@@ -11,12 +11,13 @@
 using namespace std;
 
 void handleCommand(string cmd);
-void ls();
-void mkdir(string name);
-void rmdir(string name);
-void create(string name);
-void rm(string name);
-void cat(string name);
+void ls(string filepath, dirBlock directory);
+void mkdir(string name, string path, string message);
+void rmdir(string name, string path, string message);
+void create(string name, string path, string message);
+void rm(string name, string path, string message);
+void cat(string name, string path, vector<fileBlock> list);
+void stat(string name, string path, vector<fileBlock> list);
 
 int main()
 {
