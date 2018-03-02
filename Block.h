@@ -1,11 +1,11 @@
 #ifndef Block_h
-#define B;ock_h
+#define Block_h
 #include <string>
 
-class Block [
+class Block {
 
 public:
 
-]
+}
 
 #endif
