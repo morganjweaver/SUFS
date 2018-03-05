@@ -53,13 +53,83 @@ CMAKE_SOURCE_DIR = /home/ec2-user/s3
 CMAKE_BINARY_DIR = /home/ec2-user/s3/s3_build
 
 #=============================================================================
+# Target rules for target CMakeFiles/copyObject.dir
+
+# All Build rule for target.
+CMakeFiles/copyObject.dir/all:
+	$(MAKE) -f CMakeFiles/copyObject.dir/build.make CMakeFiles/copyObject.dir/depend
+	$(MAKE) -f CMakeFiles/copyObject.dir/build.make CMakeFiles/copyObject.dir/build
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/ec2-user/s3/s3_build/CMakeFiles  1
+	@echo "Built target copyObject"
+.PHONY : CMakeFiles/copyObject.dir/all
+
+# Include target in all.
+all: CMakeFiles/copyObject.dir/all
+.PHONY : all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/copyObject.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ec2-user/s3/s3_build/CMakeFiles 1
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/copyObject.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ec2-user/s3/s3_build/CMakeFiles 0
+.PHONY : CMakeFiles/copyObject.dir/rule
+
+# Convenience name for target.
+copyObject: CMakeFiles/copyObject.dir/rule
+.PHONY : copyObject
+
+# clean rule for target.
+CMakeFiles/copyObject.dir/clean:
+	$(MAKE) -f CMakeFiles/copyObject.dir/build.make CMakeFiles/copyObject.dir/clean
+.PHONY : CMakeFiles/copyObject.dir/clean
+
+# clean rule for target.
+clean: CMakeFiles/copyObject.dir/clean
+.PHONY : clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/deleteObject.dir
+
+# All Build rule for target.
+CMakeFiles/deleteObject.dir/all:
+	$(MAKE) -f CMakeFiles/deleteObject.dir/build.make CMakeFiles/deleteObject.dir/depend
+	$(MAKE) -f CMakeFiles/deleteObject.dir/build.make CMakeFiles/deleteObject.dir/build
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/ec2-user/s3/s3_build/CMakeFiles  2
+	@echo "Built target deleteObject"
+.PHONY : CMakeFiles/deleteObject.dir/all
+
+# Include target in all.
+all: CMakeFiles/deleteObject.dir/all
+.PHONY : all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/deleteObject.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ec2-user/s3/s3_build/CMakeFiles 1
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/deleteObject.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ec2-user/s3/s3_build/CMakeFiles 0
+.PHONY : CMakeFiles/deleteObject.dir/rule
+
+# Convenience name for target.
+deleteObject: CMakeFiles/deleteObject.dir/rule
+.PHONY : deleteObject
+
+# clean rule for target.
+CMakeFiles/deleteObject.dir/clean:
+	$(MAKE) -f CMakeFiles/deleteObject.dir/build.make CMakeFiles/deleteObject.dir/clean
+.PHONY : CMakeFiles/deleteObject.dir/clean
+
+# clean rule for target.
+clean: CMakeFiles/deleteObject.dir/clean
+.PHONY : clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/putObject.dir
 
 # All Build rule for target.
 CMakeFiles/putObject.dir/all:
 	$(MAKE) -f CMakeFiles/putObject.dir/build.make CMakeFiles/putObject.dir/depend
 	$(MAKE) -f CMakeFiles/putObject.dir/build.make CMakeFiles/putObject.dir/build
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/ec2-user/s3/s3_build/CMakeFiles  1
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/ec2-user/s3/s3_build/CMakeFiles  3
 	@echo "Built target putObject"
 .PHONY : CMakeFiles/putObject.dir/all
 

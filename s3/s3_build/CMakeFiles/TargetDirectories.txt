@@ -1,1 +1,3 @@
+/home/ec2-user/s3/s3_build/CMakeFiles/copyObject.dir
 /home/ec2-user/s3/s3_build/CMakeFiles/putObject.dir
+/home/ec2-user/s3/s3_build/CMakeFiles/deleteObject.dir

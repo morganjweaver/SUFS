@@ -102,6 +102,32 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named copyObject
+
+# Build rule for target.
+copyObject: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 copyObject
+.PHONY : copyObject
+
+# fast build rule for target.
+copyObject/fast:
+	$(MAKE) -f CMakeFiles/copyObject.dir/build.make CMakeFiles/copyObject.dir/build
+.PHONY : copyObject/fast
+
+#=============================================================================
+# Target rules for targets named deleteObject
+
+# Build rule for target.
+deleteObject: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 deleteObject
+.PHONY : deleteObject
+
+# fast build rule for target.
+deleteObject/fast:
+	$(MAKE) -f CMakeFiles/deleteObject.dir/build.make CMakeFiles/deleteObject.dir/build
+.PHONY : deleteObject/fast
+
+#=============================================================================
 # Target rules for targets named putObject
 
 # Build rule for target.
@@ -113,6 +139,54 @@ putObject: cmake_check_build_system
 putObject/fast:
 	$(MAKE) -f CMakeFiles/putObject.dir/build.make CMakeFiles/putObject.dir/build
 .PHONY : putObject/fast
+
+copyObject.o: copyObject.cpp.o
+.PHONY : copyObject.o
+
+# target to build an object file
+copyObject.cpp.o:
+	$(MAKE) -f CMakeFiles/copyObject.dir/build.make CMakeFiles/copyObject.dir/copyObject.cpp.o
+.PHONY : copyObject.cpp.o
+
+copyObject.i: copyObject.cpp.i
+.PHONY : copyObject.i
+
+# target to preprocess a source file
+copyObject.cpp.i:
+	$(MAKE) -f CMakeFiles/copyObject.dir/build.make CMakeFiles/copyObject.dir/copyObject.cpp.i
+.PHONY : copyObject.cpp.i
+
+copyObject.s: copyObject.cpp.s
+.PHONY : copyObject.s
+
+# target to generate assembly for a file
+copyObject.cpp.s:
+	$(MAKE) -f CMakeFiles/copyObject.dir/build.make CMakeFiles/copyObject.dir/copyObject.cpp.s
+.PHONY : copyObject.cpp.s
+
+deleteObject.o: deleteObject.cpp.o
+.PHONY : deleteObject.o
+
+# target to build an object file
+deleteObject.cpp.o:
+	$(MAKE) -f CMakeFiles/deleteObject.dir/build.make CMakeFiles/deleteObject.dir/deleteObject.cpp.o
+.PHONY : deleteObject.cpp.o
+
+deleteObject.i: deleteObject.cpp.i
+.PHONY : deleteObject.i
+
+# target to preprocess a source file
+deleteObject.cpp.i:
+	$(MAKE) -f CMakeFiles/deleteObject.dir/build.make CMakeFiles/deleteObject.dir/deleteObject.cpp.i
+.PHONY : deleteObject.cpp.i
+
+deleteObject.s: deleteObject.cpp.s
+.PHONY : deleteObject.s
+
+# target to generate assembly for a file
+deleteObject.cpp.s:
+	$(MAKE) -f CMakeFiles/deleteObject.dir/build.make CMakeFiles/deleteObject.dir/deleteObject.cpp.s
+.PHONY : deleteObject.cpp.s
 
 putObject.o: putObject.cpp.o
 .PHONY : putObject.o
@@ -146,7 +220,15 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... copyObject"
 	@echo "... putObject"
+	@echo "... deleteObject"
+	@echo "... copyObject.o"
+	@echo "... copyObject.i"
+	@echo "... copyObject.s"
+	@echo "... deleteObject.o"
+	@echo "... deleteObject.i"
+	@echo "... deleteObject.s"
 	@echo "... putObject.o"
 	@echo "... putObject.i"
 	@echo "... putObject.s"

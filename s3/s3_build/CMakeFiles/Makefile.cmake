@@ -319,5 +319,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
+  "CMakeFiles/copyObject.dir/DependInfo.cmake"
   "CMakeFiles/putObject.dir/DependInfo.cmake"
+  "CMakeFiles/deleteObject.dir/DependInfo.cmake"
   )
