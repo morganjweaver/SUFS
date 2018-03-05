@@ -1,0 +1,25 @@
+Programs that communicate with S3
+
+Must have buckets and files existing already. 
+Must have a user created in AWS, with Access_key and Secret_access_key. 
+Must set in command line as:
+export AWS_ACCESS_KEY_ID=****
+export AWS_SECRET_ACCESS_KEY=****
+
+These programs currently just get/put/copy/delete a single test file to check if working.
+Should substitute out when building actual SUFS program.
+
+To run, go into /S3_build
+
+To run putObject, type:
+./putObject
+
+To run deleteObject, type:
+./deleteObject
+
+To run copyObject, type:
+./copyObject
+
+To run getObject, type:
+./getObject
+
