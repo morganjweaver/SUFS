@@ -128,6 +128,19 @@ deleteObject/fast:
 .PHONY : deleteObject/fast
 
 #=============================================================================
+# Target rules for targets named getObject
+
+# Build rule for target.
+getObject: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 getObject
+.PHONY : getObject
+
+# fast build rule for target.
+getObject/fast:
+	$(MAKE) -f CMakeFiles/getObject.dir/build.make CMakeFiles/getObject.dir/build
+.PHONY : getObject/fast
+
+#=============================================================================
 # Target rules for targets named putObject
 
 # Build rule for target.
@@ -188,6 +201,30 @@ deleteObject.cpp.s:
 	$(MAKE) -f CMakeFiles/deleteObject.dir/build.make CMakeFiles/deleteObject.dir/deleteObject.cpp.s
 .PHONY : deleteObject.cpp.s
 
+getObject.o: getObject.cpp.o
+.PHONY : getObject.o
+
+# target to build an object file
+getObject.cpp.o:
+	$(MAKE) -f CMakeFiles/getObject.dir/build.make CMakeFiles/getObject.dir/getObject.cpp.o
+.PHONY : getObject.cpp.o
+
+getObject.i: getObject.cpp.i
+.PHONY : getObject.i
+
+# target to preprocess a source file
+getObject.cpp.i:
+	$(MAKE) -f CMakeFiles/getObject.dir/build.make CMakeFiles/getObject.dir/getObject.cpp.i
+.PHONY : getObject.cpp.i
+
+getObject.s: getObject.cpp.s
+.PHONY : getObject.s
+
+# target to generate assembly for a file
+getObject.cpp.s:
+	$(MAKE) -f CMakeFiles/getObject.dir/build.make CMakeFiles/getObject.dir/getObject.cpp.s
+.PHONY : getObject.cpp.s
+
 putObject.o: putObject.cpp.o
 .PHONY : putObject.o
 
@@ -222,6 +259,7 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... copyObject"
 	@echo "... putObject"
+	@echo "... getObject"
 	@echo "... deleteObject"
 	@echo "... copyObject.o"
 	@echo "... copyObject.i"
@@ -229,6 +267,9 @@ help:
 	@echo "... deleteObject.o"
 	@echo "... deleteObject.i"
 	@echo "... deleteObject.s"
+	@echo "... getObject.o"
+	@echo "... getObject.i"
+	@echo "... getObject.s"
 	@echo "... putObject.o"
 	@echo "... putObject.i"
 	@echo "... putObject.s"

@@ -123,13 +123,48 @@ clean: CMakeFiles/deleteObject.dir/clean
 .PHONY : clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/getObject.dir
+
+# All Build rule for target.
+CMakeFiles/getObject.dir/all:
+	$(MAKE) -f CMakeFiles/getObject.dir/build.make CMakeFiles/getObject.dir/depend
+	$(MAKE) -f CMakeFiles/getObject.dir/build.make CMakeFiles/getObject.dir/build
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/ec2-user/s3/s3_build/CMakeFiles  3
+	@echo "Built target getObject"
+.PHONY : CMakeFiles/getObject.dir/all
+
+# Include target in all.
+all: CMakeFiles/getObject.dir/all
+.PHONY : all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/getObject.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ec2-user/s3/s3_build/CMakeFiles 1
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/getObject.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ec2-user/s3/s3_build/CMakeFiles 0
+.PHONY : CMakeFiles/getObject.dir/rule
+
+# Convenience name for target.
+getObject: CMakeFiles/getObject.dir/rule
+.PHONY : getObject
+
+# clean rule for target.
+CMakeFiles/getObject.dir/clean:
+	$(MAKE) -f CMakeFiles/getObject.dir/build.make CMakeFiles/getObject.dir/clean
+.PHONY : CMakeFiles/getObject.dir/clean
+
+# clean rule for target.
+clean: CMakeFiles/getObject.dir/clean
+.PHONY : clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/putObject.dir
 
 # All Build rule for target.
 CMakeFiles/putObject.dir/all:
 	$(MAKE) -f CMakeFiles/putObject.dir/build.make CMakeFiles/putObject.dir/depend
 	$(MAKE) -f CMakeFiles/putObject.dir/build.make CMakeFiles/putObject.dir/build
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/ec2-user/s3/s3_build/CMakeFiles  3
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/ec2-user/s3/s3_build/CMakeFiles  4
 	@echo "Built target putObject"
 .PHONY : CMakeFiles/putObject.dir/all
 

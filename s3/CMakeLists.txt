@@ -12,8 +12,10 @@ add_definitions(-DUSE_IMPORT_EXPORT)
 add_executable(putObject putObject.cpp)
 add_executable(deleteObject deleteObject.cpp)
 add_executable(copyObject copyObject.cpp)
+add_executable(getObject getObject.cpp)
 
 # Link necessary libraries 
 target_link_libraries(putObject aws-cpp-sdk-s3)
 target_link_libraries(deleteObject aws-cpp-sdk-s3)
 target_link_libraries(copyObject aws-cpp-sdk-s3)
+target_link_libraries(getObject aws-cpp-sdk-s3)

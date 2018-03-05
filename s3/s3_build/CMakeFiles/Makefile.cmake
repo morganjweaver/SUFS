@@ -321,5 +321,6 @@ set(CMAKE_MAKEFILE_PRODUCTS
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/copyObject.dir/DependInfo.cmake"
   "CMakeFiles/putObject.dir/DependInfo.cmake"
+  "CMakeFiles/getObject.dir/DependInfo.cmake"
   "CMakeFiles/deleteObject.dir/DependInfo.cmake"
   )
