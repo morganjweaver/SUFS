@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iterator>
 #include <stdio.h>
-
+#include <fstream>
 using namespace std;
 
 //TODO: 
@@ -22,7 +22,7 @@ using namespace std;
 #include <netinet/in.h>
 #include <string.h>
 #define PORT 8080
-
+#define MAXBUF 32
 //SERVER SOCKET CODE:
 
 int main(int argc, char const *argv[])
@@ -31,7 +31,7 @@ int main(int argc, char const *argv[])
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    char buffer[1024] = {0};
+    char buffer[MAXBUF] = {0};
     char *hello = "Hello from server";
       
     // Creating socket file descriptor
@@ -70,13 +70,25 @@ int main(int argc, char const *argv[])
         perror("accept");
         exit(EXIT_FAILURE);
     }
-    valread = read( new_socket , buffer, 1024);
-    printf("%s\n",buffer );
+    ofstream outfile ("testOUTFILE.txt");
+    while((valread = recv(new_socket, buffer, MAXBUF, 0)) > 0){
+        if(valread <= 0)
+            break;
+    else {
+        buffer[valread] = '\0'; 
+        outfile << buffer; 
+        printf("%s", buffer);
+    }
+}
+    outfile.close();
+   // valread = read( new_socket , buffer, 1024);
+   // printf("%s\n",buffer );
     send(new_socket , hello , strlen(hello) , 0 );
     printf("Hello message sent\n");
     return 0;
 }
 
+/**
 //CLIENT SOCKET CODE:
 
 int main(int argc, char const *argv[])
@@ -115,3 +127,4 @@ int main(int argc, char const *argv[])
     printf("%s\n",buffer );
     return 0;
 }
+**/
