@@ -8,15 +8,19 @@
 // Create StoreBlock
 // Create Stat
 // Create Hashtable data structure for file dir
-
+#include <unistd.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <arpa/inet.h>
+
 #define PORT 8080
 
 using namespace std;
+
+char* clientRequestHandler(char* request);
 
 //SERVER SOCKET CODE
 int main(int argc, char const *argv[])
@@ -66,13 +70,21 @@ int main(int argc, char const *argv[])
     }
     valread = read( new_socket , buffer, 1024);
     printf("%s\n",buffer );
-    send(new_socket , hello , strlen(hello) , 0 );
-    printf("Hello message sent\n");
+    char *result = clientRequestHandler(buffer);
+    
+    
+    //send(new_socket , result , strlen(result) , 0 );
+    printf("Return message sent\n");
     return 0;
 }  
+char* clientRequestHandler(char* request){
 
+    char* handler = "handler is handling it";
+    return handler;
+
+}
 //CLIENT SOCKET CODE
-int main(int argc, char const *argv[])
+/*int main(int argc, char const *argv[])
 {
     struct sockaddr_in address;
     int sock = 0, valread;
@@ -108,3 +120,4 @@ int main(int argc, char const *argv[])
     printf("%s\n",buffer );
     return 0;
 } 
+*/

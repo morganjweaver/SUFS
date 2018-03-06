@@ -1,13 +1,22 @@
 //Filename: SUFS Client Program
 
 #include <iostream>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <string>
 #include <sstream>
 #include <iterator>
 #include <stdio.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#include <stdlib.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <arpa/inet.h>
 
+#define PORT 8080
 using namespace std;
 
 /*
@@ -22,7 +31,7 @@ void create(string name, string path, string S3_address);
 void rm(string path);
 void cat(string path);
 void stat(string name);
-
+int sendRPC(char* request);
 /*
 ** Client - NameNode Functions?
 */
@@ -31,6 +40,7 @@ void stat(string name);
 ** Client - DataNode Functions?
 */
 
+int sendRPC(char* request);
 
 int main()
 {
@@ -135,6 +145,43 @@ void handleCommand(string cmd)
 
 }
 
+int sendRPC(char* request){
+
+    struct sockaddr_in address;
+    int sock = 0, valread;
+    struct sockaddr_in serv_addr;
+    char *hello = "Hello from client";
+    char buffer[1024] = {0};
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("\n Socket creation error \n");
+        return -1;
+    }
+  
+    memset(&serv_addr, '0', sizeof(serv_addr));
+  
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+
+    //**SERVER IP ADDR GOES HERE; current is CS1**  
+    // Convert IPv4 and IPv6 addresses from text to binary form
+    if(inet_pton(AF_INET, "10.124.72.20", &serv_addr.sin_addr)<=0) 
+    {
+        printf("\nInvalid address/ Address not supported \n");
+        return -1;
+    }
+  
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        printf("\nConnection Failed \n");
+        return -1;
+    }
+    send(sock , request , strlen(request) , 0 );
+    printf("Message sent\n");
+    valread = read( sock , buffer, 1024);
+    printf("%s\n",buffer );
+    return 0;
+}
 /*
 *******************************************************************************
 */
@@ -145,8 +192,15 @@ Provide absolute filepath
 */
 void ls(string filepath)
 {
-
+  string temp = filepath;
+  const char* request = temp.c_str();
   cout << "List Current Directory: " << filepath << endl;
+  int handled = sendRPC(const_cast<char*>(request));
+  if(handled == 0){
+    cout<<"SUCCESS ls function and 0 return of RPC fx";
+  } else{
+      cout<<"NO SUCCESS on ls fx and RPC fx";
+  }
 }
 
 /*
