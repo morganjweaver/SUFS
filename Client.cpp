@@ -149,7 +149,7 @@ void handleCommand(string cmd)
 
 }
 
-int sendRPC(char* request){
+char **sendRPC(char* request){
 
     struct sockaddr_in address;
     int sock = 0, valread;
