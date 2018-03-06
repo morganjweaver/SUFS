@@ -20,9 +20,10 @@ public:
                 keyHash = (keyHash + 1) % TABLE_SIZE;
             if (table[keyHash] == NULL)
                 return false;
-            else
-				*output = table[keyHash]->getValue();
+            else{
+		*output = table[keyHash]->getValue();
                 return true;
+	    }
       }
 
       bool put(string key, ContainerObject value) {
@@ -30,9 +31,9 @@ public:
             while (table[keyHash] != NULL && table[keyHash]->getKey() != key)
                 keyHash = (keyHash + 1) % TABLE_SIZE;
             if (table[keyHash] != NULL)
-				return false;
+		return false;
             table[keyHash] = new HashEntry(key, value);
-			return true;
+		return true;
       }
 	  
       ~DirHashMap() {
