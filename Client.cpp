@@ -16,8 +16,18 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+#include <aws/core/Aws.h>
+#include <aws/s3/S3Client.h>
+#include <aws/s3/model/PutObjectRequest.h>
+#include <aws/s3/model/GetObjectRequest.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 #define PORT 8080
 using namespace std;
+
+const long chunkSize = 67108864;
 
 /*
 ** Client Functions
@@ -27,8 +37,7 @@ void handleCommand(string cmd);
 void ls(string filepath);
 void mkdir(string name, string path);
 void rmdir(string path);
-void create(string name, string path, string S3_address);
-void rm(string path);
+void create(string name, string path, string S3_file, string S3_bucket);
 void cat(string path);
 void stat(string name);
 int sendRPC(char* request);
@@ -40,7 +49,9 @@ int sendRPC(char* request);
 ** Client - DataNode Functions?
 */
 
+void chunkFile(string fullFilePath, string chunkName);
 int sendRPC(char* request);
+void getObject(string s3file, string s3bucket);
 
 int main()
 {
@@ -53,7 +64,7 @@ int main()
   cout << "mkdir <name> <path> -- Make a directory" << endl;
   cout << "rmdir <path> -- Remove a directory" << endl;
   cout << "ls <path> -- List the contents of the current directory" << endl;
-  cout << "create <name> <path> <S3 Object> -- Create a file with S3 Object" << endl;
+  cout << "create <name> <path> <s3 filename> <s3 bucket name>-- Create a file with S3 Object" << endl;
   cout << "rm <path> -- Remove a file" << endl;
   cout << "cat <path> -- See the contents of a file" << endl;
   cout << "stat <name> -- See DataNode & Block Replicas" << endl;
@@ -114,18 +125,11 @@ void handleCommand(string cmd)
       rmdir(input[1]);
     }
   } else if (input[0] == "create") {
-    if(input.size() != 4){
+    if(input.size() != 5){
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      create(input[1], input[2], input[3]);
-    }
-  } else if (input[0] == "rm") {
-    if(input.size() != 2){
-      cout << "Error. Invalid command line arguments." << endl;
-      return;
-    } else {
-      rm(input[1]);
+      create(input[1], input[2], input[3], input[4]);
     }
   } else if (input[0] == "cat") {
     if(input.size() != 2){
@@ -157,20 +161,20 @@ int sendRPC(char* request){
         printf("\n Socket creation error \n");
         return -1;
     }
-  
+
     memset(&serv_addr, '0', sizeof(serv_addr));
-  
+
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
 
-    //**SERVER IP ADDR GOES HERE; current is CS1**  
+    //**SERVER IP ADDR GOES HERE; current is CS1**
     // Convert IPv4 and IPv6 addresses from text to binary form
-    if(inet_pton(AF_INET, "10.124.72.20", &serv_addr.sin_addr)<=0) 
+    if(inet_pton(AF_INET, "172.31.21.99", &serv_addr.sin_addr)<=0)
     {
         printf("\nInvalid address/ Address not supported \n");
         return -1;
     }
-  
+
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
         printf("\nConnection Failed \n");
@@ -194,13 +198,14 @@ void ls(string filepath)
 {
   string temp = filepath;
   const char* request = temp.c_str();
-  cout << "List Current Directory: " << filepath << endl;
   int handled = sendRPC(const_cast<char*>(request));
   if(handled == 0){
-    cout<<"SUCCESS ls function and 0 return of RPC fx";
+    cout<<"SUCCESS ls function and 0 return of RPC fx" << endl;;
   } else{
-      cout<<"NO SUCCESS on ls fx and RPC fx";
+      cout<<"NO SUCCESS on ls fx and RPC fx" << endl;
   }
+
+  cout << "List Current Directory: " << filepath << endl;
 }
 
 /*
@@ -209,6 +214,27 @@ Provide directory name and path to where directory will be created
 */
 void mkdir(string name, string path)
 {
+  string filename = name;
+  string abspath = path;
+  const char* request_name = name.c_str();
+  const char* request_path = path.c_str();
+
+  //send the directory name
+  int handled = sendRPC(const_cast<char*>(request_name));
+  if(handled == 0){
+    cout<<"SUCCESS mkdir function and 0 return of RPC fx" << endl;;
+  } else{
+      cout<<"NO SUCCESS on mkdir fx and RPC fx" << endl;;
+  }
+
+  //send the path to where the directory should be placed
+  handled = sendRPC(const_cast<char*>(request_path));
+  if(handled == 0){
+    cout<<"SUCCESS mkdir function and 0 return of RPC fx" << endl;
+  } else{
+      cout<<"NO SUCCESS on mkdir fx and RPC fx" << endl;
+  }
+
   cout << "Made Directory: " << name << endl;
 }
 
@@ -219,6 +245,16 @@ Directory must be empty to delete
 */
 void rmdir(string path)
 {
+  string temp = path;
+  const char* request = temp.c_str();
+
+  int handled = sendRPC(const_cast<char*>(request));
+  if(handled == 0){
+    cout<<"SUCCESS rmdir function and 0 return of RPC fx" << endl;
+  } else{
+      cout<<"NO SUCCESS on rmdir fx and RPC fx" << endl;
+  }
+
   cout << "Removed Directory: " << path << endl;
 }
 
@@ -226,18 +262,33 @@ void rmdir(string path)
 Create file
 Provide file name, absolute filepath, S3 Object address
 */
-void create(string name, string path, string S3_address)
+void create(string name, string path, string S3_file, string S3_bucket)
 {
   cout << "Created File: " << name << endl;
-}
 
-/*
-Remove file
-Provide absolute file path
-*/
-void rm(string path)
-{
-  cout << "Removed File: " << path << endl;
+  //socket code here
+  //sent to nameNode file creation request
+  //nn_create(name, path);
+
+  //wait for response
+  //error or success
+
+  //get from NameNode some DataNode information
+
+  //get the file from S3 into local drive
+  getObject(S3_file, S3_bucket);
+
+  chunkFile(S3_file, name);
+  //get num chunks returned from chunkFile
+  /*
+  int dnode_id = 1;
+  for(int i = 1; i <= numChunks; i++){
+    sendChunk(name + "." + i, dnode + dnode_id)
+    dnode_id++;
+    if(dnode_id == 4)
+      dnode_id = 1;
+  }
+  */
 }
 
 /*
@@ -256,4 +307,100 @@ Provide filename
 void stat(string name)
 {
   cout << "Stat Contenet of: " << name << endl;
+}
+
+/*
+chunk File into multiple blocks
+*/
+void chunkFile(string fullFilePath, string chunkName)
+{
+
+    ifstream fileStream;
+
+    fileStream.open(fullFilePath.c_str(), ios::in | ios::binary);
+
+    // File open a success
+
+    if (fileStream.is_open()) {
+
+        ofstream output;
+        int counter = 1;
+        string fullChunkName;
+        // Create a buffer to hold each chunk
+        char *buffer = new char[chunkSize];
+        // Keep reading until end of file
+        while (!fileStream.eof()) {
+        // Build the chunk file name. Usually drive:\\chunkName.ext.N
+           // N represents the Nth chunk
+            fullChunkName.clear();
+            fullChunkName.append(chunkName);
+            fullChunkName.append(".");
+           // Convert counter integer into string and append to name.
+             string intBuf = to_string(counter);
+	     fullChunkName.append(intBuf);
+           // Open new chunk file name for output
+            output.open(fullChunkName.c_str(),ios::out | ios::trunc | ios::binary);
+            // If chunk file opened successfully, read from input and
+            // write to output chunk. Then close.
+
+	     if (output.is_open()) {
+                fileStream.read(buffer,chunkSize);
+                // gcount() returns number of bytes read from stream.
+                output.write(buffer,fileStream.gcount());
+                output.close();
+
+                counter++;
+            }
+        }
+        // Cleanup buffer
+        delete[] buffer;
+
+        // Close input file stream.
+        fileStream.close();
+        cout << "Chunking complete! " << counter - 1 << " files created." << endl;
+    }
+    else { cout << "Error opening file!" << endl; }
+}
+
+/*
+Should specify filename and bucket_name
+Right now, for testing purposing, it's getting from Tu Trinh's sufs-test bucket
+*/
+void getObject(string s3file, string s3bucket)
+{
+  Aws::SDKOptions options;
+  Aws::InitAPI(options);
+  {
+    Aws::String FILE = Aws::Utils::StringUtils::to_string(s3file);
+    Aws::String BUCKET = Aws::Utils::StringUtils::to_string(s3bucket);
+    const Aws::String bucket_name = BUCKET;
+    const Aws::String key_name = FILE;
+
+    std::cout << "Downloading " << key_name << " from S3 bucket: " <<
+      bucket_name << std::endl;
+
+    Aws::Client::ClientConfiguration clientConfig;
+    clientConfig.region = Aws::Region::US_WEST_2;
+    Aws::S3::S3Client s3_client(clientConfig);
+
+    Aws::S3::Model::GetObjectRequest object_request;
+    object_request.WithBucket(bucket_name).WithKey(key_name);
+
+    auto get_object_outcome = s3_client.GetObject(object_request);
+
+    if (get_object_outcome.IsSuccess())
+      {
+	Aws::OFStream local_file;
+	local_file.open(key_name.c_str(), std::ios::out | std::ios::binary);
+	local_file << get_object_outcome.GetResult().GetBody().rdbuf();
+	std::cout << "Get Success!" << std::endl;
+      }
+    else
+      {
+	std::cout << "GetObject error: " <<
+	  get_object_outcome.GetError().GetExceptionName() << " " <<
+	  get_object_outcome.GetError().GetMessage() << std::endl;
+      }
+  }
+  Aws::ShutdownAPI(options);
 }
