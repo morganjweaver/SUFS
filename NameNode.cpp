@@ -30,8 +30,9 @@ int main(int argc, char const *argv[])
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1024] = {0};
-    char *hello = "Hello from server";
-      
+    char delimarray[] = "~!!";
+    char* delimiter = "~!!";;
+  
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
@@ -72,8 +73,10 @@ int main(int argc, char const *argv[])
     printf("%s\n",buffer );
     char *result = clientRequestHandler(buffer);
     
-    
-    //send(new_socket , result , strlen(result) , 0 );
+    send(new_socket, delimiter, strlen(delimiter), 0);
+    send(new_socket , result , strlen(result) , 0 );  //send back useful info to client based on request
+    send(new_socket, delimiter, strlen(delimiter), 0); //now cap it with a delimiter
+
     printf("Return message sent\n");
     return 0;
 }  

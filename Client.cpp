@@ -19,6 +19,8 @@
 #define PORT 8080
 using namespace std;
 
+//TODO: man 2 sendfile to chunk and move blocks to server EC2
+
 /*
 ** Client Functions
 These function help with starting/handling the commands typed in my user
@@ -31,7 +33,7 @@ void create(string name, string path, string S3_address);
 void rm(string path);
 void cat(string path);
 void stat(string name);
-int sendRPC(char* request);
+char *sendRPC(char* request);
 /*
 ** Client - NameNode Functions?
 */
@@ -40,7 +42,7 @@ int sendRPC(char* request);
 ** Client - DataNode Functions?
 */
 
-int sendRPC(char* request);
+char *sendRPC(char* request);
 
 int main()
 {
@@ -145,17 +147,22 @@ void handleCommand(string cmd)
 
 }
 
-char **sendRPC(char* request){
+char *sendRPC(char* request){
 
     struct sockaddr_in address;
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
-    char *hello = "Hello from client";
     char buffer[1024] = {0};
+    char tmp;
+    int buflen = 0;
+    char err[] = "error";
+    char* errptr = err;
+    char delimiter[] = "~!!";
+
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         printf("\n Socket creation error \n");
-        return -1;
+        return errptr;
     }
   
     memset(&serv_addr, '0', sizeof(serv_addr));
@@ -168,19 +175,66 @@ char **sendRPC(char* request){
     if(inet_pton(AF_INET, "10.124.72.20", &serv_addr.sin_addr)<=0) 
     {
         printf("\nInvalid address/ Address not supported \n");
-        return -1;
+        return errptr;
     }
   
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
         printf("\nConnection Failed \n");
-        return -1;
+        return errptr;
     }
+
+    printf("INPUT FROM LS: %s\n", request);
     send(sock , request , strlen(request) , 0 );
     printf("Message sent\n");
-    valread = read( sock , buffer, 1024);
-    printf("%s\n",buffer );
-    return 0;
+   
+    do
+    {
+        valread = read(sock, &tmp, 1);
+        if (valread < 0) cout<<"ERROR reading from socket";
+
+        /*char * comparer;
+        comparer = (char*) memchr((void*)buffer, '~', 1024 );
+        if (comparer==NULL){
+            cout<<"no delim yet, long string\n";
+             continue;
+         } else{
+              cout<<"FOUND DELIM in first buffer read\n";
+              char *string =(char*) (malloc(1024*sizeof(char)));
+              strncpy(string,buffer,1024 );
+              return string;
+          }*/
+         if (tmp != '~')
+             continue;
+         buflen = 0;
+     do{
+        
+        valread = read( sock , &tmp, 1);
+        if (valread  < 0){
+         cout<<"ERROR reading from socket" << endl;
+        }
+        /*char * comparer;
+        comparer = (char*) memchr ((void*)&tmp, '~!!', 3 );
+        if (comparer!=NULL){
+            cout<<"COMPARISON SUCCESS\n";
+            break;
+         }*/
+        if(tmp=='~')
+            break;
+         else{
+         
+         // TODO: if the buffer's capacity has been reached, either reallocate the buffer with a larger size, or fail the operation...
+        buffer[buflen] = tmp;
+        ++buflen;
+        }}
+	while(1);
+        
+        char *string =(char*) (malloc(buflen*sizeof(char)));
+        strncpy(string,buffer, buflen );
+        return string;
+        printf("%*.*s\n", buflen, buflen, buffer);
+
+} while(1);
 }
 /*
 *******************************************************************************
@@ -195,11 +249,13 @@ void ls(string filepath)
   string temp = filepath;
   const char* request = temp.c_str();
   cout << "List Current Directory: " << filepath << endl;
-  int handled = sendRPC(const_cast<char*>(request));
-  if(handled == 0){
-    cout<<"SUCCESS ls function and 0 return of RPC fx";
+  char* handled = sendRPC(const_cast<char*>(request));
+  cout<< "Printing output: \n";
+  printf("%s\n",handled);
+  if(strcmp(handled,"error")!=0){
+    cout<<"SUCCESS ls function and 0 return of RPC fx \n";
   } else{
-      cout<<"NO SUCCESS on ls fx and RPC fx";
+      cout<<"NO SUCCESS on ls fx and RPC fx\n";
   }
 }
 
