@@ -15,6 +15,8 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include "NodeHashMap.cpp"
+#include "DirHashMap.cpp"
 
 #define PORT 8080
 
@@ -33,6 +35,8 @@ int main(int argc, char const *argv[])
 <<<<<<< HEAD
     char delimarray[] = "~!!";
     char* delimiter = "~!!";;
+    DirHashMap dirMap;
+    NodeHashMap nodeMap;
   
 =======
     char *hello = "Hello from server";
