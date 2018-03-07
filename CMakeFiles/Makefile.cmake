@@ -7,12 +7,12 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 # The top level Makefile was generated from the following files:
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
-  "../CMakeLists.txt"
   "CMakeFiles/3.2.2/CMakeCCompiler.cmake"
   "CMakeFiles/3.2.2/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.2.2/CMakeSystem.cmake"
   "CMakeFiles/feature_tests.c"
   "CMakeFiles/feature_tests.cxx"
+  "CMakeLists.txt"
   "/home/ec2-user/sdk_build/aws-cpp-sdk-AWSMigrationHub/aws-cpp-sdk-AWSMigrationHub-config.cmake"
   "/home/ec2-user/sdk_build/aws-cpp-sdk-AWSMigrationHub/aws-cpp-sdk-AWSMigrationHub-targets.cmake"
   "/home/ec2-user/sdk_build/aws-cpp-sdk-access-management/aws-cpp-sdk-access-management-config.cmake"

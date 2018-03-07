@@ -35,10 +35,10 @@ RM = /usr/local/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ec2-user/client
+CMAKE_SOURCE_DIR = /home/ec2-user/SUFS
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ec2-user/client/client_build
+CMAKE_BINARY_DIR = /home/ec2-user/SUFS
 
 # Include any dependencies generated for this target.
 include CMakeFiles/Client.dir/depend.make
@@ -50,18 +50,18 @@ include CMakeFiles/Client.dir/progress.make
 include CMakeFiles/Client.dir/flags.make
 
 CMakeFiles/Client.dir/Client.cpp.o: CMakeFiles/Client.dir/flags.make
-CMakeFiles/Client.dir/Client.cpp.o: ../Client.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/ec2-user/client/client_build/CMakeFiles $(CMAKE_PROGRESS_1)
+CMakeFiles/Client.dir/Client.cpp.o: Client.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/ec2-user/SUFS/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/Client.dir/Client.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/Client.dir/Client.cpp.o -c /home/ec2-user/client/Client.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/Client.dir/Client.cpp.o -c /home/ec2-user/SUFS/Client.cpp
 
 CMakeFiles/Client.dir/Client.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/Client.dir/Client.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/ec2-user/client/Client.cpp > CMakeFiles/Client.dir/Client.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/ec2-user/SUFS/Client.cpp > CMakeFiles/Client.dir/Client.cpp.i
 
 CMakeFiles/Client.dir/Client.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Client.dir/Client.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/ec2-user/client/Client.cpp -o CMakeFiles/Client.dir/Client.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/ec2-user/SUFS/Client.cpp -o CMakeFiles/Client.dir/Client.cpp.s
 
 CMakeFiles/Client.dir/Client.cpp.o.requires:
 .PHONY : CMakeFiles/Client.dir/Client.cpp.o.requires
@@ -103,6 +103,6 @@ CMakeFiles/Client.dir/clean:
 .PHONY : CMakeFiles/Client.dir/clean
 
 CMakeFiles/Client.dir/depend:
-	cd /home/ec2-user/client/client_build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ec2-user/client /home/ec2-user/client /home/ec2-user/client/client_build /home/ec2-user/client/client_build /home/ec2-user/client/client_build/CMakeFiles/Client.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/ec2-user/SUFS && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ec2-user/SUFS /home/ec2-user/SUFS /home/ec2-user/SUFS /home/ec2-user/SUFS /home/ec2-user/SUFS/CMakeFiles/Client.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/Client.dir/depend
 
