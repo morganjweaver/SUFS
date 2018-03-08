@@ -44,7 +44,7 @@ void processClient(int clientSock);
 int main(int argc, char const *argv[])
 {
   if(argc < 2) {
-    cout << "Error: check your command line argument" << endl;
+    cout << "Error: Missing command line arguments" << endl;
     cout << "Usage: ./Server [portnumber]" << endl;
   return 1;
   }

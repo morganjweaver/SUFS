@@ -60,7 +60,7 @@ void getObject(string s3file, string s3bucket);
 int main(int argc, char const *argv[])
 {
   if(argc < 3) {
-    cout << "Error: check your command line argument" << endl;
+    cout << "Error: Missing command line arguments" << endl;
     cout << "Usage: ./Cient [ip_address] [portnumber]" << endl;
     return 1;
   }
