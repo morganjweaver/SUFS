@@ -4,8 +4,6 @@
 #include <iostream>
 using namespace std;
 
-const int TABLE_SIZE = 128;
-
 class NodeHashMap {
 	private:
 		NodeHashEntry** table;
@@ -17,16 +15,15 @@ class NodeHashMap {
 				table[i] = NULL;
 		}
 
-		bool get(string key, string* output) {
+		bool get(string key, string& output) {
 			size_t keyHash = hashfn(key) % TABLE_SIZE;
 			while (table[keyHash] != NULL && table[keyHash]->getKey() != key)
 				keyHash = (keyHash + 1) % TABLE_SIZE;
 			if (table[keyHash] == NULL)
 				return false;
 			else {
-				*output = table[keyHash]->getValue();
+				output = table[keyHash]->getValue();
 				return true;
-			}
 			}
 		}
 
