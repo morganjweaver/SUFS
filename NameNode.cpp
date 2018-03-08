@@ -15,33 +15,28 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
-#include "NodeHashMap.cpp"
+//#include "NodeHashMap.cpp"
 #include "DirHashMap.cpp"
 
 #define PORT 8080
 
 using namespace std;
 
-char* clientRequestHandler(char* request);
+const char* delimiter = '~';
+void processClient(int new_client_socket);
 
 //SERVER SOCKET CODE
 int main(int argc, char const *argv[])
 {
-    int server_fd, new_socket, valread;
+    int server_fd, client_socket, valread;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1024] = {0};
-<<<<<<< HEAD
-    char delimarray[] = "~!!";
-    char* delimiter = "~!!";;
     DirHashMap dirMap;
     NodeHashMap nodeMap;
   
-=======
-    char *hello = "Hello from server";
 
->>>>>>> e223a02638e76faf64cfe9566e7e73f974490d5a
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
@@ -72,34 +67,49 @@ int main(int argc, char const *argv[])
         perror("listen");
         exit(EXIT_FAILURE);
     }
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
-                       (socklen_t*)&addrlen))<0)
-    {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
+    while (true) 
+        {   struct sockaddr_in clientAddr;
+            socklen_t addrLen = sizeof(clientAddr);
+            clientSock = accept(server_fd,(struct sockaddr *)&clientAddr, &addrLen);
+            if (clientSock < 0) 
+                exit(-1);
+    // Communicate with client
+            processClient(client_socket);
+    // Close client 
+            close(clientSock);
+        }
+    // if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
+    //                    (socklen_t*)&addrlen))<0)
+    // {
+    //     perror("accept");
+    //     exit(EXIT_FAILURE);
+    // }
 
-    valread = read( new_socket , buffer, 1024);
-    printf("%s\n",buffer );
-    char *result = clientRequestHandler(buffer);
-<<<<<<< HEAD
+    // valread = read( new_socket , buffer, 1024);
+    // printf("%s\n",buffer );
+    // char *result = clientRequestHandler(buffer);
     
-    send(new_socket, delimiter, strlen(delimiter), 0);
-    send(new_socket , result , strlen(result) , 0 );  //send back useful info to client based on request
-    send(new_socket, delimiter, strlen(delimiter), 0); //now cap it with a delimiter
+    // send(new_socket, delimiter, strlen(delimiter), 0);
+    // send(new_socket , result , strlen(result) , 0 );  //send back useful info to client based on request
+    // send(new_socket, delimiter, strlen(delimiter), 0); //now cap it with a delimiter
 
-=======
 
-    //send(new_socket , result , strlen(result) , 0 );
->>>>>>> e223a02638e76faf64cfe9566e7e73f974490d5a
-    printf("Return message sent\n");
+    // //send(new_socket , result , strlen(result) , 0 );
+
+    // printf("Return message sent\n");
     return 0;
 }
 
-char* clientRequestHandler(char* request){
+void processClient(int new_client_socket){
 
-    char* handler = "handler is handling it";
-    return handler;
+    char buffer[1024] = {0};
+    char* message = "recieved message!";
+    valread = read( new_socket , buffer, 1024);
+    printf("%s\n",buffer );
+    
+    send(new_socket, delimiter, strlen(delimiter), 0);
+    send(new_socket , message , strlen(result) , 0 );  //send back useful info to client based on request
+    send(new_socket, delimiter, strlen(delimiter), 0); //now cap it with a delimiter
 
 }
 
