@@ -31,9 +31,22 @@ class NodeHashMap {
 			size_t keyHash = hashfn(key) % TABLE_SIZE;
 			while (table[keyHash] != NULL && table[keyHash]->getKey() != key)
 				keyHash = (keyHash + 1) % TABLE_SIZE;
-			if (table[keyHash] != NULL)
+			if (table[keyHash] != NULL){
 				return false;
+			}
 			table[keyHash] = new NodeHashEntry(key, value);
+			return true;
+		}
+		
+		bool remove(string key){
+			size_t keyHash = hashfn(key) % TABLE_SIZE;
+			while (table[keyHash] != NULL && table[keyHash]->getKey() != key)
+				keyHash = (keyHash + 1) % TABLE_SIZE;
+			if (table[keyHash] == NULL){
+				return false;
+			}
+			table[keyHash] = NULL;
+			delete table[keyHash];
 			return true;
 		}
 		  
