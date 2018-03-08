@@ -65,40 +65,43 @@ string receiveString(int sock) {
 
 void processClient(int clientSock)
 {
+  string command;
+  string getName;
+  string getPath;
 
-  string getString;
   while(true)
   {
-    getString = receiveString(clientSock);
-    cout << getString << endl;
-    if(getString == "exit"){
+    command = receiveString(clientSock);
+    cout << command << endl;
+
+    if(command == "exit"){
       close(clientSock);
       exit(-1);
     }
 
-    if(getString == "mkdir")
+    if(command == "mkdir")
     {
-      getString = receiveString(clientSock);
-      cout << getString << endl;
-      getString = receiveString(clientSock);
-      cout << getString << endl;
-    } else if(getString == "ls") {
-      getString = receiveString(clientSock);
-      cout << getString << endl;
-    } else if (getString == "create") {
-      getString = receiveString(clientSock);
-      cout << getString << endl;
-      getString = receiveString(clientSock);
-      cout << getString << endl;
-    } else if (getString == "stat") {
-      getString = receiveString(clientSock);
-      cout << getString << endl;
-    } else if (getString == "rmdir"){
-      getString = receiveString(clientSock);
-      cout << getString << endl;
-    } else if (getString == "cat"){
-      getString = receiveString(clientSock);
-      cout << getString << endl;
+      getName = receiveString(clientSock);
+      cout << getName << endl;
+      getPath = receiveString(clientSock);
+      cout << getPath << endl;
+    } else if(command == "ls") {
+      getPath = receiveString(clientSock);
+      cout << getPath << endl;
+    } else if (command == "create") {
+      getName = receiveString(clientSock);
+      cout << getName << endl;
+      getPath = receiveString(clientSock);
+      cout << getPath << endl;
+    } else if (command == "stat") {
+      getPath = receiveString(clientSock);
+      cout << getPath << endl;
+    } else if (command == "rmdir"){
+      getPath = receiveString(clientSock);
+      cout << getPath << endl;
+    } else if (command == "cat"){
+      getPath = receiveString(clientSock);
+      cout << getPath << endl;
     }
 
 
