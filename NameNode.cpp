@@ -226,7 +226,7 @@ int main(int argc, char const *argv[])
     // printf("Return message sent\n");
     return 0;
     */
-}
+//}
 
 /*
 void processClient(int new_client_socket){
