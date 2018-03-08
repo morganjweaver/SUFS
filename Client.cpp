@@ -28,7 +28,6 @@
 using namespace std;
 
 //TODO: man 2 sendfile to chunk and move blocks to server EC2
-=======
 const long chunkSize = 67108864;
 
 /*
@@ -52,9 +51,7 @@ char *sendRPC(char* request);
 */
 
 char *sendRPC(char* request);
-=======
 void chunkFile(string fullFilePath, string chunkName);
-int sendRPC(char* request);
 void getObject(string s3file, string s3bucket);
 
 int main()
@@ -178,7 +175,7 @@ char *sendRPC(char* request){
 
     //**SERVER IP ADDR GOES HERE; current is CS1**
     // Convert IPv4 and IPv6 addresses from text to binary form
-    if(inet_pton(AF_INET, "172.31.21.99", &serv_addr.sin_addr)<=0)
+    if(inet_pton(AF_INET, "172.31.27.136", &serv_addr.sin_addr)<=0)
     {
         printf("\nInvalid address/ Address not supported \n");
         return errptr;
@@ -279,7 +276,7 @@ void mkdir(string name, string path)
   const char* request_path = path.c_str();
 
   //send the directory name
-  int handled = sendRPC(const_cast<char*>(request_name));
+  char* handled = sendRPC(const_cast<char*>(request_name));
   if(handled == 0){
     cout<<"SUCCESS mkdir function and 0 return of RPC fx" << endl;;
   } else{
@@ -307,7 +304,7 @@ void rmdir(string path)
   string temp = path;
   const char* request = temp.c_str();
 
-  int handled = sendRPC(const_cast<char*>(request));
+  char* handled = sendRPC(const_cast<char*>(request));
   if(handled == 0){
     cout<<"SUCCESS rmdir function and 0 return of RPC fx" << endl;
   } else{
