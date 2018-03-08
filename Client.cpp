@@ -16,6 +16,16 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <string>
+#include <cstring>
+#include <cstdlib>
+#include <stdio.h>
+
 #include <aws/core/Aws.h>
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/PutObjectRequest.h>
@@ -34,17 +44,40 @@ const long chunkSize = 67108864;
 ** Client Functions
 These function help with starting/handling the commands typed in my user
 */
-void handleCommand(string cmd);
-void ls(string filepath);
-void mkdir(string name, string path);
-void rmdir(string path);
-void create(string name, string path, string S3_file, string S3_bucket);
-void cat(string path);
-void stat(string name);
+void handleCommand(string cmd, int socket);
+void ls(string filepath, int socket);
+void mkdir(string name, string path, int socket);
+void rmdir(string path, int socket);
+void create(string name, string path, string S3_file, string S3_bucket, int socket);
+void cat(string path, int socket);
+void stat(string name, int socket);
 char *sendRPC(char* request);
 /*
 ** Client - NameNode Functions?
 */
+void sendString(int sock, string wordSent) {
+  char wordBuffer[2000];
+  strcpy(wordBuffer, wordSent.c_str());
+  int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
+  if (bytesSent != 2000) {
+    cerr << "Error sending " << endl;
+    exit(-1);
+  }
+}
+
+string receiveString(int sock) {
+  int bytesLeft = 2000;
+  char stringBuffer[2000];
+  while(bytesLeft) {
+    int bytesRecv = recv(sock, stringBuffer, bytesLeft, 0);
+    if (bytesRecv < 0) {
+      cout << "Error with receiving " << endl;
+      exit(-1);
+    }
+    bytesLeft = bytesLeft - bytesRecv;
+  }
+  return stringBuffer;
+}
 
 /*
 ** Client - DataNode Functions?
@@ -54,8 +87,42 @@ char *sendRPC(char* request);
 void chunkFile(string fullFilePath, string chunkName);
 void getObject(string s3file, string s3bucket);
 
-int main()
+int main(int argc, char const *argv[])
 {
+  if(argc < 3) {
+    cout << "Error: check your command line argument" << endl;
+    cout << "Usage: ./Cient [ip_address] [portnumber]" << endl;
+    return 1;
+  }
+
+  int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if(sock < 0) {
+    cout << "Error with socket" << endl;
+    exit(-1);
+  }
+
+  char* IPAddr = const_cast<char *>(argv[1]);
+
+  unsigned short servPort = atoi(argv[2]);
+
+  unsigned long servIP;
+  int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
+  if (status <= 0) {
+    cout << "Error with convert dotted decimal address to int" << endl;
+    exit(-1);
+  }
+
+  struct sockaddr_in servAddr;
+  servAddr.sin_family = AF_INET; // always AF_INET
+  servAddr.sin_addr.s_addr = servIP;
+  servAddr.sin_port = htons(servPort);
+
+  status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  if(status < 0) {
+    cout << "Error with connect" << endl;
+    exit(-1);
+  }
+
   string user_command;
 
   //Welcome message
@@ -66,7 +133,6 @@ int main()
   cout << "rmdir <path> -- Remove a directory" << endl;
   cout << "ls <path> -- List the contents of the current directory" << endl;
   cout << "create <name> <path> <s3 filename> <s3 bucket name>-- Create a file with S3 Object" << endl;
-  cout << "rm <path> -- Remove a file" << endl;
   cout << "cat <path> -- See the contents of a file" << endl;
   cout << "stat <name> -- See DataNode & Block Replicas" << endl;
   cout << "exit -- Exit SUFS" << endl;
@@ -77,15 +143,15 @@ int main()
     {
       cout << ">> ";
       getline(cin, user_command);
-      handleCommand(user_command);
+      handleCommand(user_command, sock);
     }
-
+    sendString(sock, "exit");
   cout << endl << endl << endl;
   return 0;
 }
 
 //Function that handles which command was entered
-void handleCommand(string cmd)
+void handleCommand(string cmd, int socket)
 {
   string buf;
   stringstream ss(cmd);
@@ -109,42 +175,42 @@ void handleCommand(string cmd)
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      ls(input[1]);
+      ls(input[1], socket);
     }
   } else if (input[0] == "mkdir"){
     if(input.size() != 3){
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      mkdir(input[1], input[2]);
+      mkdir(input[1], input[2], socket);
     }
   } else if (input[0] == "rmdir") {
     if(input.size() != 2){
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      rmdir(input[1]);
+      rmdir(input[1], socket);
     }
   } else if (input[0] == "create") {
     if(input.size() != 5){
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      create(input[1], input[2], input[3], input[4]);
+      create(input[1], input[2], input[3], input[4], socket);
     }
   } else if (input[0] == "cat") {
     if(input.size() != 2){
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      cat(input[1]);
+      cat(input[1], socket);
     }
   } else if (input[0] == "stat"){
     if(input.size() != 2){
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      stat(input[1]);
+      stat(input[1], socket);
     }
   }
 
@@ -190,7 +256,7 @@ char *sendRPC(char* request){
     printf("INPUT FROM LS: %s\n", request);
     send(sock , request , strlen(request) , 0 );
     printf("Message sent\n");
-   
+
     do
     {
         valread = read(sock, &tmp, 1);
@@ -211,7 +277,7 @@ char *sendRPC(char* request){
              continue;
          buflen = 0;
      do{
-        
+
         valread = read( sock , &tmp, 1);
         if (valread  < 0){
          cout<<"ERROR reading from socket" << endl;
@@ -225,13 +291,13 @@ char *sendRPC(char* request){
         if(tmp=='~')
             break;
          else{
-         
+
          // TODO: if the buffer's capacity has been reached, either reallocate the buffer with a larger size, or fail the operation...
         buffer[buflen] = tmp;
         ++buflen;
         }}
 	while(1);
-        
+
         char *string =(char*) (malloc(buflen*sizeof(char)));
         strncpy(string,buffer, buflen );
         return string;
@@ -247,8 +313,14 @@ char *sendRPC(char* request){
 View contents of directory
 Provide absolute filepath
 */
-void ls(string filepath)
+void ls(string filepath, int socket)
 {
+
+  cout << "List Current Directory: " << filepath << endl;
+  sendString(socket, "ls");
+  sendString(socket, filepath);
+
+  /*
   string temp = filepath;
   const char* request = temp.c_str();
   cout << "List Current Directory: " << filepath << endl;
@@ -260,16 +332,22 @@ void ls(string filepath)
   } else{
       cout<<"NO SUCCESS on ls fx and RPC fx\n";
   }
+  */
 
-  cout << "List Current Directory: " << filepath << endl;
 }
 
 /*
 Make directory
 Provide directory name and path to where directory will be created
 */
-void mkdir(string name, string path)
+void mkdir(string name, string path, int socket)
 {
+  cout << "Made Directory: " << name << endl;
+  sendString(socket, "mkdir");
+  sendString(socket, name);
+  sendString(socket, path);
+
+  /*
   string filename = name;
   string abspath = path;
   const char* request_name = name.c_str();
@@ -290,8 +368,8 @@ void mkdir(string name, string path)
   } else{
       cout<<"NO SUCCESS on mkdir fx and RPC fx" << endl;
   }
+*/
 
-  cout << "Made Directory: " << name << endl;
 }
 
 /*
@@ -299,8 +377,12 @@ Remove Directory
 Provide absolute path to directory to be deleted
 Directory must be empty to delete
 */
-void rmdir(string path)
+void rmdir(string path, int socket)
 {
+  cout << "Removed Directory: " << path << endl;
+  sendString(socket, "rmdir");
+  sendString(socket, path);
+  /*
   string temp = path;
   const char* request = temp.c_str();
 
@@ -310,17 +392,21 @@ void rmdir(string path)
   } else{
       cout<<"NO SUCCESS on rmdir fx and RPC fx" << endl;
   }
+*/
 
-  cout << "Removed Directory: " << path << endl;
+
 }
 
 /*
 Create file
 Provide file name, absolute filepath, S3 Object address
 */
-void create(string name, string path, string S3_file, string S3_bucket)
+void create(string name, string path, string S3_file, string S3_bucket, int socket)
 {
   cout << "Created File: " << name << endl;
+  sendString(socket, "create");
+  sendString(socket, S3_file);
+  sendString(socket, path);
 
   //socket code here
   //sent to nameNode file creation request
@@ -351,18 +437,22 @@ void create(string name, string path, string S3_file, string S3_bucket)
 View contents of file
 Provide absolute file path
 */
-void cat(string path)
+void cat(string path, int socket)
 {
   cout << "Viewing File Content of: " << path << endl;
+  sendString(socket, "cat");
+  sendString(socket, path);
 }
 
 /*
 View stat of file
 Provide filename
 */
-void stat(string name)
+void stat(string name, int socket)
 {
-  cout << "Stat Contenet of: " << name << endl;
+  cout << "Stat Content of: " << name << endl;
+  sendString(socket, "stat");
+  sendString(socket, name);
 }
 
 /*
