@@ -6,7 +6,7 @@ class NodeHashEntry {
 		  string key;
 		  string value;
 	public:
-		DNodeIDHashEntry(string key, string value) {
+		NodeHashEntry(string key, string value) {
 			this->key = key;
 			this->value = value;
 		}
