@@ -15,16 +15,8 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
-
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <string>
-#include <cstring>
 #include <cstdlib>
-#include <stdio.h>
 
 #include <aws/core/Aws.h>
 #include <aws/s3/S3Client.h>
@@ -129,12 +121,12 @@ int main(int argc, char const *argv[])
   cout << endl << endl << endl;
   cout << "Welcome to SUFS!" << endl;
   cout << "Command List: " << endl;
-  cout << "mkdir <name> <path> -- Make a directory" << endl;
-  cout << "rmdir <path> -- Remove a directory" << endl;
-  cout << "ls <path> -- List the contents of the current directory" << endl;
-  cout << "create <name> <path> <s3 filename> <s3 bucket name>-- Create a file with S3 Object" << endl;
-  cout << "cat <path> -- See the contents of a file" << endl;
-  cout << "stat <name> -- See DataNode & Block Replicas" << endl;
+  cout << "mkdir <name> <abs path> -- Make a directory" << endl;
+  cout << "rmdir <abs path> -- Remove a directory" << endl;
+  cout << "ls <abs path> -- List the contents of the current directory" << endl;
+  cout << "create <name> <abs path> <s3 filename> <s3 bucket name>-- Create a file with S3 Object" << endl;
+  cout << "cat <abs path> -- See the contents of a file" << endl;
+  cout << "stat <abs path> -- See DataNode & Block Replicas" << endl;
   cout << "exit -- Exit SUFS" << endl;
   cout << endl;
 
@@ -346,30 +338,6 @@ void mkdir(string name, string path, int socket)
   sendString(socket, "mkdir");
   sendString(socket, name);
   sendString(socket, path);
-
-  /*
-  string filename = name;
-  string abspath = path;
-  const char* request_name = name.c_str();
-  const char* request_path = path.c_str();
-
-  //send the directory name
-  char* handled = sendRPC(const_cast<char*>(request_name));
-  if(handled == 0){
-    cout<<"SUCCESS mkdir function and 0 return of RPC fx" << endl;;
-  } else{
-      cout<<"NO SUCCESS on mkdir fx and RPC fx" << endl;;
-  }
-
-  //send the path to where the directory should be placed
-  handled = sendRPC(const_cast<char*>(request_path));
-  if(handled == 0){
-    cout<<"SUCCESS mkdir function and 0 return of RPC fx" << endl;
-  } else{
-      cout<<"NO SUCCESS on mkdir fx and RPC fx" << endl;
-  }
-*/
-
 }
 
 /*
@@ -382,19 +350,6 @@ void rmdir(string path, int socket)
   cout << "Removed Directory: " << path << endl;
   sendString(socket, "rmdir");
   sendString(socket, path);
-  /*
-  string temp = path;
-  const char* request = temp.c_str();
-
-  char* handled = sendRPC(const_cast<char*>(request));
-  if(handled == 0){
-    cout<<"SUCCESS rmdir function and 0 return of RPC fx" << endl;
-  } else{
-      cout<<"NO SUCCESS on rmdir fx and RPC fx" << endl;
-  }
-*/
-
-
 }
 
 /*
