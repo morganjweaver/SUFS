@@ -15,7 +15,6 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
-
 #include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -37,9 +36,59 @@ using namespace std;
 
 //const char* delimiter = '~';
 void processClient(int new_client_socket);
+void sendString(int sock, string wordSent);
+string receiveString(int sock);
+void processClient(int clientSock);
 
+//SERVER SOCKET CODE
+int main(int argc, char const *argv[])
+{
+  if(argc < 2) {
+    cout << "Error: check your command line argument" << endl;
+    cout << "Usage: ./Server [portnumber]" << endl;
+  return 1;
+  }
 
-void sendString(int sock, string wordSent) {
+  int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if(sock < 0) {
+    cerr << "Error with socket" << endl;
+    exit(-1);
+  }
+
+   unsigned short servPort = atoi(argv[1]);
+
+  struct sockaddr_in servAddr;
+  servAddr.sin_family = AF_INET; // always AF_INET
+  servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  servAddr.sin_port = htons(servPort);
+
+  int status = bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  if (status < 0) {
+    cerr << "Error with bind" << endl;
+    exit (-1);
+  }
+
+  status = listen(sock, MAXPENDING);
+  if (status < 0) {
+    cerr << "Error with listen" << endl;
+    exit(-1);
+  }
+
+  while(true){
+    struct sockaddr_in clientAddr;
+    socklen_t addrLen = sizeof(clientAddr);
+    int clientSock = accept(sock, (struct sockaddr *) &clientAddr, &addrLen);
+    if (clientSock < 0) {
+      cerr << "Error with accept" << endl;
+      exit(-1);
+    }
+    processClient(clientSock);
+  }
+}
+/******************************************************************************/
+
+void sendString(int sock, string wordSent)
+{
   char wordBuffer[2000];
   strcpy(wordBuffer, wordSent.c_str());
   int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
@@ -49,7 +98,8 @@ void sendString(int sock, string wordSent) {
   }
 }
 
-string receiveString(int sock) {
+string receiveString(int sock)
+{
   int bytesLeft = 2000;
   char stringBuffer[2000];
   while(bytesLeft) {
@@ -103,56 +153,11 @@ void processClient(int clientSock)
       getPath = receiveString(clientSock);
       cout << getPath << endl;
     }
-
-
   } //end while
+}
 
-  }
 
-//SERVER SOCKET CODE
-int main(int argc, char const *argv[])
-{
-  if(argc < 2) {
-    cout << "Error: check your command line argument" << endl;
-    cout << "Usage: ./Server [portnumber]" << endl;
-  return 1;
-  }
 
-  int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if(sock < 0) {
-    cerr << "Error with socket" << endl;
-    exit(-1);
-  }
-
-   unsigned short servPort = atoi(argv[1]);
-
-  struct sockaddr_in servAddr;
-  servAddr.sin_family = AF_INET; // always AF_INET
-  servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  servAddr.sin_port = htons(servPort);
-
-  int status = bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
-  if (status < 0) {
-    cerr << "Error with bind" << endl;
-    exit (-1);
-  }
-
-  status = listen(sock, MAXPENDING);
-  if (status < 0) {
-    cerr << "Error with listen" << endl;
-    exit(-1);
-  }
-
-  while(true){
-    struct sockaddr_in clientAddr;
-    socklen_t addrLen = sizeof(clientAddr);
-    int clientSock = accept(sock, (struct sockaddr *) &clientAddr, &addrLen);
-    if (clientSock < 0) {
-      cerr << "Error with accept" << endl;
-      exit(-1);
-    }
-    processClient(clientSock);
-  }
 
   /*
     int server_fd, client_socket, valread;
@@ -226,7 +231,7 @@ int main(int argc, char const *argv[])
     // printf("Return message sent\n");
     return 0;
     */
-}
+//}
 
 /*
 void processClient(int new_client_socket){

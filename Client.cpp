@@ -17,7 +17,6 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <cstdlib>
-
 #include <aws/core/Aws.h>
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/PutObjectRequest.h>
@@ -47,29 +46,8 @@ char *sendRPC(char* request);
 /*
 ** Client - NameNode Functions?
 */
-void sendString(int sock, string wordSent) {
-  char wordBuffer[2000];
-  strcpy(wordBuffer, wordSent.c_str());
-  int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
-  if (bytesSent != 2000) {
-    cerr << "Error sending " << endl;
-    exit(-1);
-  }
-}
-
-string receiveString(int sock) {
-  int bytesLeft = 2000;
-  char stringBuffer[2000];
-  while(bytesLeft) {
-    int bytesRecv = recv(sock, stringBuffer, bytesLeft, 0);
-    if (bytesRecv < 0) {
-      cout << "Error with receiving " << endl;
-      exit(-1);
-    }
-    bytesLeft = bytesLeft - bytesRecv;
-  }
-  return stringBuffer;
-}
+void sendString(int sock, string wordSent);
+string receiveString(int sock);
 
 /*
 ** Client - DataNode Functions?
@@ -415,7 +393,6 @@ chunk File into multiple blocks
 */
 void chunkFile(string fullFilePath, string chunkName)
 {
-
     ifstream fileStream;
 
     fileStream.open(fullFilePath.c_str(), ios::in | ios::binary);
@@ -504,4 +481,30 @@ void getObject(string s3file, string s3bucket)
       }
   }
   Aws::ShutdownAPI(options);
+}
+
+void sendString(int sock, string wordSent)
+{
+  char wordBuffer[2000];
+  strcpy(wordBuffer, wordSent.c_str());
+  int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
+  if (bytesSent != 2000) {
+    cerr << "Error sending " << endl;
+    exit(-1);
+  }
+}
+
+string receiveString(int sock)
+{
+  int bytesLeft = 2000;
+  char stringBuffer[2000];
+  while(bytesLeft) {
+    int bytesRecv = recv(sock, stringBuffer, bytesLeft, 0);
+    if (bytesRecv < 0) {
+      cout << "Error with receiving " << endl;
+      exit(-1);
+    }
+    bytesLeft = bytesLeft - bytesRecv;
+  }
+  return stringBuffer;
 }
