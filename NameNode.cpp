@@ -26,9 +26,9 @@
 #include <cstring>
 #include <cstdlib>
 #include <stdio.h>
+#include "DirHashMap.cpp"
+#include "NodeHashMap.cpp"
 #define PORT 8080
-//#include "NodeHashMap.cpp"
-//#include "DirHashMap.cpp"
 
 using namespace std;
 
@@ -45,6 +45,49 @@ void processClient(int new_client_socket);
 void sendString(int sock, string wordSent);
 string receiveString(int sock);
 void processClient(int clientSock);
+
+bool mkdir(string name, string path, DirHashMap& dirMap){
+	bool check = false;
+	bool check1 = false;
+	Directory tempDir;
+	tempDir.name = name;
+	tempDir.path = path;
+	check = dirMap.put(path, tempDir);
+	
+	size_t found = path.find_last_of("/\\");
+	if(found != -1){
+		Directory* parent = new Directory();
+		string shortPath = path.substr(0,found);
+		check1 = dirMap.get(shortPath, parent);
+		parent->directories.push_back(tempDir);
+	}
+	if(check)
+		return true;
+	else
+		return false;
+}
+
+bool rmdir(string name, string path, DirHashMap& dirMap){
+	bool check = false;
+	Directory* tempDir = new Directory();
+	check = dirMap.get(path, tempDir);
+	
+	size_t found = path.find_last_of("/\\");
+	if(found != -1){
+		Directory* parent = new Directory();
+		string shortPath = path.substr(0,found);
+		dirMap.get(shortPath, parent);
+		for(int i = 0; i < parent->directories.size(); i++)
+			if(parent->directories[i].name == name)
+				parent->directories.erase(parent->directories.begin()+i);
+	}
+	if(check){
+		dirMap.remove(path);
+		return true;
+	}
+	else
+		return false;
+}
 
 //SERVER SOCKET CODE
 int main(int argc, char const *argv[])
