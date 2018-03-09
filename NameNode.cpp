@@ -145,7 +145,7 @@ void processClient(int clientSock)
     } else if(command == "ls") {
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-    } else if (command == "create") {
+    } else if (command == "create") { //integrate receiveBlock here
       getName = receiveString(clientSock);
       cout << getName << endl;
       getPath = receiveString(clientSock);
@@ -163,45 +163,4 @@ void processClient(int clientSock)
   } //end while
 }
 
-void receiveBlock(int clientSock) //based upon processClient
-{
 
-  long size;
-  string file_name;
-  while(file_name != "exit")
-  {
-    file_name = receiveString(clientSock);
-    cout << "File received: " << getString << endl;
-    size = receiveLong(clientSock);
-    cout << "Size: " << size << endl;
-    string status = receiveBlockHelper(clientSock, getString, size);
-    cout << "Status: " << status << endl;
-  }
- 
-  close(clientSock);
-
-}
-
-string receiveBlockHelper(int sock, string file_name, long file_size) {
- 
-  FILE *write_ptr;
-  write_ptr = fopen(file_name.c_str(),"wb");
-  size_t written;
-  int bytesLeft = file_size;
-  const unsigned BUF_LEN = 2048;
-   unsigned char buffer[BUF_LEN];
-   printf("file should be size %ld", file_size);
-  while(bytesLeft > 0) {
-    int bytesRecv = recv(sock, buffer, BUF_LEN, 0);
-    cout << "got " << bytesRecv << " from client\n";
-    if (bytesRecv <= 0) {
-      cout << "Error with receiving " << endl;
-      exit(-1);
-    }
-    written = fwrite(buffer,1, bytesRecv,write_ptr);
-    bytesLeft = bytesLeft - bytesRecv;//- written;
-    printf("wrote %i to file\n", (int)written);
-  }
-  fclose(write_ptr);
-  return "success writing\n";
-}

@@ -50,7 +50,7 @@ void rmdir(string path, int socket);
 void create(string name, string path, string S3_file, string S3_bucket, int socket);
 void cat(string path, int socket);
 void stat(string name, int socket);
-void sendBlock(int sock, string file_name)
+void sendBlock(int sock, string file_name);
 /*
 ** Client - NameNode Functions?
 */
