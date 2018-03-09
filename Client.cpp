@@ -31,6 +31,13 @@ using namespace std;
 //TODO: man 2 sendfile to chunk and move blocks to server EC2
 const long chunkSize = 67108864;
 
+const int SUCCESS = 0;
+const int FILE_NOT_EXIST = 1;
+const int PATH_NOT_EXIST = 2;
+const int FILE_EXISTS = 3;
+const int DIRECTORY_EXIST = 4;
+const int DIRECTORY_NOT_EMPTY = 5;
+
 /*
 ** Client Functions
 These function help with starting/handling the commands typed in my user
