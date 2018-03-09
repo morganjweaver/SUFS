@@ -100,6 +100,7 @@ int main(int argc, char const *argv[])
   servAddr.sin_port = htons(servPort);
   cout << "Ready to connect!\n";
   status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  cout << "Status code: " << status << endl;
   if(status < 0) {
     cout << "Error with connect" << endl;
     exit(-1);
