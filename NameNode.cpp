@@ -8,6 +8,7 @@
 // Create StoreBlock
 // Create Stat
 // Create Hashtable data structure for file dir
+
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -25,23 +26,21 @@
 #include <cstring>
 #include <cstdlib>
 #include <stdio.h>
-
+#define PORT 8080
 //#include "NodeHashMap.cpp"
 //#include "DirHashMap.cpp"
 
+using namespace std;
+
+//Error messages to send back to client 
 const int SUCCESS = 0;
 const int FILE_NOT_EXIST = 1;
 const int PATH_NOT_EXIST = 2;
 const int FILE_EXISTS = 3;
 const int DIRECTORY_EXIST = 4;
 const int DIRECTORY_NOT_EMPTY = 5;
-
-#define PORT 8080
 const int MAXPENDING = 99;
 
-using namespace std;
-
-//const char* delimiter = '~';
 void processClient(int new_client_socket);
 void sendString(int sock, string wordSent);
 string receiveString(int sock);
@@ -92,6 +91,7 @@ int main(int argc, char const *argv[])
     processClient(clientSock);
   }
 }
+
 /******************************************************************************/
 
 void sendString(int sock, string wordSent)
@@ -120,6 +120,10 @@ string receiveString(int sock)
   return stringBuffer;
 }
 
+/*
+* This function processes the commands received from the client. 
+Will work with the hash tables to update the directory/file lookup table, and ID lookup table
+*/
 void processClient(int clientSock)
 {
   string command;
@@ -130,7 +134,10 @@ void processClient(int clientSock)
   {
     command = receiveString(clientSock);
     cout << command << endl;
+    
     //if command is a write block to file, add recieveBlock
+    
+    //if client exists, close the server 
     if(command == "exit"){
       close(clientSock);
       exit(-1);
@@ -142,25 +149,40 @@ void processClient(int clientSock)
       cout << getName << endl;
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-    } else if(command == "ls") {
+      //call namenode's mkdir function here
+    } 
+    else if(command == "ls") 
+    {
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-    } else if (command == "create") { //integrate receiveBlock here
+      //call namenode's ls function here
+    } 
+    else if (command == "create") 
+    {
       getName = receiveString(clientSock);
       cout << getName << endl;
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-    } else if (command == "stat") {
+      //call namenode's create function here
+    } 
+    else if (command == "stat") 
+    {
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-    } else if (command == "rmdir"){
+      //call namenode's stat function here 
+    } 
+    else if (command == "rmdir")
+    {
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-    } else if (command == "cat"){
+      //call namenode's rmkdir function here
+    } 
+    else if (command == "cat")
+    {
       getPath = receiveString(clientSock);
       cout << getPath << endl;
+      //call namenode's cat function here
     }
+    
   } //end while
 }
-
-
