@@ -91,12 +91,12 @@ int main(int argc, char const *argv[])
     cout << "Error with convert dotted decimal address to int" << endl;
     exit(-1);
   }
-
+  
   struct sockaddr_in servAddr;
   servAddr.sin_family = AF_INET; // always AF_INET
   servAddr.sin_addr.s_addr = servIP;
   servAddr.sin_port = htons(servPort);
-
+  cout << "Ready to connect!\n";
   status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if(status < 0) {
     cout << "Error with connect" << endl;
