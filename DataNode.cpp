@@ -144,10 +144,10 @@ void receiveBlock(int clientSock) //based upon processClient
   while(file_name != "exit")
   {
     file_name = receiveString(clientSock);
-    cout << "File received: " << getString << endl;
+    cout << "File received: " << file_name << endl;
     size = receiveLong(clientSock);
     cout << "Size: " << size << endl;
-    string status = receiveBlockHelper(clientSock, getString, size);
+    string status = receiveBlockHelper(clientSock, file_name, size);
     cout << "Status: " << status << endl;
   }
  
