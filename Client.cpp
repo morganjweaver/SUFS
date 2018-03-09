@@ -82,8 +82,6 @@ int main(int argc, char const *argv[])
   }
   
   char* IPAddr = const_cast<char *>(argv[1]);
-    cout << "Have IP address!!\n";
-
   unsigned short servPort = atoi(argv[2]);
 
   unsigned long servIP;
@@ -92,7 +90,6 @@ int main(int argc, char const *argv[])
     cout << "Error with convert dotted decimal address to int" << endl;
     exit(-1);
   }
-    cout << "Decimal conversion success!\n";
 
   struct sockaddr_in servAddr;
   servAddr.sin_family = AF_INET; // always AF_INET
@@ -105,7 +102,6 @@ int main(int argc, char const *argv[])
     cout << "Error with connect" << endl;
     exit(-1);
   }
-    cout << "Connected!!!\n";
 
   string user_command;
 
