@@ -40,7 +40,7 @@ void rmdir(string path);
 void create(string name, string path, string S3_file, string S3_bucket);
 void cat(string path);
 void stat(string name);
-int sendRPC(char* request);
+char **sendRPC(char* request);
 /*
 ** Client - NameNode Functions?
 */
