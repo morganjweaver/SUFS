@@ -104,6 +104,7 @@ int main(int argc, char const *argv[])
     cout << "Error with connect" << endl;
     exit(-1);
   }
+    cout << "Connected!!!\n";
 
   string user_command;
 
