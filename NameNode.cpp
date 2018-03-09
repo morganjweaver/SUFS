@@ -29,6 +29,13 @@
 //#include "NodeHashMap.cpp"
 //#include "DirHashMap.cpp"
 
+const int SUCCESS = 0;
+const int FILE_NOT_EXIST = 1;
+const int PATH_NOT_EXIST = 2;
+const int FILE_EXISTS = 3;
+const int DIRECTORY_EXIST = 4;
+const int DIRECTORY_NOT_EMPTY = 5;
+
 #define PORT 8080
 const int MAXPENDING = 99;
 
