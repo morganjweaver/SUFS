@@ -432,8 +432,7 @@ void sendBlock(int sock, string file_name){
     long file_size = ftell(readPtr);
     sendLong(sock, file_size);
     sendBlockHelper(sock, file_name);
-    close(readPtr);
-    free(readPtr);
+    fclose(readPtr);
 }
 //C-based: sends a binary file to Server by reading out of directory and calculating size
 void sendBlockHelper(int sock, string file_name) {
@@ -455,7 +454,6 @@ void sendBlockHelper(int sock, string file_name) {
       }
       remaining_to_send = remaining_to_send - (long)bytesSent;
       cout << "sent " << bytesSent << " remain " << remaining_to_send << "\n";
-      close(readPtr);
-      free(readPtr);
+      fclose(readPtr);
     }
 }
