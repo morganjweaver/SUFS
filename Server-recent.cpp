@@ -89,40 +89,22 @@ string receiveString(int sock) {
   return stringBuffer;
 }
 
-void processClient(int clientSock)
+void receiveBlock(int clientSock)
 {
-  //long getNum = receiveLong(clientSock);
-  //string get = receiveString(clientSock);
+
   long size;
-  string getString;
-  while(getString != "exit")
+  string file_name;
+  while(file_name != "exit")
   {
-    getString = receiveString(clientSock);
-    cout << getString << endl;
+    file_name = receiveString(clientSock);
+    cout << "File received: " << getString << endl;
     size = receiveLong(clientSock);
-    cout << size << endl;
+    cout << "Size: " << size << endl;
     string status = receiveBlock(clientSock, getString, size);
-    cout << status << endl;;
+    cout << "Status: " << status << endl;
   }
-  //If string contains "create filename "
-  //
+ 
   close(clientSock);
-/*
-  long messageSize = getNum;
-  int bytesLeft = messageSize;
-  char buffer[messageSize];
-  char *bp = buffer;
-  while (bytesLeft) {
-    int bytesRecv = recv(clientSock, bp, bytesLeft, 0);
-    if (bytesRecv <= 0) {
-      pthread_exit(NULL);
-    }
-    bytesLeft = bytesLeft - bytesRecv;
-    bp = bp + bytesRecv;
-  }
-  string returnString = buffer;
-  cout << returnString << endl;
-*/
 
 }
 

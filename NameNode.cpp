@@ -130,7 +130,7 @@ void processClient(int clientSock)
   {
     command = receiveString(clientSock);
     cout << command << endl;
-
+    //if command is a write block to file, add recieveBlock
     if(command == "exit"){
       close(clientSock);
       exit(-1);
@@ -163,133 +163,45 @@ void processClient(int clientSock)
   } //end while
 }
 
-
-
-
-  /*
-    int server_fd, client_socket, valread;
-    struct sockaddr_in address;
-    int opt = 1;
-    int addrlen = sizeof(address);
-    char buffer[1024] = {0};
-    DirHashMap dirMap;
-    NodeHashMap nodeMap;
-
-
-    // Creating socket file descriptor
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-    {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // Forcefully attaching socket to the port 8080
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
-                                                  &opt, sizeof(opt)))
-    {
-        perror("setsockopt");
-        exit(EXIT_FAILURE);
-    }
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons( PORT );
-
-    // Forcefully attaching socket to the port 8080
-    if (bind(server_fd, (struct sockaddr *)&address,
-                                 sizeof(address))<0)
-    {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-    if (listen(server_fd, 3) < 0)
-    {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
-    while (true)
-        {   struct sockaddr_in clientAddr;
-            socklen_t addrLen = sizeof(clientAddr);
-            clientSock = accept(server_fd,(struct sockaddr *)&clientAddr, &addrLen);
-            if (clientSock < 0)
-                exit(-1);
-    // Communicate with client
-            processClient(client_socket);
-    // Close client
-            close(clientSock);
-        }
-    // if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
-    //                    (socklen_t*)&addrlen))<0)
-    // {
-    //     perror("accept");
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // valread = read( new_socket , buffer, 1024);
-    // printf("%s\n",buffer );
-    // char *result = clientRequestHandler(buffer);
-
-    // send(new_socket, delimiter, strlen(delimiter), 0);
-    // send(new_socket , result , strlen(result) , 0 );  //send back useful info to client based on request
-    // send(new_socket, delimiter, strlen(delimiter), 0); //now cap it with a delimiter
-
-
-    // //send(new_socket , result , strlen(result) , 0 );
-
-    // printf("Return message sent\n");
-    return 0;
-    */
-//}
-
-/*
-void processClient(int new_client_socket){
-
-    char buffer[1024] = {0};
-    char* message = "recieved message!";
-    valread = read( new_socket , buffer, 1024);
-    printf("%s\n",buffer );
-
-    send(new_socket, delimiter, strlen(delimiter), 0);
-    send(new_socket , message , strlen(result) , 0 );  //send back useful info to client based on request
-    send(new_socket, delimiter, strlen(delimiter), 0); //now cap it with a delimiter
-
-}
-*/
-
-//CLIENT SOCKET CODE
-/*int main(int argc, char const *argv[])
+void receiveBlock(int clientSock) //based upon processClient
 {
-    struct sockaddr_in address;
-    int sock = 0, valread;
-    struct sockaddr_in serv_addr;
-    char *hello = "Hello from client";
-    char buffer[1024] = {0};
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        printf("\n Socket creation error \n");
-        return -1;
-    }
 
-    memset(&serv_addr, '0', sizeof(serv_addr));
+  long size;
+  string file_name;
+  while(file_name != "exit")
+  {
+    file_name = receiveString(clientSock);
+    cout << "File received: " << getString << endl;
+    size = receiveLong(clientSock);
+    cout << "Size: " << size << endl;
+    string status = receiveBlockHelper(clientSock, getString, size);
+    cout << "Status: " << status << endl;
+  }
+ 
+  close(clientSock);
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-
-    // Convert IPv4 and IPv6 addresses from text to binary form
-    if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0)
-    {
-        printf("\nInvalid address/ Address not supported \n");
-        return -1;
-    }
-
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-        printf("\nConnection Failed \n");
-        return -1;
-    }
-    send(sock , hello , strlen(hello) , 0 );
-    printf("Hello message sent\n");
-    valread = read( sock , buffer, 1024);
-    printf("%s\n",buffer );
-    return 0;
 }
-*/
+
+string receiveBlockHelper(int sock, string file_name, long file_size) {
+ 
+  FILE *write_ptr;
+  write_ptr = fopen(file_name.c_str(),"wb");
+  size_t written;
+  int bytesLeft = file_size;
+  const unsigned BUF_LEN = 2048;
+   unsigned char buffer[BUF_LEN];
+   printf("file should be size %ld", file_size);
+  while(bytesLeft > 0) {
+    int bytesRecv = recv(sock, buffer, BUF_LEN, 0);
+    cout << "got " << bytesRecv << " from client\n";
+    if (bytesRecv <= 0) {
+      cout << "Error with receiving " << endl;
+      exit(-1);
+    }
+    written = fwrite(buffer,1, bytesRecv,write_ptr);
+    bytesLeft = bytesLeft - bytesRecv;//- written;
+    printf("wrote %i to file\n", (int)written);
+  }
+  fclose(write_ptr);
+  return "success writing\n";
+}

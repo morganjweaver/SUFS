@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <string>
@@ -514,4 +515,38 @@ string receiveString(int sock)
     bytesLeft = bytesLeft - bytesRecv;
   }
   return stringBuffer;
+}
+
+void prepareBlockSend(sock, string file_name){
+
+    sendString(sock, file_name);
+    //now take file size and send over
+    FILE* readPtr;
+    readPtr = fopen(input.c_str(),"rb");
+    fseek(readPtr, 0L, SEEK_END);
+    long file_size = ftell(readPtr);
+    sendLong(sock, file_size);
+    sendBlock(sock, input);
+}
+//sends a binary file to Server by reading out of directory and calculating size
+void sendBlock(int sock, string file_name) {
+  FILE* readPtr;
+  readPtr = fopen(file_name.c_str(),"rb");
+  unsigned char binaryBuffer[2000];
+  fseek(readPtr, 0L, SEEK_END);
+  long file_size = ftell(readPtr);
+  rewind(readPtr);
+
+  long remaining_to_send = file_size;
+
+  while(remaining_to_send > 0){
+      long b_read = fread(binaryBuffer, 1 , sizeof(binaryBuffer),readPtr);
+      int bytesSent = send(sock, (void *) binaryBuffer, b_read, 0);
+      if (bytesSent != b_read) {
+        cerr << "Error sending " << endl;
+        exit(-1);
+      }
+      remaining_to_send = remaining_to_send - (long)bytesSent;
+      cout << "sent " << bytesSent << " remain " << remaining_to_send << "\n";
+    }
 }
