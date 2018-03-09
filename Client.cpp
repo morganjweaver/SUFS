@@ -15,17 +15,8 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
-
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <string>
-#include <cstring>
 #include <cstdlib>
-#include <stdio.h>
-
 #include <aws/core/Aws.h>
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/PutObjectRequest.h>
@@ -39,6 +30,13 @@ using namespace std;
 
 //TODO: man 2 sendfile to chunk and move blocks to server EC2
 const long chunkSize = 67108864;
+
+const int SUCCESS = 0;
+const int FILE_NOT_EXIST = 1;
+const int PATH_NOT_EXIST = 2;
+const int FILE_EXISTS = 3;
+const int DIRECTORY_EXIST = 4;
+const int DIRECTORY_NOT_EMPTY = 5;
 
 /*
 ** Client Functions
@@ -55,29 +53,8 @@ char *sendRPC(char* request);
 /*
 ** Client - NameNode Functions?
 */
-void sendString(int sock, string wordSent) {
-  char wordBuffer[2000];
-  strcpy(wordBuffer, wordSent.c_str());
-  int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
-  if (bytesSent != 2000) {
-    cerr << "Error sending " << endl;
-    exit(-1);
-  }
-}
-
-string receiveString(int sock) {
-  int bytesLeft = 2000;
-  char stringBuffer[2000];
-  while(bytesLeft) {
-    int bytesRecv = recv(sock, stringBuffer, bytesLeft, 0);
-    if (bytesRecv < 0) {
-      cout << "Error with receiving " << endl;
-      exit(-1);
-    }
-    bytesLeft = bytesLeft - bytesRecv;
-  }
-  return stringBuffer;
-}
+void sendString(int sock, string wordSent);
+string receiveString(int sock);
 
 /*
 ** Client - DataNode Functions?
@@ -90,7 +67,7 @@ void getObject(string s3file, string s3bucket);
 int main(int argc, char const *argv[])
 {
   if(argc < 3) {
-    cout << "Error: check your command line argument" << endl;
+    cout << "Error: Missing command line arguments" << endl;
     cout << "Usage: ./Cient [ip_address] [portnumber]" << endl;
     return 1;
   }
@@ -134,7 +111,7 @@ int main(int argc, char const *argv[])
   cout << "ls <path> -- List the contents of the current directory" << endl;
   cout << "create <name> <path> <s3 filename> <s3 bucket name>-- Create a file with S3 Object" << endl;
   cout << "cat <path> -- See the contents of a file" << endl;
-  cout << "stat <name> -- See DataNode & Block Replicas" << endl;
+  cout << "stat <path> -- List the DataNodes that store replicas of each block of a file" << endl;
   cout << "exit -- Exit SUFS" << endl;
   cout << endl;
 
@@ -346,30 +323,6 @@ void mkdir(string name, string path, int socket)
   sendString(socket, "mkdir");
   sendString(socket, name);
   sendString(socket, path);
-
-  /*
-  string filename = name;
-  string abspath = path;
-  const char* request_name = name.c_str();
-  const char* request_path = path.c_str();
-
-  //send the directory name
-  char* handled = sendRPC(const_cast<char*>(request_name));
-  if(handled == 0){
-    cout<<"SUCCESS mkdir function and 0 return of RPC fx" << endl;;
-  } else{
-      cout<<"NO SUCCESS on mkdir fx and RPC fx" << endl;;
-  }
-
-  //send the path to where the directory should be placed
-  handled = sendRPC(const_cast<char*>(request_path));
-  if(handled == 0){
-    cout<<"SUCCESS mkdir function and 0 return of RPC fx" << endl;
-  } else{
-      cout<<"NO SUCCESS on mkdir fx and RPC fx" << endl;
-  }
-*/
-
 }
 
 /*
@@ -382,19 +335,6 @@ void rmdir(string path, int socket)
   cout << "Removed Directory: " << path << endl;
   sendString(socket, "rmdir");
   sendString(socket, path);
-  /*
-  string temp = path;
-  const char* request = temp.c_str();
-
-  char* handled = sendRPC(const_cast<char*>(request));
-  if(handled == 0){
-    cout<<"SUCCESS rmdir function and 0 return of RPC fx" << endl;
-  } else{
-      cout<<"NO SUCCESS on rmdir fx and RPC fx" << endl;
-  }
-*/
-
-
 }
 
 /*
@@ -460,7 +400,6 @@ chunk File into multiple blocks
 */
 void chunkFile(string fullFilePath, string chunkName)
 {
-
     ifstream fileStream;
 
     fileStream.open(fullFilePath.c_str(), ios::in | ios::binary);
@@ -549,4 +488,30 @@ void getObject(string s3file, string s3bucket)
       }
   }
   Aws::ShutdownAPI(options);
+}
+
+void sendString(int sock, string wordSent)
+{
+  char wordBuffer[2000];
+  strcpy(wordBuffer, wordSent.c_str());
+  int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
+  if (bytesSent != 2000) {
+    cerr << "Error sending " << endl;
+    exit(-1);
+  }
+}
+
+string receiveString(int sock)
+{
+  int bytesLeft = 2000;
+  char stringBuffer[2000];
+  while(bytesLeft) {
+    int bytesRecv = recv(sock, stringBuffer, bytesLeft, 0);
+    if (bytesRecv < 0) {
+      cout << "Error with receiving " << endl;
+      exit(-1);
+    }
+    bytesLeft = bytesLeft - bytesRecv;
+  }
+  return stringBuffer;
 }

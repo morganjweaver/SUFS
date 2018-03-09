@@ -3,9 +3,9 @@
 #include <string>
 
 class Block {
-
 public:
-
+  string IP;
+  string chunk_ID;
 }
 
 #endif
