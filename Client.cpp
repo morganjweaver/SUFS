@@ -244,11 +244,13 @@ Provide file name, absolute filepath, S3 Object address
 */
 void create(string name, string path, string S3_file, string S3_bucket, int socket)
 {
+	sendBlock(socket, "sendme.txt");
   cout << "Created File: " << name << endl;
   sendString(socket, "create");
   sendString(socket, S3_file);
   sendString(socket, path);
 
+	
   //socket code here
   //sent to nameNode file creation request
   //nn_create(name, path);
