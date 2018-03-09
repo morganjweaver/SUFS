@@ -8,6 +8,7 @@
 // Create StoreBlock
 // Create Stat
 // Create Hashtable data structure for file dir
+
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -15,111 +16,173 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
-
+#include <iostream>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <string>
+#include <cstring>
+#include <cstdlib>
+#include <stdio.h>
 #define PORT 8080
+//#include "NodeHashMap.cpp"
+//#include "DirHashMap.cpp"
 
 using namespace std;
 
-char* clientRequestHandler(char* request);
+//Error messages to send back to client 
+const int SUCCESS = 0;
+const int FILE_NOT_EXIST = 1;
+const int PATH_NOT_EXIST = 2;
+const int FILE_EXISTS = 3;
+const int DIRECTORY_EXIST = 4;
+const int DIRECTORY_NOT_EMPTY = 5;
+const int MAXPENDING = 99;
+
+void processClient(int new_client_socket);
+void sendString(int sock, string wordSent);
+string receiveString(int sock);
+void processClient(int clientSock);
 
 //SERVER SOCKET CODE
 int main(int argc, char const *argv[])
 {
-    int server_fd, new_socket, valread;
-    struct sockaddr_in address;
-    int opt = 1;
-    int addrlen = sizeof(address);
-    char buffer[1024] = {0};
-    char *hello = "Hello from server";
+  if(argc < 2) {
+    cout << "Error: Missing command line arguments" << endl;
+    cout << "Usage: ./Server [portnumber]" << endl;
+  return 1;
+  }
 
-    // Creating socket file descriptor
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-    {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
-    }
+  int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if(sock < 0) {
+    cerr << "Error with socket" << endl;
+    exit(-1);
+  }
 
-    // Forcefully attaching socket to the port 8080
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
-                                                  &opt, sizeof(opt)))
-    {
-        perror("setsockopt");
-        exit(EXIT_FAILURE);
-    }
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons( PORT );
+   unsigned short servPort = atoi(argv[1]);
 
-    // Forcefully attaching socket to the port 8080
-    if (bind(server_fd, (struct sockaddr *)&address,
-                                 sizeof(address))<0)
-    {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-    if (listen(server_fd, 3) < 0)
-    {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
-                       (socklen_t*)&addrlen))<0)
-    {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
+  struct sockaddr_in servAddr;
+  servAddr.sin_family = AF_INET; // always AF_INET
+  servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  servAddr.sin_port = htons(servPort);
 
-    valread = read( new_socket , buffer, 1024);
-    printf("%s\n",buffer );
-    char *result = clientRequestHandler(buffer);
+  int status = bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  if (status < 0) {
+    cerr << "Error with bind" << endl;
+    exit (-1);
+  }
 
-    //send(new_socket , result , strlen(result) , 0 );
-    printf("Return message sent\n");
-    return 0;
+  status = listen(sock, MAXPENDING);
+  if (status < 0) {
+    cerr << "Error with listen" << endl;
+    exit(-1);
+  }
+
+  while(true){
+    struct sockaddr_in clientAddr;
+    socklen_t addrLen = sizeof(clientAddr);
+    int clientSock = accept(sock, (struct sockaddr *) &clientAddr, &addrLen);
+    if (clientSock < 0) {
+      cerr << "Error with accept" << endl;
+      exit(-1);
+    }
+    processClient(clientSock);
+  }
 }
 
-char* clientRequestHandler(char* request){
+/******************************************************************************/
 
-    char* handler = "handler is handling it";
-    return handler;
-
-}
-
-//CLIENT SOCKET CODE
-/*int main(int argc, char const *argv[])
+void sendString(int sock, string wordSent)
 {
-    struct sockaddr_in address;
-    int sock = 0, valread;
-    struct sockaddr_in serv_addr;
-    char *hello = "Hello from client";
-    char buffer[1024] = {0};
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        printf("\n Socket creation error \n");
-        return -1;
-    }
-
-    memset(&serv_addr, '0', sizeof(serv_addr));
-
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-
-    // Convert IPv4 and IPv6 addresses from text to binary form
-    if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0)
-    {
-        printf("\nInvalid address/ Address not supported \n");
-        return -1;
-    }
-
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-        printf("\nConnection Failed \n");
-        return -1;
-    }
-    send(sock , hello , strlen(hello) , 0 );
-    printf("Hello message sent\n");
-    valread = read( sock , buffer, 1024);
-    printf("%s\n",buffer );
-    return 0;
+  char wordBuffer[2000];
+  strcpy(wordBuffer, wordSent.c_str());
+  int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
+  if (bytesSent != 2000) {
+    cerr << "Error sending " << endl;
+    exit(-1);
+  }
 }
+
+string receiveString(int sock)
+{
+  int bytesLeft = 2000;
+  char stringBuffer[2000];
+  while(bytesLeft) {
+    int bytesRecv = recv(sock, stringBuffer, bytesLeft, 0);
+    if (bytesRecv < 0) {
+      cout << "Error with receiving " << endl;
+      exit(-1);
+    }
+    bytesLeft = bytesLeft - bytesRecv;
+  }
+  return stringBuffer;
+}
+
+/*
+* This function processes the commands received from the client. 
+Will work with the hash tables to update the directory/file lookup table, and ID lookup table
 */
+void processClient(int clientSock)
+{
+  string command;
+  string getName;
+  string getPath;
+
+  while(true)
+  {
+    command = receiveString(clientSock);
+    cout << command << endl;
+    
+    //if command is a write block to file, add recieveBlock
+    
+    //if client exists, close the server 
+    if(command == "exit"){
+      close(clientSock);
+      exit(-1);
+    }
+
+    if(command == "mkdir")
+    {
+      getName = receiveString(clientSock);
+      cout << getName << endl;
+      getPath = receiveString(clientSock);
+      cout << getPath << endl;
+      //call namenode's mkdir function here
+    } 
+    else if(command == "ls") 
+    {
+      getPath = receiveString(clientSock);
+      cout << getPath << endl;
+      //call namenode's ls function here
+    } 
+    else if (command == "create") 
+    {
+      getName = receiveString(clientSock);
+      cout << getName << endl;
+      getPath = receiveString(clientSock);
+      cout << getPath << endl;
+      //call namenode's create function here
+    } 
+    else if (command == "stat") 
+    {
+      getPath = receiveString(clientSock);
+      cout << getPath << endl;
+      //call namenode's stat function here 
+    } 
+    else if (command == "rmdir")
+    {
+      getPath = receiveString(clientSock);
+      cout << getPath << endl;
+      //call namenode's rmkdir function here
+    } 
+    else if (command == "cat")
+    {
+      getPath = receiveString(clientSock);
+      cout << getPath << endl;
+      //call namenode's cat function here
+    }
+    
+  } //end while
+}

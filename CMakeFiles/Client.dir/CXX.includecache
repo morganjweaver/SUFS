@@ -37,6 +37,10 @@ string.h
 -
 arpa/inet.h
 -
+sys/types.h
+-
+cstdlib
+-
 aws/core/Aws.h
 -
 aws/s3/S3Client.h
