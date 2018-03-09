@@ -106,12 +106,12 @@ int main(int argc, char const *argv[])
   cout << endl << endl << endl;
   cout << "Welcome to SUFS!" << endl;
   cout << "Command List: " << endl;
-  cout << "mkdir <name> <abs path> -- Make a directory" << endl;
-  cout << "rmdir <abs path> -- Remove a directory" << endl;
-  cout << "ls <abs path> -- List the contents of the current directory" << endl;
-  cout << "create <name> <abs path> <s3 filename> <s3 bucket name>-- Create a file with S3 Object" << endl;
-  cout << "cat <abs path> -- See the contents of a file" << endl;
-  cout << "stat <abs path> -- See DataNode & Block Replicas" << endl;
+  cout << "mkdir <name> <path> -- Make a directory" << endl;
+  cout << "rmdir <path> -- Remove a directory" << endl;
+  cout << "ls <path> -- List the contents of the current directory" << endl;
+  cout << "create <name> <path> <s3 filename> <s3 bucket name>-- Create a file with S3 Object" << endl;
+  cout << "cat <path> -- See the contents of a file" << endl;
+  cout << "stat <path> -- List the DataNodes that store replicas of each block of a file" << endl;
   cout << "exit -- Exit SUFS" << endl;
   cout << endl;
 
