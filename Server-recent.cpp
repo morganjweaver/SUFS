@@ -10,11 +10,13 @@
 #include <fstream>
 #include <string>
 #include <cstdlib>
-#include <stdio.h>
+//#include <stdio.h>
+#include <cstdio>
 
 using namespace std;
 
 const int MAXPENDING = 99;
+string receiveBlock(int sock, string file_name, long file_size);
 
 void sendLong(int clientSock, long size) {
   size = htonl(size);
@@ -53,25 +55,25 @@ long receiveLong(int clientSock) {
   return hostToInt;
 }
 
-/*
-string receiveString(int clientSock) {
-  long messageSize = receiveLong(clientSock);
-  int bytesLeft = messageSize; // bytes to read
-  char buffer[messageSize];    // initially empty
-  char *bp = buffer;
 
-  while (bytesLeft) {
-    int bytesRecv = recv(clientSock, bp, bytesLeft, 0);
-    if (bytesRecv <= 0) {
-      exit(-1);
-    }
-    bytesLeft = bytesLeft - bytesRecv;
-    bp = bp + bytesRecv;
-  }
-  string returnString = buffer;
-  return returnString;
-}
-*/
+// string receiveString(int clientSock) {
+//   long messageSize = receiveLong(clientSock);
+//   int bytesLeft = messageSize; // bytes to read
+//   char buffer[messageSize];    // initially empty
+//   char *bp = buffer;
+
+//   while (bytesLeft) {
+//     int bytesRecv = recv(clientSock, bp, bytesLeft, 0);
+//     if (bytesRecv <= 0) {
+//       exit(-1);
+//     }
+//     bytesLeft = bytesLeft - bytesRecv;
+//     bp = bp + bytesRecv;
+//   }
+//   string returnString = buffer;
+//   return returnString;
+// }
+
 
 string receiveString(int sock) {
   int bytesLeft = 2000;
@@ -91,12 +93,19 @@ void processClient(int clientSock)
 {
   //long getNum = receiveLong(clientSock);
   //string get = receiveString(clientSock);
+  long size;
   string getString;
   while(getString != "exit")
   {
     getString = receiveString(clientSock);
     cout << getString << endl;
+    size = receiveLong(clientSock);
+    cout << size << endl;
+    string status = receiveBlock(clientSock, getString, size);
+    cout << status << endl;;
   }
+  //If string contains "create filename "
+  //
   close(clientSock);
 /*
   long messageSize = getNum;
@@ -115,6 +124,31 @@ void processClient(int clientSock)
   cout << returnString << endl;
 */
 
+}
+
+string receiveBlock(int sock, string file_name, long file_size) {
+ 
+  FILE *write_ptr;
+  write_ptr = fopen(file_name.c_str(),"wb");
+  size_t written;
+  //long messageSize = receiveLong(sock);
+  int bytesLeft = file_size;
+  const unsigned BUF_LEN = 2048;
+   unsigned char buffer[BUF_LEN];
+   printf("file should be size %ld", file_size);
+  while(bytesLeft > 0) {
+    int bytesRecv = recv(sock, buffer, BUF_LEN, 0);
+    cout << "got " << bytesRecv << " from client\n";
+    if (bytesRecv <= 0) {
+      cout << "Error with receiving " << endl;
+      exit(-1);
+    }
+    written = fwrite(buffer,1, bytesRecv,write_ptr);
+    bytesLeft = bytesLeft - bytesRecv;//- written;
+    printf("wrote %i to file\n", (int)written);
+  }
+  fclose(write_ptr);
+  return "success writing\n";
 }
 
 int main(int argc, const char * argv[])

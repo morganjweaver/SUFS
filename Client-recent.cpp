@@ -7,7 +7,8 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
-#include <stdio.h>
+//#include <stdio.h>
+#include <cstdio>
 
 using namespace std;
 
@@ -19,7 +20,7 @@ void sendLong(int clientSock, long size) {
   }
 }
 
-/*
+
 void sendString(int clientSock, string stringToSend, int size) {
   sendLong(clientSock, size);
   char msg[size];
@@ -34,7 +35,7 @@ void sendString(int clientSock, string stringToSend, int size) {
     exit(-1);
   }
 }
-*/
+
 
 void sendString(int sock, string wordSent) {
   char wordBuffer[2000];
@@ -44,6 +45,27 @@ void sendString(int sock, string wordSent) {
     cerr << "Error sending " << endl;
     exit(-1);
   }
+}
+void sendBlock(int sock, string file_name) {
+  FILE* readPtr;
+  readPtr = fopen(file_name.c_str(),"rb");
+  unsigned char binaryBuffer[2000];
+  fseek(readPtr, 0L, SEEK_END);
+  long file_size = ftell(readPtr);
+  rewind(readPtr);
+
+  long remaining_to_send = file_size;
+
+  while(remaining_to_send > 0){
+      long b_read = fread(binaryBuffer, 1 , sizeof(binaryBuffer),readPtr);
+      int bytesSent = send(sock, (void *) binaryBuffer, b_read, 0);
+      if (bytesSent != b_read) {
+        cerr << "Error sending " << endl;
+        exit(-1);
+      }
+      remaining_to_send = remaining_to_send - (long)bytesSent;
+      cout << "sent " << bytesSent << " remain " << remaining_to_send << "\n";
+    }
 }
 
 long receiveLong(int clientSock) {
@@ -118,12 +140,19 @@ int main(int argc, char const *argv[]) {
   //sendLong(sock, sendNum);
   string input;
 
-
-
   while(input != "exit"){
     cout << ">> ";
     cin >> input;
     sendString(sock, input);
+    //cout<<">> ";
+    //cin >> size;
+    FILE* readPtr;
+    readPtr = fopen(input.c_str(),"rb");
+    fseek(readPtr, 0L, SEEK_END);
+    long file_size = ftell(readPtr);
+    sendLong(sock, file_size);
+    sendBlock(sock, input);
+
   }
 
   close(sock);
