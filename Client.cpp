@@ -242,9 +242,9 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
 {
 	sendBlock(socket, "sendme.txt");
   cout << "Created File: " << name << endl;
-  sendString(socket, "create");
-  sendString(socket, S3_file);
-  sendString(socket, path);
+  //sendString(socket, "create");
+  //sendString(socket, S3_file);
+  //sendString(socket, path);
 
 	
   //socket code here
@@ -257,9 +257,9 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   //get from NameNode some DataNode information
 
   //get the file from S3 into local drive
-  getObject(S3_file, S3_bucket);
+  //getObject(S3_file, S3_bucket);
 
-  chunkFile(S3_file, name);
+  //chunkFile(S3_file, name);
   //get num chunks returned from chunkFile
   /*
   int dnode_id = 1;
