@@ -51,6 +51,8 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
 void cat(string path, int socket);
 void stat(string name, int socket);
 void sendBlock(int sock, string file_name);
+void sendLong(int clientSock, long size);
+void sendBlockHelper(int sock, string file_name);
 /*
 ** Client - NameNode Functions?
 */
@@ -194,98 +196,6 @@ void handleCommand(string cmd, int socket)
 
 }
 
-// char *sendRPC(char* request){
-
-//     struct sockaddr_in address;
-//     int sock = 0, valread;
-//     struct sockaddr_in serv_addr;
-//     char buffer[1024] = {0};
-//     char tmp;
-//     int buflen = 0;
-//     char err[] = "error";
-//     char* errptr = err;
-//     char delimiter[] = "~!!";
-
-//     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-//     {
-//         printf("\n Socket creation error \n");
-//         return errptr;
-//     }
-
-//     memset(&serv_addr, '0', sizeof(serv_addr));
-
-//     serv_addr.sin_family = AF_INET;
-//     serv_addr.sin_port = htons(PORT);
-
-//     //**SERVER IP ADDR GOES HERE; current is CS1**
-//     // Convert IPv4 and IPv6 addresses from text to binary form
-//     if(inet_pton(AF_INET, "172.31.27.136", &serv_addr.sin_addr)<=0)
-//     {
-//         printf("\nInvalid address/ Address not supported \n");
-//         return errptr;
-//     }
-
-//     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-//     {
-//         printf("\nConnection Failed \n");
-//         return errptr;
-//     }
-
-//     printf("INPUT FROM LS: %s\n", request);
-//     send(sock , request , strlen(request) , 0 );
-//     printf("Message sent\n");
-
-//     do
-//     {
-//         valread = read(sock, &tmp, 1);
-//         if (valread < 0) cout<<"ERROR reading from socket";
-
-//         char * comparer;
-//         comparer = (char*) memchr((void*)buffer, '~', 1024 );
-//         if (comparer==NULL){
-//             cout<<"no delim yet, long string\n";
-//              continue;
-//          } else{
-//               cout<<"FOUND DELIM in first buffer read\n";
-//               char *string =(char*) (malloc(1024*sizeof(char)));
-//               strncpy(string,buffer,1024 );
-//               return string;
-//           }
-//          if (tmp != '~')
-//              continue;
-//          buflen = 0;
-//      do{
-
-//         valread = read( sock , &tmp, 1);
-//         if (valread  < 0){
-//          cout<<"ERROR reading from socket" << endl;
-//         }
-//         /*char * comparer;
-//         comparer = (char*) memchr ((void*)&tmp, '~!!', 3 );
-//         if (comparer!=NULL){
-//             cout<<"COMPARISON SUCCESS\n";
-//             break;
-//          }*/
-//         if(tmp=='~')
-//             break;
-//          else{
-
-//          // TODO: if the buffer's capacity has been reached, either reallocate the buffer with a larger size, or fail the operation...
-//         buffer[buflen] = tmp;
-//         ++buflen;
-//         }}
-// 	while(1);
-
-//         char *string =(char*) (malloc(buflen*sizeof(char)));
-//         strncpy(string,buffer, buflen );
-//         return string;
-//         printf("%*.*s\n", buflen, buflen, buffer);
-
-// } while(1);
-// }
-/*
-*******************************************************************************
-*/
 
 /*
 View contents of directory
@@ -297,20 +207,6 @@ void ls(string filepath, int socket)
   cout << "List Current Directory: " << filepath << endl;
   sendString(socket, "ls");
   sendString(socket, filepath);
-
-  /*
-  string temp = filepath;
-  const char* request = temp.c_str();
-  cout << "List Current Directory: " << filepath << endl;
-  char* handled = sendRPC(const_cast<char*>(request));
-  cout<< "Printing output: \n";
-  printf("%s\n",handled);
-  if(strcmp(handled,"error")!=0){
-    cout<<"SUCCESS ls function and 0 return of RPC fx \n";
-  } else{
-      cout<<"NO SUCCESS on ls fx and RPC fx\n";
-  }
-  */
 
 }
 
@@ -516,6 +412,14 @@ string receiveString(int sock)
   }
   return stringBuffer;
 }
+void sendLong(int clientSock, long size) {
+  size = htonl(size);
+  int bytesSent = send(clientSock, (void *) &size, sizeof(long), 0);
+  if(bytesSent != sizeof(long)) {
+    pthread_exit(NULL);
+  }
+}
+
 //C++-based: takes client socket and block file name and 
 //then sends name and size to sendBlockHelper to send
 void sendBlock(int sock, string file_name){
@@ -523,11 +427,11 @@ void sendBlock(int sock, string file_name){
     sendString(sock, file_name);
     //now take file size and send over
     FILE* readPtr;
-    readPtr = fopen(input.c_str(),"rb");
+    readPtr = fopen(file_name.c_str(),"rb");
     fseek(readPtr, 0L, SEEK_END);
     long file_size = ftell(readPtr);
     sendLong(sock, file_size);
-    sendBlockHelper(sock, input);
+    sendBlockHelper(sock, file_name);
 }
 //C-based: sends a binary file to Server by reading out of directory and calculating size
 void sendBlockHelper(int sock, string file_name) {
