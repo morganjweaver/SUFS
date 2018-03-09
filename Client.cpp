@@ -95,9 +95,7 @@ int main(int argc, char const *argv[])
   servAddr.sin_family = AF_INET; // always AF_INET
   servAddr.sin_addr.s_addr = servIP;
   servAddr.sin_port = htons(servPort);
-  cout << "Ready to connect!\n";
   status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
-  cout << "Status code: " << status << endl;
   if(status < 0) {
     cout << "Error with connect" << endl;
     exit(-1);
@@ -434,6 +432,8 @@ void sendBlock(int sock, string file_name){
     long file_size = ftell(readPtr);
     sendLong(sock, file_size);
     sendBlockHelper(sock, file_name);
+    close(readPtr);
+    free(readPtr);
 }
 //C-based: sends a binary file to Server by reading out of directory and calculating size
 void sendBlockHelper(int sock, string file_name) {
@@ -455,5 +455,7 @@ void sendBlockHelper(int sock, string file_name) {
       }
       remaining_to_send = remaining_to_send - (long)bytesSent;
       cout << "sent " << bytesSent << " remain " << remaining_to_send << "\n";
+      close(readPtr);
+      free(readPtr);
     }
 }
