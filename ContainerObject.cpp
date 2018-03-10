@@ -17,7 +17,7 @@ class File : public ContainerObject
 {
   public:  
     float size;
-    vector<block> blocks;
+    vector<string> blocks;
    
 };
 
