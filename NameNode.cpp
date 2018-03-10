@@ -95,7 +95,7 @@ int main(int argc, char const *argv[])
 {
   if(argc < 2) {
     cout << "Error: Missing command line arguments" << endl;
-    cout << "Usage: ./Server [portnumber]" << endl;
+    cout << "Usage: ./NameNode [portnumber]" << endl;
   return 1;
   }
 
