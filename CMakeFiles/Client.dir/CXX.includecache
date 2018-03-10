@@ -11,6 +11,8 @@ iostream
 -
 cstring
 -
+cstdio
+-
 string
 -
 vector
