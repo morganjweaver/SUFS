@@ -26,9 +26,9 @@
 #include <cstring>
 #include <cstdlib>
 #include <stdio.h>
+#include "DirHashMap.cpp"
+#include "NodeHashMap.cpp"
 #define PORT 8080
-//#include "NodeHashMap.cpp"
-//#include "DirHashMap.cpp"
 
 using namespace std;
 
@@ -45,6 +45,49 @@ void processClient(int new_client_socket);
 void sendString(int sock, string wordSent);
 string receiveString(int sock);
 void processClient(int clientSock);
+
+bool mkdir(string name, string path, DirHashMap& dirMap){
+	bool check = false;
+	bool check1 = false;
+	Directory tempDir;
+	tempDir.name = name;
+	tempDir.path = path;
+	check = dirMap.put(path, tempDir);
+	
+	size_t found = path.find_last_of("/\\");
+	if(found != -1){
+		Directory* parent = new Directory();
+		string shortPath = path.substr(0,found);
+		check1 = dirMap.get(shortPath, parent);
+		parent->directories.push_back(tempDir);
+	}
+	if(check)
+		return true;
+	else
+		return false;
+}
+
+bool rmdir(string name, string path, DirHashMap& dirMap){
+	bool check = false;
+	Directory* tempDir = new Directory();
+	check = dirMap.get(path, tempDir);
+	
+	size_t found = path.find_last_of("/\\");
+	if(found != -1){
+		Directory* parent = new Directory();
+		string shortPath = path.substr(0,found);
+		dirMap.get(shortPath, parent);
+		for(int i = 0; i < parent->directories.size(); i++)
+			if(parent->directories[i].name == name)
+				parent->directories.erase(parent->directories.begin()+i);
+	}
+	if(check){
+		dirMap.remove(path);
+		return true;
+	}
+	else
+		return false;
+}
 
 //SERVER SOCKET CODE
 int main(int argc, char const *argv[])
@@ -67,6 +110,8 @@ int main(int argc, char const *argv[])
   servAddr.sin_family = AF_INET; // always AF_INET
   servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
   servAddr.sin_port = htons(servPort);
+  cout << "In Address sin_port: " << servAddr.sin_addr << endl;
+  cout << "In Address  servAddr.sin_addr.s_addr" << servAddr.sin_addr.s_addr << endl;
 
   int status = bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if (status < 0) {
@@ -119,7 +164,14 @@ string receiveString(int sock)
   }
   return stringBuffer;
 }
+//add heartbeat information to DataNode:block hashtable
 
+void processHeartbeat(string heartbeat_data){
+    //if put attempt returns false, remove the entry and try again
+  string id = 
+
+
+}
 /*
 * This function processes the commands received from the client. 
 Will work with the hash tables to update the directory/file lookup table, and ID lookup table
@@ -137,12 +189,15 @@ void processClient(int clientSock)
     
     //if command is a write block to file, add recieveBlock
     
-    //if client exists, close the server 
+    //if client exits, close the server 
     if(command == "exit"){
       close(clientSock);
       exit(-1);
     }
-
+    if(command == "heartbeat"){
+      string heartbeat_info = receiveString(clientSock);
+      processHeartbeat(heartbeat_info);
+    }
     if(command == "mkdir")
     {
       getName = receiveString(clientSock);
