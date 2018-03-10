@@ -8,9 +8,9 @@ const int TABLE_SIZE = 128;
 
 class DirHashMap {
 	private:
-		DirHashEntry** table;
 		hash<string> hashfn;
 	public:
+		DirHashEntry** table;
 		DirHashMap() {
 			table = new DirHashEntry*[TABLE_SIZE];
 			for (int i = 0; i < TABLE_SIZE; i++)
@@ -29,11 +29,14 @@ class DirHashMap {
 			}
 		}
 
-		bool put(string key, Directory value) {
+		bool put(string key, ContainerObject value) {
 			size_t keyHash = hashfn(key) % TABLE_SIZE;
 			while (table[keyHash] != NULL && table[keyHash]->getKey() != key)
 				keyHash = (keyHash + 1) % TABLE_SIZE;
 			if (table[keyHash] != NULL){
+				table[keyHash] = NULL;
+				delete table[keyHash];
+				table[keyHash] = new DirHashEntry(key, value);
 				return false;
 			}
 			table[keyHash] = new DirHashEntry(key, value);
