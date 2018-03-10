@@ -6,37 +6,29 @@
 #include <iterator>
 #include <stdio.h>
 #include <fstream>
-using namespace std;
-
-//TODO: 
-// Create listener for incoming requests
-// Create handler for incoming requests from listener
-
-// Create update function to send dir info to NameNode
-// Create DeleteBlock
-// Create StoreBlock
-// 
+#include <sys/time.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
-#define PORT 8080
-#define MAXBUF 32
+#include <cstdio>
 const int MAXPENDING = 99;
+
+using namespace std;
 
 //SERVER SOCKET CODE:
 void receiveBlock(int clientSock);
 string receiveBlockHelper(int sock, string file_name, long file_size);
 string receiveString(int sock);
 long receiveLong(int clientSock);
-
+vector<string> blockNames;
 
 int main(int argc, char const *argv[])
 {
   if(argc < 2) {
     cout << "Error: Missing command line arguments" << endl;
-    cout << "Usage: ./Server [portnumber]" << endl;
+    cout << "Usage: ./DataNode [portnumber]" << endl;
   return 1;
   }
 
@@ -46,7 +38,7 @@ int main(int argc, char const *argv[])
     exit(-1);
   }
 
-   unsigned short servPort = atoi(argv[1]);
+  unsigned short servPort = atoi(argv[1]);
 
   struct sockaddr_in servAddr;
   servAddr.sin_family = AF_INET; // always AF_INET
@@ -66,6 +58,15 @@ int main(int argc, char const *argv[])
   }
 
   while(true){
+    
+    //heartbeat is non-blocking here:
+    // timeval timeout;
+    // timeout.tv_sec = 10;
+    // timeout.tv_usec = 0;
+    // int ret = select(maxfdp1, &rset, &wset, NULL, &timeout);
+    // if( ret == 0) // timed out
+    //     cout << "heartbeat!"
+
     struct sockaddr_in clientAddr;
     socklen_t addrLen = sizeof(clientAddr);
     int clientSock = accept(sock, (struct sockaddr *) &clientAddr, &addrLen);
@@ -97,7 +98,8 @@ void receiveBlock(int clientSock) //based upon processClient
 }
 
 string receiveBlockHelper(int sock, string file_name, long file_size) {
- 
+  
+  blockNames.push_back(file_name);
   FILE *write_ptr;
   write_ptr = fopen(file_name.c_str(),"wb");
   size_t written;
@@ -118,6 +120,31 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
   }
   fclose(write_ptr);
   return "success writing\n";
+}
+
+void sendString(int sock, string wordSent)
+{
+  char wordBuffer[2000];
+  strcpy(wordBuffer, wordSent.c_str());
+  int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
+  if (bytesSent != 2000) {
+    cerr << "Error sending " << endl;
+    exit(-1);
+  }
+}
+
+void sendHeartbeat(int sock){
+//sends a single string list of blocks to NameNode
+  sendString(sock, "heartbeat");
+  string filenames = "";
+  
+  for (string block : blockNames){
+    filenames.append(block);
+    filenames.append(" ");
+  } //now have string for easy sending
+  
+  sendString(sock, filenames);
+
 }
 
 string receiveString(int sock) {

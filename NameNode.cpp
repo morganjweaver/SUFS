@@ -23,6 +23,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string>
+#include <sstream>
 #include <cstring>
 #include <cstdlib>
 #include <stdio.h>
@@ -45,7 +46,8 @@ const int MAXPENDING = 99;
 void processClient(int new_client_socket);
 void sendString(int sock, string wordSent);
 string receiveString(int sock);
-void processClient(int clientSock);
+void processClient(int clientSock, string clientIP);
+void processHeartbeat(string nodeIPaddr, string heartbeat_data);
 
 bool mkdir(string name, string path, DirHashMap& dirMap){
 	bool check = false;
@@ -196,10 +198,13 @@ void processHeartbeat(string nodeIPaddr, string heartbeat_data){
   while(s>> fileName)
     blockFileNames.push_back(fileName);
   
-  if(HASHMAP.put(nodeIPaddr, blockFileNames) == false){
-    cout << "failed to put addresses" << endl;
-    exit(-1);
-  }
+  // Now we have a vector of block file IDs and the IP addr of the DataNode that holds them
+  // Add global hashmap fof block-->vector<string file> table here!!
+
+  // if(HASHMAP.put(nodeIPaddr, blockFileNames) == false){
+  //   cout << "failed to put addresses" << endl;
+  //   exit(-1);
+  // }
 
 }
 /*
@@ -225,8 +230,8 @@ void processClient(int clientSock, string clientIP)
       exit(-1);
     }
     if(command == "heartbeat"){
-      string heartbeat_info = receiveString(clientSock);
-      processHeartbeat(heartbeat_info, clientIP);
+      string blocks = receiveString(clientSock);
+      processHeartbeat(blocks, clientIP);
     }
     if(command == "mkdir")
     {
