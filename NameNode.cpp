@@ -110,8 +110,6 @@ int main(int argc, char const *argv[])
   servAddr.sin_family = AF_INET; // always AF_INET
   servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
   servAddr.sin_port = htons(servPort);
-  cout << "In Address sin_port: " << servAddr.sin_addr << endl;
-  cout << "In Address  servAddr.sin_addr.s_addr" << servAddr.sin_addr.s_addr << endl;
 
   int status = bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if (status < 0) {
@@ -133,7 +131,28 @@ int main(int argc, char const *argv[])
       cerr << "Error with accept" << endl;
       exit(-1);
     }
-    processClient(clientSock);
+
+    //Grabs client IP address for DataNode ID
+    socklen_t len;
+    struct sockaddr_storage addr;
+    char ipstr[INET6_ADDRSTRLEN];
+      int port;
+
+    len = sizeof addr;
+    getpeername(clientSock, (struct sockaddr*)&addr, &len);
+
+    // deal with both IPv4 and IPv6:
+    if (addr.ss_family == AF_INET) {
+        struct sockaddr_in *clientSock = (struct sockaddr_in *)&addr;
+        port = ntohs(clientSock->sin_port);
+        inet_ntop(AF_INET, &clientSock->sin_addr, ipstr, sizeof ipstr);
+    } else { // AF_INET6
+        struct sockaddr_in6 *clientSock = (struct sockaddr_in6 *)&addr;
+        port = ntohs(clientSock->sin6_port);
+        inet_ntop(AF_INET6, &clientSock->sin6_addr, ipstr, sizeof ipstr);
+  }
+
+    processClient(clientSock, ipstr);
   }
 }
 
@@ -166,17 +185,27 @@ string receiveString(int sock)
 }
 //add heartbeat information to DataNode:block hashtable
 
-void processHeartbeat(string heartbeat_data){
+void processHeartbeat(string nodeIPaddr, string heartbeat_data){
     //if put attempt returns false, remove the entry and try again
-  string id = 
-
+  
+  //DATA_NODE_HASHMAP_HERE
+  vector<string> blockFileNames;
+  string fileName;
+  stringstream s (heartbeat_data);
+  while(s>> fileName)
+    blockFileNames.push_back(fileName);
+  
+  if(HASHMAP.put(nodeIPaddr, blockFileNames) == false){
+    cout << "failed to put addresses" << endl;
+    exit(-1);
+  }
 
 }
 /*
 * This function processes the commands received from the client. 
 Will work with the hash tables to update the directory/file lookup table, and ID lookup table
 */
-void processClient(int clientSock)
+void processClient(int clientSock, string clientIP)
 {
   string command;
   string getName;
@@ -196,7 +225,7 @@ void processClient(int clientSock)
     }
     if(command == "heartbeat"){
       string heartbeat_info = receiveString(clientSock);
-      processHeartbeat(heartbeat_info);
+      processHeartbeat(heartbeat_info, clientIP);
     }
     if(command == "mkdir")
     {
