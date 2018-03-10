@@ -230,7 +230,10 @@ void processClient(int clientSock, string clientIP)
   string command;
   string getName;
   string getPath;
-
+  DirHashMap dirMap;
+  NodeHashMap nodeMap;
+  vector<string> lsReturn;
+  bool check = false;
   while(true)
   {
     command = receiveString(clientSock);
@@ -253,13 +256,14 @@ void processClient(int clientSock, string clientIP)
       cout << getName << endl;
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-      //call namenode's mkdir function here
+      check = mkdir(getName, getPath, dirMap);
+      cout << check << endl;
     } 
     else if(command == "ls") 
     {
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-      //call namenode's ls function here
+      lsReturn = ls(getPath, dirMap);
     } 
     else if (command == "create") 
     {
@@ -277,9 +281,12 @@ void processClient(int clientSock, string clientIP)
     } 
     else if (command == "rmdir")
     {
+      getName = receiveString(clientSock);
+      cout << getName << endl;
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-      //call namenode's rmkdir function here
+      check = rmdir(getName, getPath, dirMap);
+      cout << check << endl;
     } 
     else if (command == "cat")
     {
