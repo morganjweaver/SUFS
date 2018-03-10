@@ -128,7 +128,7 @@ int main(int argc, char const *argv[])
   servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
   servAddr.sin_port = htons(servPort);
 
-  int status = bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  int status = ::bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if (status < 0) {
     cerr << "Error with bind" << endl;
     exit (-1);

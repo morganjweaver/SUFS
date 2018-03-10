@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <cstdio>
+#include <sys/types.h>
 const int MAXPENDING = 99;
 
 using namespace std;
@@ -44,11 +45,11 @@ int main(int argc, char const *argv[])
   servAddr.sin_family = AF_INET; // always AF_INET
   servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
   servAddr.sin_port = htons(servPort);
-
-  int status = bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  int status = ::bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if (status < 0) {
     cerr << "Error with bind" << endl;
     exit (-1);
+
   }
 
   status = listen(sock, MAXPENDING);
@@ -119,7 +120,7 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
     printf("wrote %i to file\n", (int)written);
   }
   fclose(write_ptr);
-  close(sock);
+  //close(sock);
   return "success writing\n";
 }
 
