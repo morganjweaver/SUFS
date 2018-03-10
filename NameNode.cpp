@@ -51,18 +51,20 @@ void processHeartbeat(string nodeIPaddr, string heartbeat_data);
 
 bool mkdir(string name, string path, DirHashMap& dirMap){
 	bool check = false;
-	bool check1 = false;
-	Directory tempDir;
-	tempDir.name = name;
-	tempDir.path = path;
+	ContainerObject tempDir;
+	tempDir.dirName = name;
+	tempDir.dirPath = path;
 	check = dirMap.put(path, tempDir);
 	
 	size_t found = path.find_last_of("/\\");
 	if(found != -1){
-		Directory* parent = new Directory();
+		ContainerObject* parent = new ContainerObject();
 		string shortPath = path.substr(0,found);
-		check1 = dirMap.get(shortPath, parent);
+		dirMap.get(shortPath, parent);
 		parent->directories.push_back(tempDir);
+		dirMap.put(shortPath, *parent);
+		ContainerObject* test = new ContainerObject();
+		dirMap.get(shortPath, test);
 	}
 	if(check)
 		return true;
@@ -72,17 +74,18 @@ bool mkdir(string name, string path, DirHashMap& dirMap){
 
 bool rmdir(string name, string path, DirHashMap& dirMap){
 	bool check = false;
-	Directory* tempDir = new Directory();
+	ContainerObject* tempDir = new ContainerObject();
 	check = dirMap.get(path, tempDir);
 	
 	size_t found = path.find_last_of("/\\");
 	if(found != -1){
-		Directory* parent = new Directory();
+		ContainerObject* parent = new ContainerObject();
 		string shortPath = path.substr(0,found);
 		dirMap.get(shortPath, parent);
 		for(int i = 0; i < parent->directories.size(); i++)
-			if(parent->directories[i].name == name)
+			if(parent->directories[i].dirName == name)
 				parent->directories.erase(parent->directories.begin()+i);
+		dirMap.put(shortPath, *parent);
 	}
 	if(check){
 		dirMap.remove(path);
@@ -90,6 +93,17 @@ bool rmdir(string name, string path, DirHashMap& dirMap){
 	}
 	else
 		return false;
+}
+
+vector<string> ls(string path, DirHashMap& dirMap){
+	vector<string> returnList;
+	ContainerObject* tempDir = new ContainerObject();
+	dirMap.get(path, tempDir);
+	for(int i = 0; i < tempDir->directories.size(); i++)
+		returnList.push_back(tempDir->directories[i].dirName);
+	for(int i = 0; i < tempDir->files.size(); i++)
+		returnList.push_back(tempDir->files[i].fileName);
+	return returnList;
 }
 
 //SERVER SOCKET CODE
@@ -216,7 +230,10 @@ void processClient(int clientSock, string clientIP)
   string command;
   string getName;
   string getPath;
-
+  DirHashMap dirMap;
+  NodeHashMap nodeMap;
+  vector<string> lsReturn;
+  bool check = false;
   while(true)
   {
     command = receiveString(clientSock);
@@ -239,13 +256,14 @@ void processClient(int clientSock, string clientIP)
       cout << getName << endl;
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-      //call namenode's mkdir function here
+      check = mkdir(getName, getPath, dirMap);
+      cout << check << endl;
     } 
     else if(command == "ls") 
     {
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-      //call namenode's ls function here
+      lsReturn = ls(getPath, dirMap);
     } 
     else if (command == "create") 
     {
@@ -263,9 +281,12 @@ void processClient(int clientSock, string clientIP)
     } 
     else if (command == "rmdir")
     {
+      getName = receiveString(clientSock);
+      cout << getName << endl;
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-      //call namenode's rmkdir function here
+      check = rmdir(getName, getPath, dirMap);
+      cout << check << endl;
     } 
     else if (command == "cat")
     {
