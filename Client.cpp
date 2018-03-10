@@ -53,7 +53,7 @@ void sendBlockHelper(int sock, string file_name);
 void sendString(int sock, string wordSent);
 string receiveString(int sock);
 long receiveLong(int clientSock);
-void chunkFile(string fullFilePath, string chunkName);
+int chunkFile(string fullFilePath, string chunkName);
 void getObject(string s3file, string s3bucket);
 
 int main(int argc, char const *argv[])
@@ -285,6 +285,18 @@ Provide file name, absolute filepath, S3 Object address
 void create(string name, string path, string S3_file, string S3_bucket, int socket)
 {
   sendBlock(socket, name);
+  /*
+  getObject(S3_file, S3_bucket);
+  int numChunks = chunkFile(S3_file, name);
+  cout << numChunks << endl;
+
+  cin.ignore();
+  
+  for(int i = 1; i <= numChunks; i++){
+    string chunkFileName = name + '.' + to_string(i);
+    sendBlock(socket, chunkFileName);
+  }
+  */
   cout << "Created File: " << name << endl;
   
   //sendString(socket, "create");
@@ -360,7 +372,7 @@ void stat(string name, int socket)
 /*
 chunk File into multiple blocks
 */
-void chunkFile(string fullFilePath, string chunkName)
+int chunkFile(string fullFilePath, string chunkName)
 {
     ifstream fileStream;
     fileStream.open(fullFilePath.c_str(), ios::in | ios::binary);
@@ -403,8 +415,10 @@ void chunkFile(string fullFilePath, string chunkName)
         // Close input file stream.
         fileStream.close();
         cout << "Chunking complete! " << counter - 1 << " files created." << endl;
+	return (counter - 1);
     }
     else { cout << "Error opening file!" << endl; }
+    return 0;
 }
 
 /*
