@@ -119,6 +119,7 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
     printf("wrote %i to file\n", (int)written);
   }
   fclose(write_ptr);
+  close(sock);
   return "success writing\n";
 }
 
