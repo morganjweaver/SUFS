@@ -222,17 +222,21 @@ void mkdir(string name, string path, int socket)
   sendString(socket, "mkdir");
   sendString(socket, name);
   sendString(socket, path);
-  
+  cout << "Successfully made directory" << name << endl;
+  /*
   string tempPath = path;
   if(tempPath[tempPath.size()-1] != "/"){
     tempPath = tempPath + "/";
   }
+  */
 
+  /*
   long response; //=receiveLong(socket);
   if(response == 1)
     cout << "Successfully made Directory: " << tempPath + name << endl; 
   else
     cout << "Failed to make directory" << endl;
+  */
 
   /* UNCOMMENT FOR ERROR CHECKING INTEGERS FROM NAMENODE IS IMPLEMENTED
   if(response == SUCCESS){
