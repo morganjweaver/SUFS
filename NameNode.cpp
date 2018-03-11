@@ -33,7 +33,7 @@
 
 using namespace std;
 
-//Error messages to send back to client 
+//Error messages to send back to client
 const int SUCCESS = 0;
 const int FILE_NOT_EXIST = 1;
 const int PATH_NOT_EXIST = 2;
@@ -49,62 +49,9 @@ string receiveString(int sock);
 void processClient(int clientSock, string clientIP);
 void processHeartbeat(string nodeIPaddr, string heartbeat_data);
 
-bool mkdir(string name, string path, DirHashMap& dirMap){
-	bool check = false;
-	ContainerObject tempDir;
-	tempDir.dirName = name;
-	tempDir.dirPath = path;
-	check = dirMap.put(path, tempDir);
-	
-	size_t found = path.find_last_of("/\\");
-	if(found != -1){
-		ContainerObject* parent = new ContainerObject();
-		string shortPath = path.substr(0,found);
-		dirMap.get(shortPath, parent);
-		parent->directories.push_back(tempDir);
-		dirMap.put(shortPath, *parent);
-		ContainerObject* test = new ContainerObject();
-		dirMap.get(shortPath, test);
-	}
-	if(check)
-		return true;
-	else
-		return false;
-}
-
-bool rmdir(string name, string path, DirHashMap& dirMap){
-	bool check = false;
-	ContainerObject* tempDir = new ContainerObject();
-	check = dirMap.get(path, tempDir);
-	
-	size_t found = path.find_last_of("/\\");
-	if(found != -1){
-		ContainerObject* parent = new ContainerObject();
-		string shortPath = path.substr(0,found);
-		dirMap.get(shortPath, parent);
-		for(int i = 0; i < parent->directories.size(); i++)
-			if(parent->directories[i].dirName == name)
-				parent->directories.erase(parent->directories.begin()+i);
-		dirMap.put(shortPath, *parent);
-	}
-	if(check){
-		dirMap.remove(path);
-		return true;
-	}
-	else
-		return false;
-}
-
-vector<string> ls(string path, DirHashMap& dirMap){
-	vector<string> returnList;
-	ContainerObject* tempDir = new ContainerObject();
-	dirMap.get(path, tempDir);
-	for(int i = 0; i < tempDir->directories.size(); i++)
-		returnList.push_back(tempDir->directories[i].dirName);
-	for(int i = 0; i < tempDir->files.size(); i++)
-		returnList.push_back(tempDir->files[i].fileName);
-	return returnList;
-}
+bool mkdir(string name, string path, DirHashMap& dirMap);
+bool rmdir(string name, string path, DirHashMap& dirMap);
+vector<string> ls(string path, DirHashMap& dirMap);
 
 //SERVER SOCKET CODE
 int main(int argc, char const *argv[])
@@ -174,6 +121,14 @@ int main(int argc, char const *argv[])
 }
 
 /******************************************************************************/
+void sendLong(int clientSock, long size)
+{
+  size = htonl(size);
+  int bytesSent = send(clientSock, (void *) &size, sizeof(long), 0);
+  if(bytesSent != sizeof(long)) {
+    pthread_exit(NULL);
+  }
+}
 
 void sendString(int sock, string wordSent)
 {
@@ -204,14 +159,14 @@ string receiveString(int sock)
 
 void processHeartbeat(string nodeIPaddr, string heartbeat_data){
     //if put attempt returns false, remove the entry and try again
-  
+
   //DATA_NODE_HASHMAP_HERE
   vector<string> blockFileNames;
   string fileName;
   stringstream s (heartbeat_data);
   while(s>> fileName)
     blockFileNames.push_back(fileName);
-  
+
   // Now we have a vector of block file IDs and the IP addr of the DataNode that holds them
   // Add global hashmap fof block-->vector<string file> table here!!
 
@@ -222,7 +177,7 @@ void processHeartbeat(string nodeIPaddr, string heartbeat_data){
 
 }
 /*
-* This function processes the commands received from the client. 
+* This function processes the commands received from the client.
 Will work with the hash tables to update the directory/file lookup table, and ID lookup table
 */
 void processClient(int clientSock, string clientIP)
@@ -238,18 +193,20 @@ void processClient(int clientSock, string clientIP)
   {
     command = receiveString(clientSock);
     cout << command << endl;
-    
+
     //if command is a write block to file, add recieveBlock
-    
-    //if client exits, close the server 
+
+    //if client exits, close the server
     if(command == "exit"){
       close(clientSock);
       exit(-1);
     }
+
     if(command == "heartbeat"){
       string blocks = receiveString(clientSock);
       processHeartbeat(blocks, clientIP);
     }
+
     if(command == "mkdir")
     {
       getName = receiveString(clientSock);
@@ -257,43 +214,137 @@ void processClient(int clientSock, string clientIP)
       getPath = receiveString(clientSock);
       cout << getPath << endl;
       check = mkdir(getName, getPath, dirMap);
-      cout << check << endl;
-    } 
-    else if(command == "ls") 
+			sendLong(clientSock, check);
+			if(check == 1)
+				cout << "Success" << endl;
+			else
+				cout << "Error" << endl;
+      //cout << check << endl;
+
+			cout << endl;
+    }
+    else if(command == "ls")
     {
       getPath = receiveString(clientSock);
       cout << getPath << endl;
       lsReturn = ls(getPath, dirMap);
-    } 
-    else if (command == "create") 
+
+			if(lsReturn.size() == 0){
+				cout << "Error" << endl;
+			}
+
+			for(int i = 0; i < lsReturn.size(); i++){
+				cout << lsReturn[i] << endl;
+			}
+
+      sendLong(clientSock, lsReturn.size());
+
+      for(int i = 0; i < lsReturn.size(); i++){
+        sendString(clientSock, lsReturn[i]);
+      }
+
+			cout << endl;
+    }
+    else if (command == "create")
     {
       getName = receiveString(clientSock);
       cout << getName << endl;
       getPath = receiveString(clientSock);
       cout << getPath << endl;
       //call namenode's create function here
-    } 
-    else if (command == "stat") 
+			cout << endl;
+    }
+    else if (command == "stat")
     {
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-      //call namenode's stat function here 
-    } 
+      //call namenode's stat function here
+			cout << endl;
+    }
     else if (command == "rmdir")
     {
       getName = receiveString(clientSock);
-      cout << getName << endl;
       getPath = receiveString(clientSock);
+
+      cout << getName << endl;
       cout << getPath << endl;
+
       check = rmdir(getName, getPath, dirMap);
-      cout << check << endl;
-    } 
+			sendLong(clientSock, check);
+			if(check == 1)
+				cout << "Success" << endl;
+			else
+				cout << "Error" << endl;
+      //cout << check << endl;
+			cout << endl;
+    }
     else if (command == "cat")
     {
       getPath = receiveString(clientSock);
       cout << getPath << endl;
       //call namenode's cat function here
+			cout << endl;
     }
-    
+
   } //end while
+}
+
+bool mkdir(string name, string path, DirHashMap& dirMap){
+	bool check = false;
+	ContainerObject tempDir;
+	tempDir.dirName = name;
+	tempDir.dirPath = path;
+	check = dirMap.put(path, tempDir);
+
+	size_t found = path.find_last_of("/\\");
+	if(found != -1){
+		ContainerObject* parent = new ContainerObject();
+		string shortPath = path.substr(0,found);
+		dirMap.get(shortPath, parent);
+		parent->directories.push_back(tempDir);
+		dirMap.put(shortPath, *parent);
+		ContainerObject* test = new ContainerObject();
+		dirMap.get(shortPath, test);
+	}
+
+	if(check)
+		return true;
+	else
+		return false;
+}
+
+bool rmdir(string name, string path, DirHashMap& dirMap){
+	bool check = false;
+	ContainerObject* tempDir = new ContainerObject();
+	check = dirMap.get(path, tempDir);
+
+	size_t found = path.find_last_of("/\\");
+	if(found != -1){
+		ContainerObject* parent = new ContainerObject();
+		string shortPath = path.substr(0,found);
+		dirMap.get(shortPath, parent);
+		for(int i = 0; i < parent->directories.size(); i++)
+			if(parent->directories[i].dirName == name)
+				parent->directories.erase(parent->directories.begin()+i);
+		dirMap.put(shortPath, *parent);
+	}
+  
+	if(check){
+		dirMap.remove(path);
+		return true;
+	}
+	else
+		return false;
+}
+
+vector<string> ls(string path, DirHashMap& dirMap)
+{
+	vector<string> returnList;
+	ContainerObject* tempDir = new ContainerObject();
+	dirMap.get(path, tempDir);
+	for(int i = 0; i < tempDir->directories.size(); i++)
+		returnList.push_back(tempDir->directories[i].dirName);
+	for(int i = 0; i < tempDir->files.size(); i++)
+		returnList.push_back(tempDir->files[i].fileName);
+	return returnList;
 }

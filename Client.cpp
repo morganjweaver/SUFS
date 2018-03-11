@@ -43,7 +43,7 @@ const int DIRECTORY_NOT_EXIST = 6;
 void handleCommand(string cmd, int socket);
 void ls(string filepath, int socket);
 void mkdir(string name, string path, int socket);
-void rmdir(string path, int socket);
+void rmdir(string name, string path, int socket);
 void create(string name, string path, string S3_file, string S3_bucket, int socket);
 void cat(string path, int socket);
 void stat(string name, int socket);
@@ -69,7 +69,7 @@ int main(int argc, char const *argv[])
     cout << "Error with socket" << endl;
     exit(-1);
   }
-  
+
   char* IPAddr = const_cast<char *>(argv[1]);
   unsigned short servPort = atoi(argv[2]);
 
@@ -97,7 +97,7 @@ int main(int argc, char const *argv[])
   cout << "Welcome to SUFS!" << endl;
   cout << "Command List: " << endl;
   cout << "mkdir <name> <path> -- Make a directory" << endl;
-  cout << "rmdir <path> -- Remove a directory" << endl;
+  cout << "rmdir <name> <path> -- Remove a directory" << endl;
   cout << "ls <path> -- List the contents of the current directory" << endl;
   cout << "create <name> <path> <s3 filename> <s3 bucket name>-- Create a file with S3 Object" << endl;
   cout << "cat <path> -- See the contents of a file" << endl;
@@ -153,11 +153,11 @@ void handleCommand(string cmd, int socket)
       mkdir(input[1], input[2], socket);
     }
   } else if (input[0] == "rmdir") {
-    if(input.size() != 2){
+    if(input.size() != 3){
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      rmdir(input[1], socket);
+      rmdir(input[1], input[2], socket);
     }
   } else if (input[0] == "create") {
     if(input.size() != 5){
@@ -193,15 +193,28 @@ void ls(string filepath, int socket)
   //cout << "List Current Directory: " << filepath << endl;
   sendString(socket, "ls");
   sendString(socket, filepath);
-  
+
+  int numItems = receiveLong(socket);
+
+  if(numItems == 0){
+    cout << "Error" << endl;
+    return;
+  }
+
+  cout << "Listing current directory \"" << filepath << "\"" << endl;
+  for(int i = 0; i < numItems; i++){
+    string getItem = receiveString(socket);
+    cout << "-" << getItem << endl;
+  }
+
   //after sending the name and the path
   //and the namenode has determined that the mkdir was successful
   //mkdir should wait to receive a long from the namenode, say X
   //then it waits for X amount of string receives
   //load into vector
   //iterate through and print out the vector
- 
-  /* UNCOMMENT THIS FOR THE ERROR CHECKING MESSAGES 
+
+  /* UNCOMMENT THIS FOR THE ERROR CHECKING MESSAGES
   long response = receiveLong(socket);
   if(response == SUCCESS){
     cout << "Listing current directory: " << filepath << endl;
@@ -222,7 +235,14 @@ void mkdir(string name, string path, int socket)
   sendString(socket, "mkdir");
   sendString(socket, name);
   sendString(socket, path);
-  cout << "Successfully made directory" << name << endl;
+
+  long response = receiveLong(socket);
+  if(response == 1)
+    cout << "Successfully made directory \"" << name << "\""<< endl;
+  else
+    cout << "Failed to make directory" << endl;
+
+  //cout << "Successfully made directory \"" << name << "\""<< endl;
   /*
   string tempPath = path;
   if(tempPath[tempPath.size()-1] != "/"){
@@ -233,7 +253,7 @@ void mkdir(string name, string path, int socket)
   /*
   long response; //=receiveLong(socket);
   if(response == 1)
-    cout << "Successfully made Directory: " << tempPath + name << endl; 
+    cout << "Successfully made Directory: " << tempPath + name << endl;
   else
     cout << "Failed to make directory" << endl;
   */
@@ -254,12 +274,13 @@ Remove Directory
 Provide absolute path to directory to be deleted
 Directory must be empty to delete
 */
-void rmdir(string path, int socket)
+void rmdir(string name, string path, int socket)
 {
   sendString(socket, "rmdir");
+  sendString(socket, name);
   sendString(socket, path);
-  
-  long response; //=receiveLong(socket);
+
+  long response = receiveLong(socket);
   if(response == 1)
     cout << "Successfully removed Directory: " << path << endl;
   else
@@ -291,14 +312,14 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   cout << numChunks << endl;
 
   cin.ignore();
-  
+
   for(int i = 1; i <= numChunks; i++){
     string chunkFileName = name + '.' + to_string(i);
     sendBlock(socket, chunkFileName);
   }
   */
   cout << "Created File: " << name << endl;
-  
+
   //sendString(socket, "create");
   //sendString(socket, S3_file);
   //sendString(socket, path);
@@ -308,7 +329,7 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
 
   //chunkFile(S3_file, name);
 
-  /* UNCOMMMENT WHEN ERROR CHECKING INTEGER IS IMPLEMENTED IN NAMENODE  
+  /* UNCOMMMENT WHEN ERROR CHECKING INTEGER IS IMPLEMENTED IN NAMENODE
   string tempPath = path;
   if(tempPath[tempPath.size()-1] != "/"){
     tempPath = tempPath + "/";
@@ -319,7 +340,7 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
     cout << "Successfully created file: " << tempPath + name << endl;
   } else if (response == PATH_NOT_EXIST){
     cout << "Error. Path does not exist" << endl;
-  } else if (response == FILE_EXISTS){ 
+  } else if (response == FILE_EXISTS){
     cout << "Error. File already exists under this name" << endl;
   }
   */
@@ -490,7 +511,7 @@ string receiveString(int sock)
   return stringBuffer;
 }
 
-void sendLong(int clientSock, long size) 
+void sendLong(int clientSock, long size)
 {
   size = htonl(size);
   int bytesSent = send(clientSock, (void *) &size, sizeof(long), 0);
@@ -499,7 +520,7 @@ void sendLong(int clientSock, long size)
   }
 }
 
-long receiveLong(int clientSock) 
+long receiveLong(int clientSock)
 {
   int bytesLeft = sizeof(long);  // bytes to read
   long numberGiven;   // initially empty
@@ -517,7 +538,7 @@ long receiveLong(int clientSock)
 }
 
 
-//C++-based: takes client socket and block file name and 
+//C++-based: takes client socket and block file name and
 //then sends name and size to sendBlockHelper to send
 void sendBlock(int sock, string file_name){
 
