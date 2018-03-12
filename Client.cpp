@@ -25,12 +25,14 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <time.h>
 
 #define PORT 8080
 using namespace std;
 
 //TODO: man 2 sendfile to chunk and move blocks to server EC2
 const long chunkSize = 67108864;
+int counter = 0;
 
 const int SUCCESS = 0;
 const int FILE_NOT_EXIST = 1;
@@ -59,6 +61,7 @@ void removeFile(string file);
 
 int main(int argc, char const *argv[])
 {
+  srand(time(NULL));
   if(argc < 3) {
     cout << "Error: Missing command line arguments" << endl;
     cout << "Usage: ./Cient [ip_address] [portnumber]" << endl;
@@ -335,6 +338,7 @@ Provide file name, absolute filepath, S3 Object address
 */
 void create(string name, string path, string S3_file, string S3_bucket, int socket)
 {
+ 
   sendString(socket, "create");
   sendString(socket, name);
   sendString(socket, path);
@@ -343,34 +347,36 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   //process into vectors, then send blocks/chunks to Data Nodes  
   string baseName = receiveString(socket);
   string DataNodeIPs = receiveString(socket);
+  string getStringPort = receiveString(socket);
+  unsigned short dataNodePort = (getStringPort, nullptr, 0);
   vector<string> baseFileNames;
   vector<string> IPs;
   string filename;
   stringstream s (DataNodeIPs);
-  while(s>> fileName)
-    IPs.push_back(fileName);
+  while(s>> filename)
+    IPs.push_back(filename);
   
   getObject(S3_file, baseName);
+  int numChunks = chunkFile(S3_file, baseName);
+  
+  //get N random  numbers
 
-  //TESTME!! Make sure strings get into vectors
+  int numDataNodes = IPs.size();
+  for(int i = 1; i <= numChunks; i++){
+    int sendingIP = counter % numDataNodes;
+    string chunkedFileName = baseName + "." + to_string(i);
+    char * IP = const_cast<char*>(IPs[sendingIP].c_str());
+    blockToDataNode(IP, dataNodePort, chunkedFileName);
+    counter++;
+  }
   
-  /*
-    getObject(S3_file, S3_bucket);
-    int numChunks = chunkFile(S3_file, name);
-    cout << numChunks << endl;
-    
-    }
-  */
-  
+  //loop blockToDataNode for all the chunks
+  //blockToDataNode(char* DNIPaddr, unsigned short port, string chunkedFile);
+
+  //TESTME!! Make sure strings get into vectors  
   cout << "Created File: " << name << endl;
 
   
-
-  //get the file from S3 into local drive
-  //getObject(S3_file, S3_bucket);
-
-  //chunkFile(S3_file, name);
-
   /* UNCOMMMENT WHEN ERROR CHECKING INTEGER IS IMPLEMENTED IN NAMENODE
   string tempPath = path;
   if(tempPath[tempPath.size()-1] != "/"){

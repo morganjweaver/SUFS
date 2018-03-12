@@ -57,6 +57,8 @@ fstream
 -
 sstream
 -
+time.h
+-
 
 /home/ec2-user/aws-sdk-cpp/aws-cpp-sdk-core/include/aws/core/AmazonSerializableWebServiceRequest.h
 aws/core/Core_EXPORTS.h
