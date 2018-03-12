@@ -189,6 +189,7 @@ void processClient(int clientSock, string clientIP)
   NodeHashMap nodeMap;
   vector<string> lsReturn;
   bool check = false;
+  cout << "client IP " << clientIP << endl;
   while(true)
   {
     command = receiveString(clientSock);
