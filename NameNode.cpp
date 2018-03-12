@@ -255,7 +255,7 @@ void processClient(int clientSock, string clientIP)
         string IP = DataNodeIPs[i];
         IPs.append(IP);
         IPs.append(" ");
-       sendString(clientSock, )
+       sendString(clientSock, IPs)
   } //now have string for easy sending
       //call namenode's create function here
 			cout << endl;
