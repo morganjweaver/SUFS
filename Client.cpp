@@ -299,7 +299,36 @@ void rmdir(string name, string path, int socket)
   }
   */
 }
+//sendToDataNode(), which takes in an IP, a Port, and a chunked file name
+void blockToDataNode(char* DNIPaddr, unsigned short port, string chunkedFile){
+//set up connection to given DataBlock then funnel into sendBlock.
+   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+   if(sock < 0) {
+    cout << "blockToDataNode: Error with socket" << endl;
+    exit(-1);
+   }
 
+  char* IPAddr = const_cast<char *>(DNIPaddr);
+
+  unsigned long servIP;
+  int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
+  if (status <= 0) {
+    cout << "blockTODataNode: Error with convert dotted decimal address to int" << endl;
+    exit(-1);
+  }
+
+  struct sockaddr_in servAddr;
+  servAddr.sin_family = AF_INET; // always AF_INET
+  servAddr.sin_addr.s_addr = servIP;
+  servAddr.sin_port = htons(port);
+  status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  if(status < 0) {
+    cout << "THREAD: Error with connect" << endl;
+    exit(-1);
+  }
+    sendBlock(port, chunkedFile);
+   
+}
 /*
 Create file
 Provide file name, absolute filepath, S3 Object address
