@@ -15,7 +15,7 @@ class NodeHashMap {
 				table[i] = NULL;
 		}
 
-		bool get(string key, string& output) {
+		bool get(string key, vector<string>& output) {
 			size_t keyHash = hashfn(key) % TABLE_SIZE;
 			while (table[keyHash] != NULL && table[keyHash]->getKey() != key)
 				keyHash = (keyHash + 1) % TABLE_SIZE;
@@ -27,12 +27,13 @@ class NodeHashMap {
 			}
 		}
 
-		bool put(string key, string value) {
+		bool put(string key, vector<string> value) {
 			size_t keyHash = hashfn(key) % TABLE_SIZE;
 			while (table[keyHash] != NULL && table[keyHash]->getKey() != key)
 				keyHash = (keyHash + 1) % TABLE_SIZE;
 			if (table[keyHash] != NULL){
-				return false;
+				table[keyHash] = NULL;
+				delete table[keyHash];
 			}
 			table[keyHash] = new NodeHashEntry(key, value);
 			return true;
