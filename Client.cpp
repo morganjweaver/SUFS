@@ -355,9 +355,10 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   while(t>>chunkName)
     chunkFileNames.push_back(chunkName);
   //TESTME!! Make sure strings get into vectors
+  
   /*
   getObject(S3_file, S3_bucket);
-  int numChunks = chunkFile(S3_file, name);
+  int numChunks = chunkFile(S3_file, BASEname);
   cout << numChunks << endl;
 
   cin.ignore();

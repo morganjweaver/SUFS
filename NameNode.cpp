@@ -48,11 +48,11 @@ void sendString(int sock, string wordSent);
 string receiveString(int sock);
 void processClient(int clientSock, string clientIP);
 void processHeartbeat(string nodeIPaddr, string heartbeat_data);
-
+int uniqueIDCounter = 0;
 bool mkdir(string name, string path, DirHashMap& dirMap);
 bool rmdir(string name, string path, DirHashMap& dirMap);
 vector<string> ls(string path, DirHashMap& dirMap);
-
+vector<string> DataNodeIPs;
 //SERVER SOCKET CODE
 int main(int argc, char const *argv[])
 {
@@ -249,6 +249,14 @@ void processClient(int clientSock, string clientIP)
       cout << getName << endl;
       getPath = receiveString(clientSock);
       cout << getPath << endl;
+      sendString(clientSock, uniqueIDCounter.toString());
+      string IPs = "";
+      for (int i = 0; i<DataNodeIPs.size();i++){
+        string IP = DataNodeIPs[i];
+        IPs.append(IP);
+        IPs.append(" ");
+       sendString(clientSock, )
+  } //now have string for easy sending
       //call namenode's create function here
 			cout << endl;
     }
@@ -354,23 +362,12 @@ bool create(string name, string path, vector<string> chunkID, vector<string> dat
 	tempFile.filePath = path;
 	Block temp;
         //send ENTIRE set of DataNode IPs to Client to decide where to send
-	for(int i = 0; i < chunkID.size(); i++){
-		if(i % 2 == 0){
-			temp.IP = dataNodeIP[0];
-			temp.chunk_ID = chunkID[i];
-			tempFile.blocks.push_back(temp);
-		}
-		else if(i % 3 == 0){
-			temp.IP = dataNodeIP[1];
-			temp.chunk_ID = chunkID[i];
-			tempFile.blocks.push_back(temp);
-		}
-		else {
-			temp.IP = dataNodeIP[2];
-			temp.chunk_ID = chunkID[i];
-			tempFile.blocks.push_back(temp);
-		}
-	}
+    string DN_IPs = "";
+    for (int i = 0; i<dataNodeIP.size(); i++){
+      DN_IPs.append(dataNodeIP[i]);
+      //now we have a string of DN IP addresses to send over the network into receiveString on Client
+    }
+
 	check = dirMap.put(path, tempFile);
 	size_t found = path.find_last_of("/\\");
 	if(found != -1 && check != false){
