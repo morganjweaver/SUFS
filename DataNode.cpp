@@ -28,6 +28,7 @@ string receiveBlockHelper(int sock, string file_name, long file_size);
 string receiveString(int sock);
 long receiveLong(int clientSock);
 vector<string> blockNames;
+vector<string> peerDataNodeIPs;
 void sendHeartbeat(int sock);
 void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort);
 int flag; //provides a lock for the threads
@@ -79,6 +80,19 @@ int main(int argc, char const *argv[])
     }
     receiveBlock(clientSock);
   }
+}
+
+//Takes list of DataNode peers from NameNode every minute and updates peer node vector
+//******************************************************
+void processHeartbeat(string heartbeat_data){
+  stringstream s (heartbeat_data);
+  while(s>> fileName){
+    peerDataNodeIPs.push_back(fileName);
+    cout << "peer IP: " << fileName << endl;
+  }
+  //de-dupe the peer vector ID
+  sort(peerDataNodeIPs.begin(), peerDataNodeIDs.end());
+  peerDataNodeIPs.erase(unique(peerDataNodeIPs.begin(), peerDataNodeIPs.end()), peerDataNodeIPs.end());
 }
 void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
  

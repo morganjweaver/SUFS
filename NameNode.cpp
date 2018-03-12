@@ -353,6 +353,7 @@ bool create(string name, string path, vector<string> chunkID, vector<string> dat
 	tempFile.fileName = name;
 	tempFile.filePath = path;
 	Block temp;
+        //send ENTIRE set of DataNode IPs to Client to decide where to send
 	for(int i = 0; i < chunkID.size(); i++){
 		if(i % 2 == 0){
 			temp.IP = dataNodeIP[0];
