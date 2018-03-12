@@ -32,6 +32,8 @@ vector<string> peerDataNodeIPs;
 void sendHeartbeat(int sock);
 void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort);
 int flag; //provides a lock for the threads
+void processDataNode(int socket);
+void processHeartbeat(string heartbeat_data);
 
 int main(int argc, char const *argv[])
 {
@@ -78,12 +80,11 @@ int main(int argc, char const *argv[])
       cerr << "Error with accept" << endl;
       exit(-1);
     }
-    receiveBlock(clientSock);
+    processDataNode(clientSock);
   }
 }
 
 //Takes list of DataNode peers from NameNode every minute and updates peer node vector
-//******************************************************
 void processHeartbeat(string heartbeat_data){
   stringstream s (heartbeat_data);
   while(s>> fileName){
@@ -94,8 +95,24 @@ void processHeartbeat(string heartbeat_data){
   sort(peerDataNodeIPs.begin(), peerDataNodeIDs.end());
   peerDataNodeIPs.erase(unique(peerDataNodeIPs.begin(), peerDataNodeIPs.end()), peerDataNodeIPs.end());
 }
+void processDataNode(int socket)
+{
+  string receiveData;  
+  while(true){
+    receiveData = receiveString(socket);
+    if(receiveData == "heartbeat"){
+      cout << "Ready to receive heartbeat" << endl;
+      string peerIPs  = receiveString(socket);
+      processHeartbeat(peerIPs);
+    } else if (receiveData == "block"){
+      cout << "Ready to receive block" << endl;
+      receiveBlock(socket);
+    }
+  }
+  //close(socket);
+}
+
 void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
- 
    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
    if(sock < 0) {
     cout << "THREAD: Error with socket" << endl;
@@ -126,9 +143,9 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
     sendHeartbeat(sock);
   }
 }
+
 void receiveBlock(int clientSock) //based upon processClient
 {
-
   long size;
   string file_name;
   while(file_name != "exit")
@@ -140,9 +157,7 @@ void receiveBlock(int clientSock) //based upon processClient
     string status = receiveBlockHelper(clientSock, file_name, size);
     cout << "Status: " << status << endl;
   }
- 
   //close(clientSock);
-
 }
 
 string receiveBlockHelper(int sock, string file_name, long file_size) {
@@ -215,6 +230,7 @@ string receiveString(int sock) {
   }
   return stringBuffer;
 }
+
 long receiveLong(int clientSock) {
   int bytesLeft = sizeof(long);  // bytes to read
   long numberGiven;   // initially empty
