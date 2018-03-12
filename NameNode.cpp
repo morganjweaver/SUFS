@@ -346,3 +346,38 @@ vector<string> ls(string path, DirHashMap& dirMap)
 		returnList.push_back(tempDir->files[i].fileName);
 	return returnList;
 }
+
+bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap){
+	bool check = false;
+	ContainerObject tempFile;
+	tempFile.fileName = name;
+	tempFile.filePath = path;
+	Block temp;
+	for(int i = 0; i < 5; i++){
+		if(i % 2 == 0){
+			temp.IP = dataNodeIP[0];
+			temp.chunk_ID = chunkID[i];
+			tempFile.blocks.push_back(temp);
+		}
+		else if(i % 3 == 0){
+			temp.IP = dataNodeIP[1];
+			temp.chunk_ID = chunkID[i];
+			tempFile.blocks.push_back(temp);
+		}
+		else {
+			temp.IP = dataNodeIP[2];
+			temp.chunk_ID = chunkID[i];
+			tempFile.blocks.push_back(temp);
+		}
+	}
+	check = dirMap.put(path, tempFile);
+	size_t found = path.find_last_of("/\\");
+	if(found != -1 && check != false){
+		ContainerObject* parent = new ContainerObject();
+		string shortPath = path.substr(0,found);
+		dirMap.get(shortPath, parent);
+		parent->files.push_back(tempFile);
+		dirMap.put(shortPath, *parent);
+	}
+	return check;
+}
