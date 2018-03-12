@@ -353,7 +353,7 @@ bool create(string name, string path, vector<string> chunkID, vector<string> dat
 	tempFile.fileName = name;
 	tempFile.filePath = path;
 	Block temp;
-	for(int i = 0; i < 5; i++){
+	for(int i = 0; i < chunkID.size(); i++){
 		if(i % 2 == 0){
 			temp.IP = dataNodeIP[0];
 			temp.chunk_ID = chunkID[i];
