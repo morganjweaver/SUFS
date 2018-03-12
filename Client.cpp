@@ -55,6 +55,7 @@ string receiveString(int sock);
 long receiveLong(int clientSock);
 int chunkFile(string fullFilePath, string chunkName);
 void getObject(string s3file, string s3bucket);
+void removeFile(string file);
 
 int main(int argc, char const *argv[])
 {
@@ -574,4 +575,15 @@ void sendBlockHelper(int sock, string file_name) {
       cout << "sent " << bytesSent << " remain " << remaining_to_send << "\n";
       fclose(readPtr);
     }
+}
+
+void removeFile(string file)
+{
+  string filename = file;
+  const char* deleteFile = filename.c_str();
+
+  if(remove(deleteFile) != 0)
+    perror("Error deleting file");
+  else
+    puts("File successfully deleted");
 }
