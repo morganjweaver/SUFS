@@ -34,7 +34,7 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort);
 int flag; //provides a lock for the threads
 void processDataNode(int socket);
 void processHeartbeat(string heartbeat_data);
-
+int portNo;
 int main(int argc, char const *argv[])
 {
   if(argc < 3) {
@@ -42,6 +42,7 @@ int main(int argc, char const *argv[])
     cout << "Usage: ./DataNode [NameNode IP] [portnumber]" << endl;
   return 1;
   }
+  portNo = argv[3];
   flag = 0;
   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if(sock < 0) {
@@ -202,6 +203,7 @@ void sendString(int sock, string wordSent)
 void sendHeartbeat(int sock){
 //sends a single string list of blocks to NameNode
   sendString(sock, "heartbeat");
+  sendString(sock, portno);
   string filenames = "";
   while (flag != 0){
     this_thread::sleep_for(chrono::seconds(1));
@@ -213,6 +215,7 @@ void sendHeartbeat(int sock){
     filenames.append(" ");
   } //now have string for easy sending
   flag = 0; //mark flag open
+  //sendString(sock, )
   sendString(sock, filenames);
 
 }

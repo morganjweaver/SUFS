@@ -27,6 +27,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <stdio.h>
+#include <thread>
 #include "DirHashMap.cpp"
 #include "NodeHashMap.cpp"
 #define PORT 8080
@@ -47,12 +48,15 @@ void processClient(int new_client_socket);
 void sendString(int sock, string wordSent);
 string receiveString(int sock);
 void processClient(int clientSock, string clientIP);
-void processHeartbeat(string nodeIPaddr, string heartbeat_data);
+void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data);
 int uniqueIDCounter = 0;
 bool mkdir(string name, string path, DirHashMap& dirMap);
 bool rmdir(string name, string path, DirHashMap& dirMap);
 vector<string> ls(string path, DirHashMap& dirMap);
 vector<string> DataNodeIPs;
+void heartbeatThreadTask();
+void sendHeartbeat(int sock, string IPstring);
+string DatNodePort = "0";
 //SERVER SOCKET CODE
 int main(int argc, char const *argv[])
 {
@@ -86,6 +90,8 @@ int main(int argc, char const *argv[])
     cerr << "Error with listen" << endl;
     exit(-1);
   }
+
+  std::thread threadBeat(heartbeatThreadTask, DataNodeIPs);
 
   while(true){
     struct sockaddr_in clientAddr;
@@ -157,8 +163,18 @@ string receiveString(int sock)
 }
 //add heartbeat information to DataNode:block hashtable
 
-void processHeartbeat(string nodeIPaddr, string heartbeat_data, NodeHashMap& nodeMap){
+void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, NodeHashMap& nodeMap){
     //if put attempt returns false, remove the entry and try again
+  if(DatNodePort != clientPort){
+    cout << "DatNodePort set to " << clientPort << " from " << DatNodePort << endl;
+    DatNodePort = clientPort;
+  }
+  DataNodeIPs.push_back(nodeIPaddr);
+  //now de-dupe from global IP list
+  for(int i = 0; i<DataNodeIPs.size()-1; i++){
+    if (DataNodeIPs[i] == nodeIPaddr)
+        DataNodeIPs.erase(DataNodeIPs.begin()+i);
+  }
   vector<string> blockFileNames;
   string fileName;
   stringstream s (heartbeat_data);
@@ -201,8 +217,10 @@ void processClient(int clientSock, string clientIP)
     }
 
     if(command == "heartbeat"){
+      string port = receiveString(clientSock); 
       string blocks = receiveString(clientSock);
-      processHeartbeat(clientIP, blocks,  nodeMap);
+
+      processHeartbeat(clientPort, clientIP, blocks,  nodeMap);
     }
 
     if(command == "mkdir")
@@ -249,13 +267,14 @@ void processClient(int clientSock, string clientIP)
       cout << getName << endl;
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-      sendString(clientSock, uniqueIDCounter.toString());
+      sendString(clientSock, toString(uniqueIDCounter));
       string IPs = "";
       for (int i = 0; i<DataNodeIPs.size();i++){
         string IP = DataNodeIPs[i];
         IPs.append(IP);
         IPs.append(" ");
        sendString(clientSock, IPs)
+       sendString(DatNodePort);
   } //now have string for easy sending
       //call namenode's create function here
 			cout << endl;
@@ -379,3 +398,54 @@ bool create(string name, string path, vector<string> chunkID, vector<string> dat
 	}
 	return check;
 }
+
+//send peer list ot all datanodes
+void heartbeatThreadTask(){
+   
+  while(true){
+    this_thread::sleep_for(chrono::seconds(60));
+    cout<< "1-min heartbeat!\n";
+    //first turn vectors into char*
+    if(DatNodePort == "0")
+        this_thread::sleep_for(chrono::seconds(60));
+   for(int i = 0; i<IP.size(); i++){ 
+       int n = IPs[i].length();
+       char DN_IP[n+1];
+       strcpy(DN_IP, IPs[i].c_str()); 
+
+       int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+       if(sock < 0) {
+        cout << "THREAD: Error with socket" << endl;
+        exit(-1);
+       }
+      unsigned short Port = atoi(DatNodePort);
+      char* IPAddr = const_cast<char *>(DN_IP);
+
+      unsigned long DN_IP;
+      int status = inet_pton(AF_INET, IPAddr, (void *) &DN_IP);
+      if (status <= 0) {
+        cout << "THREAD: Error with convert dotted decimal address to int" << endl;
+        exit(-1);
+      }
+
+      struct sockaddr_in DN_Addr;
+      servAddr.sin_family = AF_INET; // always AF_INET
+      servAddr.sin_addr.s_addr = DN_IP;
+      servAddr.sin_port = htons(Port);
+      status = connect (sock, (struct sockaddr *) &DN_Addr, sizeof(DN_Addr));
+      if(status < 0) {
+        cout << "THREAD: Error with connect" << endl;
+        exit(-1);
+  }
+    sendHeartbeat(sock);
+  }
+
+}
+
+void sendHeartbeat(int sock, string IPstring){
+//sends a single string list of IPs to DataNode
+  sendString(sock, "heartbeat");
+  sendString(sock, IPstring);
+  close(sock);
+}
+
