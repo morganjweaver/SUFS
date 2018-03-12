@@ -1,19 +1,23 @@
+//compile note: use g++ -std=c++11 -pthread DataNode.cpp -o DataNode
 #include <iostream>
 #include <string>
+#include <chrono>
 #include <vector>
 #include <string>
 #include <sstream>
 #include <iterator>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <fstream>
 #include <sys/time.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
-#include <netinet/in.h>
 #include <string.h>
 #include <cstdio>
 #include <sys/types.h>
+#include <thread>
 const int MAXPENDING = 99;
 
 using namespace std;
@@ -24,22 +28,25 @@ string receiveBlockHelper(int sock, string file_name, long file_size);
 string receiveString(int sock);
 long receiveLong(int clientSock);
 vector<string> blockNames;
+void sendHeartbeat(int sock);
+void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort);
+int flag; //provides a lock for the threads
 
 int main(int argc, char const *argv[])
 {
-  if(argc < 2) {
+  if(argc < 3) {
     cout << "Error: Missing command line arguments" << endl;
-    cout << "Usage: ./DataNode [portnumber]" << endl;
+    cout << "Usage: ./DataNode [NameNode IP] [portnumber]" << endl;
   return 1;
   }
-
+  flag = 0;
   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if(sock < 0) {
     cerr << "Error with socket" << endl;
     exit(-1);
   }
-
-  unsigned short servPort = atoi(argv[1]);
+  char* IPAddr = const_cast<char *>(argv[1]);
+  unsigned short servPort = atoi(argv[2]);
 
   struct sockaddr_in servAddr;
   servAddr.sin_family = AF_INET; // always AF_INET
@@ -47,7 +54,7 @@ int main(int argc, char const *argv[])
   servAddr.sin_port = htons(servPort);
   int status = ::bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if (status < 0) {
-    cerr << "Error with bind" << endl;
+    cerr << "Error with MAIN bind" << endl;
     exit (-1);
 
   }
@@ -58,15 +65,22 @@ int main(int argc, char const *argv[])
     exit(-1);
   }
 
+  std::thread threadBeat(heartbeatThreadTask, IPAddr, servPort);
+
   while(true){
-    
+   cout <<"entered while loop!\n"; 
     //heartbeat is non-blocking here:
-    // timeval timeout;
-    // timeout.tv_sec = 10;
-    // timeout.tv_usec = 0;
-    // int ret = select(maxfdp1, &rset, &wset, NULL, &timeout);
-    // if( ret == 0) // timed out
-    //     cout << "heartbeat!"
+    std::chrono::time_point<std::chrono::system_clock> start, end;
+ 
+    start = std::chrono::system_clock::now();
+    std::cout << "HEARTBEAT!" <<  '\n';
+    end = std::chrono::system_clock::now();
+ 
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+ 
+    std::cout << "finished heartbeat  at " << std::ctime(&end_time)
+              << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
     struct sockaddr_in clientAddr;
     socklen_t addrLen = sizeof(clientAddr);
@@ -78,7 +92,38 @@ int main(int argc, char const *argv[])
     receiveBlock(clientSock);
   }
 }
+void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
+ 
+   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+   if(sock < 0) {
+    cout << "THREAD: Error with socket" << endl;
+    exit(-1);
+   }
 
+  char* IPAddr = const_cast<char *>(NameNodeIP);
+
+  unsigned long servIP;
+  int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
+  if (status <= 0) {
+    cout << "THREAD: Error with convert dotted decimal address to int" << endl;
+    exit(-1);
+  }
+
+  struct sockaddr_in servAddr;
+  servAddr.sin_family = AF_INET; // always AF_INET
+  servAddr.sin_addr.s_addr = servIP;
+  servAddr.sin_port = htons(NNPort);
+  status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  if(status < 0) {
+    cout << "THREAD: Error with connect" << endl;
+    exit(-1);
+  }
+  while(true){
+    this_thread::sleep_for(chrono::seconds(10));
+    cout<< "10-sec heartbeat!\n";
+    sendHeartbeat(sock);
+  }
+}
 void receiveBlock(int clientSock) //based upon processClient
 {
 
@@ -99,7 +144,9 @@ void receiveBlock(int clientSock) //based upon processClient
 }
 
 string receiveBlockHelper(int sock, string file_name, long file_size) {
-  
+  while (flag !=0){
+    this_thread::sleep_for(chrono::seconds(1));
+  } flag = 1;
   blockNames.push_back(file_name);
   FILE *write_ptr;
   write_ptr = fopen(file_name.c_str(),"wb");
@@ -119,8 +166,8 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
     bytesLeft = bytesLeft - bytesRecv;//- written;
     printf("wrote %i to file\n", (int)written);
   }
+  flag = 0;
   fclose(write_ptr);
-  //close(sock);
   return "success writing\n";
 }
 
@@ -139,12 +186,16 @@ void sendHeartbeat(int sock){
 //sends a single string list of blocks to NameNode
   sendString(sock, "heartbeat");
   string filenames = "";
-  
-  for (string block : blockNames){
+  while (flag != 0){
+    this_thread::sleep_for(chrono::seconds(1));
+  } 
+  flag = 1;
+  for (int i = 0; i<blockNames.size();i++){
+    string block = blockNames[i];
     filenames.append(block);
     filenames.append(" ");
   } //now have string for easy sending
-  
+  flag = 0; //mark flag open
   sendString(sock, filenames);
 
 }
