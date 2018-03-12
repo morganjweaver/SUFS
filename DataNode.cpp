@@ -92,7 +92,6 @@ void processDataNode(int socket)
       cout << "Ready to receive heartbeat" << endl;
       string peerIPs  = receiveString(socket);
       processHeartbeat(peerIPs);
-      //process all the IPs from the string here and load into peer_IPs vector
     } else if (receiveData == "block"){
       cout << "Ready to receive block" << endl;
       receiveBlock(socket);
