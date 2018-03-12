@@ -335,40 +335,33 @@ Provide file name, absolute filepath, S3 Object address
 */
 void create(string name, string path, string S3_file, string S3_bucket, int socket)
 {
-  
   sendString(socket, "create");
   sendString(socket, name);
   sendString(socket, path);
-  //Get chunk IDs and data node IPs from Name Node and 
-  //process into vectors, then send blocks/chunks to Data Nodes
   
+  //Get chunk IDs and data node IPs from Name Node and 
+  //process into vectors, then send blocks/chunks to Data Nodes  
+  string baseName = receiveString(socket);
   string DataNodeIPs = receiveString(socket);
-  string chunkNames = receiveString(socket);
-  vector<string> chunkFileNames;
+  vector<string> baseFileNames;
   vector<string> IPs;
   string filename;
   stringstream s (DataNodeIPs);
   while(s>> fileName)
     IPs.push_back(fileName);
-  string chunkName;
-  string t (chunkNames);
-  while(t>>chunkName)
-    chunkFileNames.push_back(chunkName);
+  
+  getObject(S3_file, baseName);
+
   //TESTME!! Make sure strings get into vectors
   
   /*
-  getObject(S3_file, S3_bucket);
-  int numChunks = chunkFile(S3_file, BASEname);
-  cout << numChunks << endl;
-
-  cin.ignore();
-
-  for(int i = 1; i <= numChunks; i++){
-    string chunkFileName = name + '.' + to_string(i);
-    sendBlock(socket, chunkFileName);
-  }
+    getObject(S3_file, S3_bucket);
+    int numChunks = chunkFile(S3_file, name);
+    cout << numChunks << endl;
+    
+    }
   */
-
+  
   cout << "Created File: " << name << endl;
 
   
