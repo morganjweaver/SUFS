@@ -4,9 +4,9 @@ using namespace std;
 class NodeHashEntry {
 	private:
 		  string key;
-		  string value;
+		  vector<string> value;
 	public:
-		NodeHashEntry(string key, string value) {
+		NodeHashEntry(string key, vector<string> value) {
 			this->key = key;
 			this->value = value;
 		}
@@ -15,7 +15,7 @@ class NodeHashEntry {
 			return key;
 		}
 
-		string getValue() {
+		vector<string> getValue() {
 			return value;
 		}
 };

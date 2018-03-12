@@ -157,7 +157,7 @@ string receiveString(int sock)
 }
 //add heartbeat information to DataNode:block hashtable
 
-void processHeartbeat(string nodeIPaddr, string heartbeat_data){
+void processHeartbeat(string nodeIPaddr, string heartbeat_data, NodeHashMap& nodeMap){
     //if put attempt returns false, remove the entry and try again
 
   //DATA_NODE_HASHMAP_HERE
@@ -166,11 +166,10 @@ void processHeartbeat(string nodeIPaddr, string heartbeat_data){
   stringstream s (heartbeat_data);
   while(s>> fileName)
     blockFileNames.push_back(fileName);
-
   // Now we have a vector of block file IDs and the IP addr of the DataNode that holds them
   // Add global hashmap fof block-->vector<string file> table here!!
 
-  // if(HASHMAP.put(nodeIPaddr, blockFileNames) == false){
+  // if(nodeMap.put(nodeIPaddr, blockFileNames) == false){
   //   cout << "failed to put addresses" << endl;
   //   exit(-1);
   // }
@@ -204,7 +203,7 @@ void processClient(int clientSock, string clientIP)
 
     if(command == "heartbeat"){
       string blocks = receiveString(clientSock);
-      processHeartbeat(blocks, clientIP);
+      processHeartbeat(clientIP, blocks,  nodeMap);
     }
 
     if(command == "mkdir")
