@@ -166,7 +166,6 @@ void processHeartbeat(string nodeIPaddr, string heartbeat_data, NodeHashMap& nod
   stringstream s (heartbeat_data);
   while(s>> fileName)
     blockFileNames.push_back(fileName);
-  cout << "ready to update map of block files on Data Node with IP " << nodeIPaddr << endl;
   // Now we have a vector of block file IDs and the IP addr of the DataNode that holds them
   // Add global hashmap fof block-->vector<string file> table here!!
 
@@ -189,7 +188,6 @@ void processClient(int clientSock, string clientIP)
   NodeHashMap nodeMap;
   vector<string> lsReturn;
   bool check = false;
-  cout << "client IP " << clientIP << endl;
   while(true)
   {
     command = receiveString(clientSock);
@@ -205,7 +203,7 @@ void processClient(int clientSock, string clientIP)
 
     if(command == "heartbeat"){
       string blocks = receiveString(clientSock);
-      processHeartbeat(blocks, clientIP, nodeMap);
+      processHeartbeat(clientIP, blocks,  nodeMap);
     }
 
     if(command == "mkdir")
