@@ -335,7 +335,26 @@ Provide file name, absolute filepath, S3 Object address
 */
 void create(string name, string path, string S3_file, string S3_bucket, int socket)
 {
-  sendBlock(socket, name);
+  
+  sendString(socket, "create");
+  sendString(socket, name);
+  sendString(socket, path);
+  //Get chunk IDs and data node IPs from Name Node and 
+  //process into vectors, then send blocks/chunks to Data Nodes
+  
+  string DataNodeIPs = receiveString(socket);
+  string chunkNames = receiveString(socket);
+  vector<string> chunkFileNames;
+  vector<string> IPs;
+  string filename;
+  stringstream s (DataNodeIPs);
+  while(s>> fileName)
+    IPs.push_back(fileName);
+  string chunkName;
+  string t (chunkNames);
+  while(t>>chunkName)
+    chunkFileNames.push_back(chunkName);
+  //TESTME!! Make sure strings get into vectors
   /*
   getObject(S3_file, S3_bucket);
   int numChunks = chunkFile(S3_file, name);
@@ -348,11 +367,10 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
     sendBlock(socket, chunkFileName);
   }
   */
+
   cout << "Created File: " << name << endl;
 
-  //sendString(socket, "create");
-  //sendString(socket, S3_file);
-  //sendString(socket, path);
+  
 
   //get the file from S3 into local drive
   //getObject(S3_file, S3_bucket);
