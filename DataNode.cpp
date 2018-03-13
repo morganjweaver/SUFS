@@ -23,18 +23,25 @@ const int MAXPENDING = 99;
 using namespace std;
 
 //SERVER SOCKET CODE:
-void receiveBlock(int clientSock);
+void receiveBlock(int clientSock, int replica_flag); 
 string receiveBlockHelper(int sock, string file_name, long file_size);
 string receiveString(int sock);
 long receiveLong(int clientSock);
-vector<string> blockNames;
-vector<string> peerDataNodeIPs;
+void replicateBlock(string blockName);
 void sendHeartbeat(int sock);
 void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort);
-int flag; //provides a lock for the threads
 void processDataNode(int socket);
 void processHeartbeat(string heartbeat_data);
+void sendLong(int clientSock, long size);
+void sendString(int sock, string wordSent);
+void sendBlockHelper(int sock, string file_name);
+void sendBlock(int sock, string file_name);
+
+int flag; //provides a lock for the threads
+vector<string> blockNames;
+vector<string> peerDataNodeIPs;
 int portNo;
+int counter = 0; //for determining which replicas to store blocks on
 int main(int argc, char const *argv[])
 {
   if(argc < 3) {
@@ -42,7 +49,6 @@ int main(int argc, char const *argv[])
     cout << "Usage: ./DataNode [NameNode IP] [portnumber]" << endl;
   return 1;
   }
-  portNo = argv[3];
   flag = 0;
   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if(sock < 0) {
@@ -87,13 +93,14 @@ int main(int argc, char const *argv[])
 
 //Takes list of DataNode peers from NameNode every minute and updates peer node vector
 void processHeartbeat(string heartbeat_data){
+  string fileName;
   stringstream s (heartbeat_data);
   while(s>> fileName){
     peerDataNodeIPs.push_back(fileName);
     cout << "peer IP: " << fileName << endl;
   }
   //de-dupe the peer vector ID
-  sort(peerDataNodeIPs.begin(), peerDataNodeIDs.end());
+  sort(peerDataNodeIPs.begin(), peerDataNodeIPs.end());
   peerDataNodeIPs.erase(unique(peerDataNodeIPs.begin(), peerDataNodeIPs.end()), peerDataNodeIPs.end());
 }
 void processDataNode(int socket)
@@ -107,7 +114,10 @@ void processDataNode(int socket)
       processHeartbeat(peerIPs);
     } else if (receiveData == "block"){
       cout << "Ready to receive block" << endl;
-      receiveBlock(socket);
+      receiveBlock(socket, 0);
+    } else if (receiveData == "replica"){
+      cout << "Ready to receive block" << endl;
+      receiveBlock(socket, 1);
     }
   }
   //close(socket);
@@ -144,8 +154,9 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
     sendHeartbeat(sock);
   }
 }
-
-void receiveBlock(int clientSock) //based upon processClient
+//0 = regular block 
+//1 = replica block
+void receiveBlock(int clientSock, int replica_flag) //based upon processClient
 {
   long size;
   string file_name;
@@ -158,9 +169,44 @@ void receiveBlock(int clientSock) //based upon processClient
     string status = receiveBlockHelper(clientSock, file_name, size);
     cout << "Status: " << status << endl;
   }
+  if(replica_flag == 0){ //needs replication!
+     replicateBlock(file_name);
+  }
   //close(clientSock);
 }
+void replicateBlock(string blockName){
 
+    unsigned short servPort = portNo;
+    int Node = counter % peerDataNodeIPs.size();
+    string IP = peerDataNodeIPs[Node];
+    
+    char* IPAddr = const_cast<char *>(blockName.c_str());
+
+   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+   if(sock < 0) {
+    cout << "THREAD: Error with socket" << endl;
+    exit(-1);
+   }
+
+  unsigned long servIP;
+  int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
+  if (status <= 0) {
+    cout << "THREAD: Error with convert dotted decimal address to int" << endl;
+    exit(-1);
+  }
+
+  struct sockaddr_in servAddr;
+  servAddr.sin_family = AF_INET; // always AF_INET
+  servAddr.sin_addr.s_addr = servIP;
+  servAddr.sin_port = htons(servPort);
+  status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  if(status < 0) {
+    cout << "THREAD: Error with connect" << endl;
+    exit(-1);
+  } //now we have a socket
+  sendBlock(sock, blockName);
+counter++;
+}
 string receiveBlockHelper(int sock, string file_name, long file_size) {
   while (flag !=0){
     this_thread::sleep_for(chrono::seconds(1));
@@ -188,7 +234,51 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
   fclose(write_ptr);
   return "success writing\n";
 }
+//C++-based: takes client socket and block file name and
+//then sends name and size to sendBlockHelper to send
+void sendBlock(int sock, string file_name){
 
+    sendString(sock, file_name);
+    //now take file size and send over
+    FILE* readPtr;
+    readPtr = fopen(file_name.c_str(),"rb");
+    fseek(readPtr, 0L, SEEK_END);
+    long file_size = ftell(readPtr);
+    sendLong(sock, file_size);
+    sendBlockHelper(sock, file_name);
+    fclose(readPtr);
+}
+//C-based: sends a binary file to Server by reading out of directory and calculating size
+void sendBlockHelper(int sock, string file_name) {
+  FILE* readPtr;
+  readPtr = fopen(file_name.c_str(),"rb");
+  unsigned char binaryBuffer[2000];
+  fseek(readPtr, 0L, SEEK_END);
+  long file_size = ftell(readPtr);
+  rewind(readPtr);
+
+  long remaining_to_send = file_size;
+
+  while(remaining_to_send > 0){
+      long b_read = fread(binaryBuffer, 1 , sizeof(binaryBuffer),readPtr);
+      int bytesSent = send(sock, (void *) binaryBuffer, b_read, 0);
+      if (bytesSent != b_read) {
+        cerr << "Error sending " << endl;
+        exit(-1);
+      }
+      remaining_to_send = remaining_to_send - (long)bytesSent;
+      cout << "sent " << bytesSent << " remain " << remaining_to_send << "\n";
+      fclose(readPtr);
+    }
+}
+void sendLong(int clientSock, long size)
+{
+  size = htonl(size);
+  int bytesSent = send(clientSock, (void *) &size, sizeof(long), 0);
+  if(bytesSent != sizeof(long)) {
+    pthread_exit(NULL);
+  }
+}
 void sendString(int sock, string wordSent)
 {
   char wordBuffer[2000];
@@ -203,7 +293,7 @@ void sendString(int sock, string wordSent)
 void sendHeartbeat(int sock){
 //sends a single string list of blocks to NameNode
   sendString(sock, "heartbeat");
-  sendString(sock, portno);
+  sendString(sock, to_string(portNo));
   string filenames = "";
   while (flag != 0){
     this_thread::sleep_for(chrono::seconds(1));
