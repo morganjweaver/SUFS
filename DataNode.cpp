@@ -18,6 +18,7 @@
 #include <cstdio>
 #include <sys/types.h>
 #include <thread>
+#include <algorithm>
 const int MAXPENDING = 99;
 
 using namespace std;
