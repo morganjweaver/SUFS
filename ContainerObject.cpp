@@ -12,7 +12,7 @@ class File
 	string fileName;
 	string filePath;
     float size;
-    vector<block> blocks;
+    vector<Block> blocks;
 };
 
 class Directory
