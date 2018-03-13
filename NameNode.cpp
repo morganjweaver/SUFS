@@ -270,6 +270,14 @@ void processClient(int clientSock, string clientIP)
        sendString(clientSock, IPs);
        sendString(clientSock,DataNodePort);
       }
+	  
+	long numBlockNames = receiveLong(socket);
+	vector <string> blockNames;
+	for(int i = 0; i < numBlockNames; i++){
+	string getName = receiveString(socket);
+	blockNames.push_back(getName;
+	}
+	    
       check = create(getName, getPath, blockNames, DataNodeIPs, dirMap);
       sendLong(clientSock, check);
       if(check == 1)
