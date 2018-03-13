@@ -107,11 +107,13 @@ void processHeartbeat(string heartbeat_data){
 }
 void processDataNode(int socket)
 {
-  string receiveData; 
+  string receiveData;
+  cout << "Entered processDataNode()" << endl;
 
   while(true){
     receiveData = receiveString(socket);
     cout << "received message: " << receiveData << endl;
+    
     if(receiveData == "heartbeat"){
       cout << "Ready to receive heartbeat" << endl;
       string peerIPs  = receiveString(socket);
