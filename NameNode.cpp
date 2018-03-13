@@ -263,6 +263,7 @@ void processClient(int clientSock, string clientIP)
     }
     else if (command == "create")
     {
+      vector<string> blockNames;
       getName = receiveString(clientSock);
       cout << getName << endl;
       getPath = receiveString(clientSock);
@@ -275,6 +276,18 @@ void processClient(int clientSock, string clientIP)
         IPs.append(" ");
        sendString(clientSock, IPs)
        sendString(DatNodePort);
+      }
+       long numBlockNames = recieveLong(socket);
+       for(int i = 0; i < numBlockNames; i++){
+            string getName = recieveString(socket);
+	    blockNames.push_back(getName);
+       }
+       check = create(getName, getPath, blockNames, DataNodeIPs, dirMap);
+       sendLong(clientSock, check);
+	if(check == 1)
+		cout << "Success" << endl;
+	else
+		cout << "Error" << endl;
   } //now have string for easy sending
       //call namenode's create function here
 			cout << endl;
