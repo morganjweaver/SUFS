@@ -277,7 +277,7 @@ void processClient(int clientSock, string clientIP)
 	vector <string> blockNames;
 	for(int i = 0; i < numBlockNames; i++){
 	string getName = receiveString(clientSock);
-	blockNames.push_back(getName;
+	blockNames.push_back(getName);
 	}
 	    
       check = create(getName, getPath, blockNames, DataNodeIPs, dirMap);
