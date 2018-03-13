@@ -87,9 +87,10 @@ int main(int argc, char const *argv[])
     if (clientSock < 0) {
       cerr << "Error with accept" << endl;
       exit(-1);
+      cout << "launching processDataNode\n";
+      processDataNode(clientSock);
     }
-    cout << "launching processDataNode\n";
-    processDataNode(clientSock);
+    
   }
 }
 
