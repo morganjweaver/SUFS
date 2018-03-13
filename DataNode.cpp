@@ -44,6 +44,7 @@ vector<string> blockNames;
 vector<string> peerDataNodeIPs;
 int portNo;
 int counter = 0; //for determining which replicas to store blocks on
+
 int main(int argc, char const *argv[])
 {
   if(argc < 3) {
@@ -76,7 +77,9 @@ int main(int argc, char const *argv[])
     cerr << "Error with listen" << endl;
     exit(-1);
   }
-
+//-------------------------------------------------------TEST CODE
+blockNames.push_back("dummy_file");
+//--------------------------------------------------------------
   while(true){
    cout <<"entered while loop!\n"; 
 
