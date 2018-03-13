@@ -80,7 +80,7 @@ int main(int argc, char const *argv[])
 //-------------------------------------------------------TEST CODE
 blockNames.push_back("dummy_file");
 //--------------------------------------------------------------
-  //while(true){
+  while(true){
    cout <<"entered while loop!\n"; 
 
     struct sockaddr_in clientAddr;
@@ -92,7 +92,8 @@ blockNames.push_back("dummy_file");
     }
     cout << "launching processDataNode\n";
     processDataNode(clientSock);
-  //}
+    close(clientSock);
+  }
 }
 
 //Takes list of DataNode peers from NameNode every minute and updates peer node vector
@@ -113,7 +114,7 @@ void processDataNode(int socket)
   string receiveData;
   cout << "Entered processDataNode()" << endl;
 
-  while(true){
+  //while(true){
     receiveData = receiveString(socket);
     cout << "received message: " << receiveData << endl;
     
@@ -128,7 +129,7 @@ void processDataNode(int socket)
       cout << "Ready to receive block" << endl;
       receiveBlock(socket, 1);
     }
-  }
+  //}
   //close(socket);
 }
 
