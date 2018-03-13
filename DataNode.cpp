@@ -163,6 +163,7 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
     this_thread::sleep_for(chrono::seconds(10));
     cout<< "10-sec heartbeat!\n";
     sendHeartbeat(sock);
+    close(sock);
   }
 }
 //0 = regular block 
@@ -320,7 +321,7 @@ void sendHeartbeat(int sock){
   flag = 0; //mark flag open
   cout << "Sending heartbeat: " << filenames << endl;
   sendString(sock, filenames);
-  close(sock);
+  //close(sock);
 }
 
 string receiveString(int sock) {

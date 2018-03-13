@@ -119,6 +119,7 @@ int main(int argc, char const *argv[])
   }
 
     processClient(clientSock, ipstr);
+    close(clientSock);
   }
 }
 
@@ -455,6 +456,7 @@ void heartbeatThreadTask(){
     exit(-1);
   }
     sendHeartbeat(sock, IPs);
+    close(sock);
   }
  }
 }
@@ -464,7 +466,7 @@ void sendHeartbeat(int sock, string IPstring){
   sendString(sock, "heartbeat");
   sendString(sock, IPstring);
   cout << "HEARTBEAT CONTENTS: " << IPstring << endl;
-  close(sock);
+  //close(sock);
 }
 
 //receive a numeric over the network 
