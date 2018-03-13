@@ -218,6 +218,7 @@ void processClient(int clientSock, string clientIP)
       string blocks = receiveString(clientSock);
 
       processHeartbeat(port, clientIP, blocks,  nodeMap);
+      close(clientSock);
     }
 
     if(command == "mkdir")
