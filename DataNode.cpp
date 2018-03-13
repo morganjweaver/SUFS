@@ -169,6 +169,7 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
     cout << "THREAD: Error with connect to NameNode "  << endl;
     exit(-1);
   }
+}
     cout<< "10-sec heartbeat!\n";
     sendHeartbeat(sock);
     cout << "Closing socket in function threadTask after Heartbeat sent\n";
