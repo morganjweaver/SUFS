@@ -35,13 +35,7 @@
 using namespace std;
 
 //Error messages to send back to client
-const int SUCCESS = 0;
-const int FILE_NOT_EXIST = 1;
-const int PATH_NOT_EXIST = 2;
-const int FILE_EXISTS = 3;
-const int DIRECTORY_EXIST = 4;
-const int DIRECTORY_NOT_EMPTY = 5;
-const int DIRECTORY_NOT_EXIST = 6;
+
 const int MAXPENDING = 99;
 
 void processClient(int new_client_socket);
