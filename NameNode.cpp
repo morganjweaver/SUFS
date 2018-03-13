@@ -449,7 +449,7 @@ void heartbeatThreadTask(){
   servAddr.sin_port = htons(port);
   status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if(status < 0) {
-    cout << "THREAD: Error with connect" << endl;
+    cout << "THREAD: Error with connect to IP: " << DataNodeIPs[i] << endl;
     exit(-1);
   }
     sendHeartbeat(sock, IPs);
