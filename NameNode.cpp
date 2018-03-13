@@ -202,8 +202,8 @@ void processClient(int clientSock, string clientIP)
   NodeHashMap nodeMap;
   vector<string> lsReturn;
   bool check = false;
-  while(true)
-  {
+  //while(true)
+  //{
     command = receiveString(clientSock);
     //cout << command << endl;
 
@@ -324,7 +324,7 @@ void processClient(int clientSock, string clientIP)
 			cout << endl;
     }
 
-  } //end while
+  //} //end while
 }
 
 bool mkdir(string name, string path, DirHashMap& dirMap){
