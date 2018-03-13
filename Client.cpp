@@ -26,6 +26,7 @@
 #include <fstream>
 #include <sstream>
 #include <time.h>
+#include <algorithm>
 
 #define PORT 8080
 using namespace std;
