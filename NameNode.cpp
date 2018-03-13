@@ -437,13 +437,9 @@ void heartbeatThreadTask(){
     cout << "THREAD: Error with connect" << endl;
     exit(-1);
   }
-  while(true){
-    this_thread::sleep_for(chrono::seconds(10));
-    cout<< "10-sec heartbeat!\n";
     sendHeartbeat(sock, IPs);
   }
-  }
-}
+ }
 }
 
 void sendHeartbeat(int sock, string IPstring){
