@@ -273,10 +273,10 @@ void processClient(int clientSock, string clientIP)
        sendString(clientSock,DataNodePort);
       }
 	  
-	long numBlockNames = receiveLong(socket);
+	long numBlockNames = receiveLong(clientSock);
 	vector <string> blockNames;
 	for(int i = 0; i < numBlockNames; i++){
-	string getName = receiveString(socket);
+	string getName = receiveString(clientSock);
 	blockNames.push_back(getName;
 	}
 	    
