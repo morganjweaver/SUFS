@@ -1,5 +1,8 @@
 # Specific huge test file
 first200.txt
+Client
+NameNode
+DataNode
 
 # Prerequisites
 *.d

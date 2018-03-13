@@ -2,6 +2,7 @@
 #include <vector>
 #include <iterator>
 #include <stdio.h>
+#include "Block.h"
 
 using namespace std;
 
@@ -11,7 +12,7 @@ class File
 	string fileName;
 	string filePath;
     float size;
-    //vector<block> blocks;
+    vector<Block> blocks;
 };
 
 class Directory

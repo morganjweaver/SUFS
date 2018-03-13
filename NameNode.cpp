@@ -27,6 +27,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <stdio.h>
+#include <thread>
 #include "DirHashMap.cpp"
 #include "NodeHashMap.cpp"
 #define PORT 8080
@@ -34,25 +35,24 @@
 using namespace std;
 
 //Error messages to send back to client
-const int SUCCESS = 0;
-const int FILE_NOT_EXIST = 1;
-const int PATH_NOT_EXIST = 2;
-const int FILE_EXISTS = 3;
-const int DIRECTORY_EXIST = 4;
-const int DIRECTORY_NOT_EMPTY = 5;
-const int DIRECTORY_NOT_EXIST = 6;
+
 const int MAXPENDING = 99;
 
 void processClient(int new_client_socket);
 void sendString(int sock, string wordSent);
 string receiveString(int sock);
 void processClient(int clientSock, string clientIP);
-void processHeartbeat(string nodeIPaddr, string heartbeat_data);
-
+void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data);
+int uniqueIDCounter = 0;
 bool mkdir(string name, string path, DirHashMap& dirMap);
 bool rmdir(string name, string path, DirHashMap& dirMap);
 vector<string> ls(string path, DirHashMap& dirMap);
-
+vector<string> DataNodeIPs;
+void heartbeatThreadTask();
+void sendHeartbeat(int sock, string IPstring);
+bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap);
+long receiveLong(int clientSock);
+string DataNodePort = "0";
 //SERVER SOCKET CODE
 int main(int argc, char const *argv[])
 {
@@ -87,6 +87,8 @@ int main(int argc, char const *argv[])
     exit(-1);
   }
 
+  std::thread threadBeat(heartbeatThreadTask);
+
   while(true){
     struct sockaddr_in clientAddr;
     socklen_t addrLen = sizeof(clientAddr);
@@ -117,6 +119,8 @@ int main(int argc, char const *argv[])
   }
 
     processClient(clientSock, ipstr);
+    cout << "Closing socket in function main in while loop\n";
+    close(clientSock);
   }
 }
 
@@ -157,23 +161,32 @@ string receiveString(int sock)
 }
 //add heartbeat information to DataNode:block hashtable
 
-void processHeartbeat(string nodeIPaddr, string heartbeat_data){
+void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, NodeHashMap& nodeMap){
     //if put attempt returns false, remove the entry and try again
-
-  //DATA_NODE_HASHMAP_HERE
+  cout << "Heartbeat received from " << nodeIPaddr << " contents: " << heartbeat_data << endl;
+  if(DataNodePort != clientPort){
+    cout << "DatNodePort set to " << clientPort << " from " <<DataNodePort << endl;
+   DataNodePort = clientPort;
+  }
+  DataNodeIPs.push_back(nodeIPaddr);
+  //now de-dupe from global IP list
+  for(int i = 0; i<DataNodeIPs.size()-1; i++){
+    if (DataNodeIPs[i] == nodeIPaddr)
+        DataNodeIPs.erase(DataNodeIPs.begin()+i);
+  }
   vector<string> blockFileNames;
   string fileName;
   stringstream s (heartbeat_data);
   while(s>> fileName)
     blockFileNames.push_back(fileName);
-
   // Now we have a vector of block file IDs and the IP addr of the DataNode that holds them
   // Add global hashmap fof block-->vector<string file> table here!!
 
-  // if(HASHMAP.put(nodeIPaddr, blockFileNames) == false){
-  //   cout << "failed to put addresses" << endl;
-  //   exit(-1);
-  // }
+   if(nodeMap.put(nodeIPaddr, blockFileNames) == false){
+     cout << "failed to put addresses" << endl;
+     exit(-1);
+   }
+   
 
 }
 /*
@@ -189,10 +202,10 @@ void processClient(int clientSock, string clientIP)
   NodeHashMap nodeMap;
   vector<string> lsReturn;
   bool check = false;
-  while(true)
-  {
+  //while(true)
+  //{
     command = receiveString(clientSock);
-    cout << command << endl;
+    //cout << command << endl;
 
     //if command is a write block to file, add recieveBlock
 
@@ -203,8 +216,11 @@ void processClient(int clientSock, string clientIP)
     }
 
     if(command == "heartbeat"){
+      string port = receiveString(clientSock); 
       string blocks = receiveString(clientSock);
-      processHeartbeat(blocks, clientIP);
+
+      processHeartbeat(port, clientIP, blocks,  nodeMap);
+      //close(clientSock);
     }
 
     if(command == "mkdir")
@@ -251,8 +267,30 @@ void processClient(int clientSock, string clientIP)
       cout << getName << endl;
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-      //call namenode's create function here
-			cout << endl;
+      sendString(clientSock, to_string(uniqueIDCounter));
+      string IPs = "";
+      for (int i = 0; i<DataNodeIPs.size();i++){
+        string IP = DataNodeIPs[i];
+        IPs.append(IP);
+        IPs.append(" ");
+       sendString(clientSock, IPs);
+       sendString(clientSock,DataNodePort);
+      }
+	  
+	long numBlockNames = receiveLong(clientSock);
+	vector <string> blockNames;
+	for(int i = 0; i < numBlockNames; i++){
+	string getName = receiveString(clientSock);
+	blockNames.push_back(getName);
+	}
+	    
+      check = create(getName, getPath, blockNames, DataNodeIPs, dirMap);
+      sendLong(clientSock, check);
+      if(check == 1)
+	cout << "Success" << endl;
+      else
+	cout << "Error" << endl;
+      cout << endl;
     }
     else if (command == "stat")
     {
@@ -286,7 +324,7 @@ void processClient(int clientSock, string clientIP)
 			cout << endl;
     }
 
-  } //end while
+  //} //end while
 }
 
 bool mkdir(string name, string path, DirHashMap& dirMap){
@@ -348,3 +386,129 @@ vector<string> ls(string path, DirHashMap& dirMap)
 		returnList.push_back(tempDir->files[i].fileName);
 	return returnList;
 }
+
+bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap){
+	bool check = false;
+	ContainerObject tempFile;
+	tempFile.fileName = name;
+	tempFile.filePath = path;
+	//Block temp;
+        //send ENTIRE set of DataNode IPs to Client to decide where to send
+    string DN_IPs = "";
+    for (int i = 0; i<dataNodeIP.size(); i++){
+      DN_IPs.append(dataNodeIP[i]);
+      //now we have a string of DN IP addresses to send over the network into receiveString on Client
+    }
+
+	check = dirMap.put(path, tempFile);
+	size_t found = path.find_last_of("/\\");
+	if(found != -1 && check != false){
+		ContainerObject* parent = new ContainerObject();
+		string shortPath = path.substr(0,found);
+		dirMap.get(shortPath, parent);
+		parent->files.push_back(tempFile);
+		dirMap.put(shortPath, *parent);
+	}
+	return check;
+}
+
+//send peer list ot all datanodes
+void heartbeatThreadTask(){
+   
+  while(true){
+    this_thread::sleep_for(chrono::seconds(60));
+    cout<< "1-min heartbeat!\n";
+    //first turn vectors into char*
+    if(DataNodePort == "0")
+        this_thread::sleep_for(chrono::seconds(60));
+    unsigned short port = (unsigned short)atoi(DataNodePort.c_str());
+
+    string IPs = "";
+    for(int i = 0; i<DataNodeIPs.size(); i++){ 
+        IPs.append(DataNodeIPs[i]);
+    }
+   for(int i = 0; i<DataNodeIPs.size(); i++){ 
+       int n = DataNodeIPs[i].length();
+       char DN_IP[n+1];
+       strcpy(DN_IP, DataNodeIPs[i].c_str()); 
+       
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+   if(sock < 0) {
+    cout << "THREAD: Error with socket" << endl;
+    exit(-1);
+   }
+
+  char* IPAddr = const_cast<char *>(DN_IP);
+
+  unsigned long servIP;
+  int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
+  if (status <= 0) {
+    cout << "THREAD: Error with convert dotted decimal address to int" << endl;
+    exit(-1);
+  }
+ 
+  struct sockaddr_in servAddr;
+  servAddr.sin_family = AF_INET; // always AF_INET
+  servAddr.sin_addr.s_addr = servIP;
+  servAddr.sin_port = htons(port);
+  int connect_attempts = 0;
+
+  status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  if(status < 0) {
+    while(connect_attempts<3){
+      status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+      connect_attempts++;
+    }
+    if(status < 0) {
+    cout << "THREAD: Error with connect to IP: " << DataNodeIPs[i] << endl;
+    exit(-1);
+  }
+  }
+    sendHeartbeat(sock, IPs);
+    cout << "Closing socket in function main after HeartBeat\n";
+    close(sock);
+  }
+ }
+}
+
+void sendHeartbeat(int sock, string IPstring){
+//sends a single string list of IPs to DataNode
+  sendString(sock, "heartbeat");
+  sendString(sock, IPstring);
+  cout << "HEARTBEAT CONTENTS: " << IPstring << endl;
+  //close(sock);
+}
+
+//receive a numeric over the network 
+long receiveLong(int clientSock)
+{
+  int bytesLeft = sizeof(long);  // bytes to read
+  long numberGiven;   // initially empty
+  char *bp = (char *) &numberGiven;
+  while (bytesLeft) {
+    int bytesRecv = recv(clientSock, bp, bytesLeft, 0);
+    if (bytesRecv <= 0) {
+      pthread_exit(NULL);
+    }
+    bytesLeft = bytesLeft - bytesRecv;
+    bp = bp + bytesRecv;
+  }
+  long hostToInt = ntohl(numberGiven);
+  return hostToInt;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
