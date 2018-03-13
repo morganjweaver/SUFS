@@ -1,6 +1,7 @@
 #ifndef Block_h
 #define Block_h
 #include <string>
+using namespace std;
 
 class Block {
 public:
