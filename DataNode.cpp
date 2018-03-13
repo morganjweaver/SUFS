@@ -80,7 +80,7 @@ int main(int argc, char const *argv[])
 //-------------------------------------------------------TEST CODE
 blockNames.push_back("dummy_file");
 //--------------------------------------------------------------
-  while(true){
+  //while(true){
    cout <<"entered while loop!\n"; 
 
     struct sockaddr_in clientAddr;
@@ -92,7 +92,7 @@ blockNames.push_back("dummy_file");
     }
     cout << "launching processDataNode\n";
     processDataNode(clientSock);
-  }
+  //}
 }
 
 //Takes list of DataNode peers from NameNode every minute and updates peer node vector
