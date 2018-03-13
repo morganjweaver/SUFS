@@ -92,6 +92,7 @@ blockNames.push_back("dummy_file");
     }
     cout << "launching processDataNode\n";
     processDataNode(clientSock);
+    cout << "Closing socket in function main after processDataNode\n";
     close(clientSock);
   }
 }
@@ -163,6 +164,7 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
     this_thread::sleep_for(chrono::seconds(10));
     cout<< "10-sec heartbeat!\n";
     sendHeartbeat(sock);
+    cout << "Closing socket in function threadTask after Heartbeat sent\n";
     close(sock);
   }
 }

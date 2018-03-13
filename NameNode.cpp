@@ -445,7 +445,7 @@ void heartbeatThreadTask(){
     cout << "THREAD: Error with convert dotted decimal address to int" << endl;
     exit(-1);
   }
-
+ 
   struct sockaddr_in servAddr;
   servAddr.sin_family = AF_INET; // always AF_INET
   servAddr.sin_addr.s_addr = servIP;
@@ -456,6 +456,7 @@ void heartbeatThreadTask(){
     exit(-1);
   }
     sendHeartbeat(sock, IPs);
+    cout << "Closing socket in function main after HeartBeat\n";
     close(sock);
   }
  }
