@@ -161,6 +161,7 @@ string receiveString(int sock)
 
 void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, NodeHashMap& nodeMap){
     //if put attempt returns false, remove the entry and try again
+  cout << "Heartbeat received from " << nodeIPaddr << " contents: " << heartbeat_data << endl;
   if(DataNodePort != clientPort){
     cout << "DatNodePort set to " << clientPort << " from " <<DataNodePort << endl;
    DataNodePort = clientPort;
@@ -202,7 +203,7 @@ void processClient(int clientSock, string clientIP)
   while(true)
   {
     command = receiveString(clientSock);
-    cout << command << endl;
+    //cout << command << endl;
 
     //if command is a write block to file, add recieveBlock
 
