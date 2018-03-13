@@ -393,23 +393,30 @@ bool create(string name, string path, vector<string> chunkID, vector<string> dat
 	tempFile.fileName = name;
 	tempFile.filePath = path;
 	Block temp;
+	int counter = 0;
         //send ENTIRE set of DataNode IPs to Client to decide where to send
     string DN_IPs = "";
     for (int i = 0; i<dataNodeIP.size(); i++){
       DN_IPs.append(dataNodeIP[i]);
       //now we have a string of DN IP addresses to send over the network into receiveString on Client
     }
-
-	check = dirMap.put(path, tempFile);
-	size_t found = path.find_last_of("/\\");
-	if(found != -1 && check != false){
-		ContainerObject* parent = new ContainerObject();
-		string shortPath = path.substr(0,found);
-		dirMap.get(shortPath, parent);
-		parent->files.push_back(tempFile);
-		dirMap.put(shortPath, *parent);
-	}
-	return check;
+    for(int i = 0; i < chunkID.size(); i++){
+	int tempSize = counter % dataNodeIP.size();
+	temp.IP = dataNodeIP[tempSize];
+	temp.chunk_ID = chunkID[i];
+	tempFile.blocks.push_back(temp);
+	counter++;	
+     }
+     check = dirMap.put(path, tempFile);
+     size_t found = path.find_last_of("/\\");
+     if(found != -1 && check != false){
+	ContainerObject* parent = new ContainerObject();
+	string shortPath = path.substr(0,found);
+	dirMap.get(shortPath, parent);
+	parent->files.push_back(tempFile);
+        dirMap.put(shortPath, *parent);
+      }
+      return check;
 }
 
 //send peer list ot all datanodes
