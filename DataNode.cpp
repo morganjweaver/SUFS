@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <sys/time.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
@@ -58,6 +59,7 @@ int main(int argc, char const *argv[])
   }
   char* IPAddr = const_cast<char *>(argv[1]);
   unsigned short servPort = atoi(argv[2]);
+  std::thread threadBeat(heartbeatThreadTask, IPAddr, servPort);
 
   struct sockaddr_in servAddr;
   servAddr.sin_family = AF_INET; // always AF_INET
@@ -67,7 +69,6 @@ int main(int argc, char const *argv[])
   if (status < 0) {
     cerr << "Error with MAIN bind" << endl;
     exit (-1);
-
   }
 
   status = listen(sock, MAXPENDING);
@@ -75,8 +76,6 @@ int main(int argc, char const *argv[])
     cerr << "Error with listen" << endl;
     exit(-1);
   }
-
-  std::thread threadBeat(heartbeatThreadTask, IPAddr, servPort);
 
   while(true){
    cout <<"entered while loop!\n"; 
@@ -87,10 +86,9 @@ int main(int argc, char const *argv[])
     if (clientSock < 0) {
       cerr << "Error with accept" << endl;
       exit(-1);
-      cout << "launching processDataNode\n";
-      processDataNode(clientSock);
     }
-    
+    cout << "launching processDataNode\n";
+    processDataNode(clientSock);
   }
 }
 
@@ -316,7 +314,7 @@ void sendHeartbeat(int sock){
   flag = 0; //mark flag open
   cout << "Sending heartbeat: " << filenames << endl;
   sendString(sock, filenames);
-
+  close(sock);
 }
 
 string receiveString(int sock) {
