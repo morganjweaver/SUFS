@@ -378,14 +378,11 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
     removeFile(chunkedFileName);
   }
 
-  //loop blockToDataNode for all the chunks
-  //blockToDataNode(char* DNIPaddr, unsigned short port, string chunkedFile);
-
   //TESTME!! Make sure strings get into vectors  
   cout << "Created File: " << name << endl;
 
   
-  /* UNCOMMMENT WHEN ERROR CHECKING INTEGER IS IMPLEMENTED IN NAMENODE
+  /* 
   string tempPath = path;
   if(tempPath[tempPath.size()-1] != "/"){
     tempPath = tempPath + "/";
