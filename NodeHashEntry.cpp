@@ -2,21 +2,20 @@
 using namespace std;
 
 class NodeHashEntry {
-private:
-      string key;
-      string value;
-	  
-public:
-      DNodeIDHashEntry(string key, string value) {
-            this->key = key;
-            this->value = value;
-      }
+	private:
+		  string key;
+		  string value;
+	public:
+		NodeHashEntry(string key, string value) {
+			this->key = key;
+			this->value = value;
+		}
 
-      int getKey() {
-            return key;
-      }
+		string getKey() {
+			return key;
+		}
 
-      string getValue() {
-            return value;
-      }
+		string getValue() {
+			return value;
+		}
 };

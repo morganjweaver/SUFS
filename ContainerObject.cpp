@@ -5,27 +5,24 @@
 
 using namespace std;
 
-class ContainerObject
+class File
 {
   public:
-    string name;
-    string path;    
-
-};
-
-class File : public ContainerObject
-{
-  public:  
+	string fileName;
+	string filePath;
     float size;
-    vector<block> blocks;
-   
+    //vector<block> blocks;
 };
 
-class Directory : public ContainerObject
+class Directory
 {
   public:
+	string dirName;
+	string dirPath;
     vector<File> files;
     vector<Directory> directories;
-
 };
  
+class ContainerObject: public File, public Directory
+{
+};

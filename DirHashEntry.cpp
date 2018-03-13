@@ -1,22 +1,22 @@
 #include "ContainerObject.cpp"
 #include <string>
+using namespace std;
 
 class DirHashEntry {
-private:
-      int key;
-      containerObject value;
-	  
-public:
-      DirHashEntry(string key, ContainerObject value) {
-            this->key = key;
-            this->value = value;
-      }
+	private:
+		string key;
+		ContainerObject value;
+	public:
+		DirHashEntry(string key, ContainerObject value) {
+			this->key = key;
+			this->value = value;
+		}
 
-      int getKey() {
-            return key;
-      }
+		string getKey() {
+			return key;
+		}
 
-      ContainerObject getValue() {
-            return value;
-      }
+		ContainerObject getValue() {
+			return value;
+		}
 };

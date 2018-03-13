@@ -11,6 +11,8 @@ iostream
 -
 cstring
 -
+cstdio
+-
 string
 -
 vector
@@ -36,6 +38,10 @@ netinet/in.h
 string.h
 -
 arpa/inet.h
+-
+sys/types.h
+-
+cstdlib
 -
 aws/core/Aws.h
 -

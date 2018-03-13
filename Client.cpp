@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <string>
@@ -15,7 +16,8 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
-
+#include <sys/types.h>
+#include <cstdlib>
 #include <aws/core/Aws.h>
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/PutObjectRequest.h>
@@ -27,8 +29,10 @@
 #define PORT 8080
 using namespace std;
 
+//TODO: man 2 sendfile to chunk and move blocks to server EC2
 const long chunkSize = 67108864;
 
+<<<<<<< HEAD
 /*
 ** Client Functions
 These function help with starting/handling the commands typed in my user
@@ -51,10 +55,66 @@ char **sendRPC(char* request);
 
 void chunkFile(string fullFilePath, string chunkName);
 int sendRPC(char* request);
+=======
+const int SUCCESS = 0;
+const int FILE_NOT_EXIST = 1;
+const int PATH_NOT_EXIST = 2;
+const int FILE_EXISTS = 3;
+const int DIRECTORY_EXIST = 4;
+const int DIRECTORY_NOT_EMPTY = 5;
+const int DIRECTORY_NOT_EXIST = 6;
+
+void handleCommand(string cmd, int socket);
+void ls(string filepath, int socket);
+void mkdir(string name, string path, int socket);
+void rmdir(string name, string path, int socket);
+void create(string name, string path, string S3_file, string S3_bucket, int socket);
+void cat(string path, int socket);
+void stat(string name, int socket);
+void sendBlock(int sock, string file_name);
+void sendLong(int clientSock, long size);
+void sendBlockHelper(int sock, string file_name);
+void sendString(int sock, string wordSent);
+string receiveString(int sock);
+long receiveLong(int clientSock);
+int chunkFile(string fullFilePath, string chunkName);
+>>>>>>> c7d15d78a4307e75ae3600736a7ac4ac1a05713a
 void getObject(string s3file, string s3bucket);
 
-int main()
+int main(int argc, char const *argv[])
 {
+  if(argc < 3) {
+    cout << "Error: Missing command line arguments" << endl;
+    cout << "Usage: ./Cient [ip_address] [portnumber]" << endl;
+    return 1;
+  }
+
+  int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if(sock < 0) {
+    cout << "Error with socket" << endl;
+    exit(-1);
+  }
+
+  char* IPAddr = const_cast<char *>(argv[1]);
+  unsigned short servPort = atoi(argv[2]);
+
+  unsigned long servIP;
+  int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
+  if (status <= 0) {
+    cout << "Error with convert dotted decimal address to int" << endl;
+    exit(-1);
+  }
+
+  struct sockaddr_in servAddr;
+  servAddr.sin_family = AF_INET; // always AF_INET
+  servAddr.sin_addr.s_addr = servIP;
+  servAddr.sin_port = htons(servPort);
+  status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  if(status < 0) {
+    cout << "Error with connect" << endl;
+    exit(-1);
+  }
+
   string user_command;
 
   //Welcome message
@@ -62,12 +122,11 @@ int main()
   cout << "Welcome to SUFS!" << endl;
   cout << "Command List: " << endl;
   cout << "mkdir <name> <path> -- Make a directory" << endl;
-  cout << "rmdir <path> -- Remove a directory" << endl;
+  cout << "rmdir <name> <path> -- Remove a directory" << endl;
   cout << "ls <path> -- List the contents of the current directory" << endl;
   cout << "create <name> <path> <s3 filename> <s3 bucket name>-- Create a file with S3 Object" << endl;
-  cout << "rm <path> -- Remove a file" << endl;
   cout << "cat <path> -- See the contents of a file" << endl;
-  cout << "stat <name> -- See DataNode & Block Replicas" << endl;
+  cout << "stat <path> -- List the DataNodes that store replicas of each block of a file" << endl;
   cout << "exit -- Exit SUFS" << endl;
   cout << endl;
 
@@ -76,19 +135,20 @@ int main()
     {
       cout << ">> ";
       getline(cin, user_command);
-      handleCommand(user_command);
+      handleCommand(user_command, sock);
     }
-
+    sendString(sock, "exit");
   cout << endl << endl << endl;
   return 0;
 }
 
 //Function that handles which command was entered
-void handleCommand(string cmd)
+void handleCommand(string cmd, int socket)
 {
   string buf;
   stringstream ss(cmd);
   vector<string> input;
+
   while (ss >> buf){
     input.push_back(buf);
   }
@@ -108,134 +168,130 @@ void handleCommand(string cmd)
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      ls(input[1]);
+      ls(input[1], socket);
     }
   } else if (input[0] == "mkdir"){
     if(input.size() != 3){
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      mkdir(input[1], input[2]);
+      mkdir(input[1], input[2], socket);
     }
   } else if (input[0] == "rmdir") {
-    if(input.size() != 2){
+    if(input.size() != 3){
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      rmdir(input[1]);
+      rmdir(input[1], input[2], socket);
     }
   } else if (input[0] == "create") {
     if(input.size() != 5){
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      create(input[1], input[2], input[3], input[4]);
+      create(input[1], input[2], input[3], input[4], socket);
     }
   } else if (input[0] == "cat") {
     if(input.size() != 2){
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      cat(input[1]);
+      cat(input[1], socket);
     }
   } else if (input[0] == "stat"){
     if(input.size() != 2){
       cout << "Error. Invalid command line arguments." << endl;
       return;
     } else {
-      stat(input[1]);
+      stat(input[1], socket);
     }
   }
-
 }
 
-char **sendRPC(char* request){
-
-    struct sockaddr_in address;
-    int sock = 0, valread;
-    struct sockaddr_in serv_addr;
-    char *hello = "Hello from client";
-    char buffer[1024] = {0};
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        printf("\n Socket creation error \n");
-        return -1;
-    }
-
-    memset(&serv_addr, '0', sizeof(serv_addr));
-
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-
-    //**SERVER IP ADDR GOES HERE; current is CS1**
-    // Convert IPv4 and IPv6 addresses from text to binary form
-    if(inet_pton(AF_INET, "172.31.21.99", &serv_addr.sin_addr)<=0)
-    {
-        printf("\nInvalid address/ Address not supported \n");
-        return -1;
-    }
-
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-        printf("\nConnection Failed \n");
-        return -1;
-    }
-    send(sock , request , strlen(request) , 0 );
-    printf("Message sent\n");
-    valread = read( sock , buffer, 1024);
-    printf("%s\n",buffer );
-    return 0;
-}
-/*
-*******************************************************************************
-*/
 
 /*
 View contents of directory
 Provide absolute filepath
 */
-void ls(string filepath)
+void ls(string filepath, int socket)
 {
-  string temp = filepath;
-  const char* request = temp.c_str();
-  int handled = sendRPC(const_cast<char*>(request));
-  if(handled == 0){
-    cout<<"SUCCESS ls function and 0 return of RPC fx" << endl;;
-  } else{
-      cout<<"NO SUCCESS on ls fx and RPC fx" << endl;
+  //cout << "List Current Directory: " << filepath << endl;
+  sendString(socket, "ls");
+  sendString(socket, filepath);
+
+  int numItems = receiveLong(socket);
+
+  if(numItems == 0){
+    cout << "Error" << endl;
+    return;
   }
 
-  cout << "List Current Directory: " << filepath << endl;
+  cout << "Listing current directory \"" << filepath << "\"" << endl;
+  for(int i = 0; i < numItems; i++){
+    string getItem = receiveString(socket);
+    cout << "-" << getItem << endl;
+  }
+
+  //after sending the name and the path
+  //and the namenode has determined that the mkdir was successful
+  //mkdir should wait to receive a long from the namenode, say X
+  //then it waits for X amount of string receives
+  //load into vector
+  //iterate through and print out the vector
+
+  /* UNCOMMENT THIS FOR THE ERROR CHECKING MESSAGES
+  long response = receiveLong(socket);
+  if(response == SUCCESS){
+    cout << "Listing current directory: " << filepath << endl;
+  } else if(response = PATH_NOT_EXIST){
+    cout << "Error. Path does not exist" << endl;
+  }  else if(response == DIRECTORY_NOT_EXIST){
+  cout << "Error. Directory does not exist" << endl;
+  }
+  */
 }
 
 /*
 Make directory
 Provide directory name and path to where directory will be created
 */
-void mkdir(string name, string path)
+void mkdir(string name, string path, int socket)
 {
-  string filename = name;
-  string abspath = path;
-  const char* request_name = name.c_str();
-  const char* request_path = path.c_str();
+  sendString(socket, "mkdir");
+  sendString(socket, name);
+  sendString(socket, path);
 
-  //send the directory name
-  int handled = sendRPC(const_cast<char*>(request_name));
-  if(handled == 0){
-    cout<<"SUCCESS mkdir function and 0 return of RPC fx" << endl;;
-  } else{
-      cout<<"NO SUCCESS on mkdir fx and RPC fx" << endl;;
+  long response = receiveLong(socket);
+  if(response == 1)
+    cout << "Successfully made directory \"" << name << "\""<< endl;
+  else
+    cout << "Failed to make directory" << endl;
+
+  //cout << "Successfully made directory \"" << name << "\""<< endl;
+  /*
+  string tempPath = path;
+  if(tempPath[tempPath.size()-1] != "/"){
+    tempPath = tempPath + "/";
   }
+  */
 
-  //send the path to where the directory should be placed
-  handled = sendRPC(const_cast<char*>(request_path));
-  if(handled == 0){
-    cout<<"SUCCESS mkdir function and 0 return of RPC fx" << endl;
-  } else{
-      cout<<"NO SUCCESS on mkdir fx and RPC fx" << endl;
+  /*
+  long response; //=receiveLong(socket);
+  if(response == 1)
+    cout << "Successfully made Directory: " << tempPath + name << endl;
+  else
+    cout << "Failed to make directory" << endl;
+  */
+
+  /* UNCOMMENT FOR ERROR CHECKING INTEGERS FROM NAMENODE IS IMPLEMENTED
+  if(response == SUCCESS){
+    cout << "Successfully made directory: " << tempPath + name << endl;
+  } else if (response == PATH_NOT_EXIST){
+    cout << "Error. Path does not exist" << endl;
+  } else if (response == DIRECTORY_EXIST){
+    cout << "Error. Directory in that name already exists." << endl;
   }
-
-  cout << "Made Directory: " << name << endl;
+  */
 }
 
 /*
@@ -243,50 +299,74 @@ Remove Directory
 Provide absolute path to directory to be deleted
 Directory must be empty to delete
 */
-void rmdir(string path)
+void rmdir(string name, string path, int socket)
 {
-  string temp = path;
-  const char* request = temp.c_str();
+  sendString(socket, "rmdir");
+  sendString(socket, name);
+  sendString(socket, path);
 
-  int handled = sendRPC(const_cast<char*>(request));
-  if(handled == 0){
-    cout<<"SUCCESS rmdir function and 0 return of RPC fx" << endl;
-  } else{
-      cout<<"NO SUCCESS on rmdir fx and RPC fx" << endl;
+  long response = receiveLong(socket);
+  if(response == 1)
+    cout << "Successfully removed Directory: " << path << endl;
+  else
+    cout << "Failed to remove directory" << endl;
+
+  /* UNCOMMENT CODE WHEN INTEGER MESSAGES HAVE BEEN IMPLEMENTED IN NAME NODE
+  if(response == SUCCESS){
+    cout << "Successfully removed directory: " << path << endl;
+  } else if(response == DIRECTORY_NOT_EXIST){
+    cout << "Error. Directory does not exist" << endl;
+  } else if(response == PATH_NOT_EXIST){
+    cout << "Error. Path does not exist" << endl;
+  } else if(response == DIRECTORY_NOT_EMPTY){
+  cout << "Error. Directory is not empty" << endl;
   }
-
-  cout << "Removed Directory: " << path << endl;
+  */
 }
 
 /*
 Create file
 Provide file name, absolute filepath, S3 Object address
 */
-void create(string name, string path, string S3_file, string S3_bucket)
+void create(string name, string path, string S3_file, string S3_bucket, int socket)
 {
+  sendBlock(socket, name);
+  /*
+  getObject(S3_file, S3_bucket);
+  int numChunks = chunkFile(S3_file, name);
+  cout << numChunks << endl;
+
+  cin.ignore();
+
+  for(int i = 1; i <= numChunks; i++){
+    string chunkFileName = name + '.' + to_string(i);
+    sendBlock(socket, chunkFileName);
+  }
+  */
   cout << "Created File: " << name << endl;
 
-  //socket code here
-  //sent to nameNode file creation request
-  //nn_create(name, path);
-
-  //wait for response
-  //error or success
-
-  //get from NameNode some DataNode information
+  //sendString(socket, "create");
+  //sendString(socket, S3_file);
+  //sendString(socket, path);
 
   //get the file from S3 into local drive
-  getObject(S3_file, S3_bucket);
+  //getObject(S3_file, S3_bucket);
 
-  chunkFile(S3_file, name);
-  //get num chunks returned from chunkFile
-  /*
-  int dnode_id = 1;
-  for(int i = 1; i <= numChunks; i++){
-    sendChunk(name + "." + i, dnode + dnode_id)
-    dnode_id++;
-    if(dnode_id == 4)
-      dnode_id = 1;
+  //chunkFile(S3_file, name);
+
+  /* UNCOMMMENT WHEN ERROR CHECKING INTEGER IS IMPLEMENTED IN NAMENODE
+  string tempPath = path;
+  if(tempPath[tempPath.size()-1] != "/"){
+    tempPath = tempPath + "/";
+  }
+
+  long response; //=receiveLong(socket);
+  if(response == SUCCESS){
+    cout << "Successfully created file: " << tempPath + name << endl;
+  } else if (response == PATH_NOT_EXIST){
+    cout << "Error. Path does not exist" << endl;
+  } else if (response == FILE_EXISTS){
+    cout << "Error. File already exists under this name" << endl;
   }
   */
 }
@@ -295,32 +375,55 @@ void create(string name, string path, string S3_file, string S3_bucket)
 View contents of file
 Provide absolute file path
 */
-void cat(string path)
+void cat(string path, int socket)
 {
   cout << "Viewing File Content of: " << path << endl;
+  sendString(socket, "cat");
+  sendString(socket, path);
+
+  /* UNCOMMENT WHEN READY TO RECEIVE INT MESSAGES FROM NAMENODE
+  long response = receiveLong(socket);
+  if(response == SUCCESS){
+    cout << "Viewing file content of: " << path << endl;
+  } else if (response == FILE_NOT_EXIST){
+    cout << "Error. File does not exist" << endl;
+  } else if (response == PATH_NOT_EXIST){
+    cout << "Error. Path does not exist" << endl;
+  }
+  */
 }
 
 /*
 View stat of file
 Provide filename
 */
-void stat(string name)
+void stat(string name, int socket)
 {
-  cout << "Stat Contenet of: " << name << endl;
+  cout << "Stat Content of: " << name << endl;
+  sendString(socket, "stat");
+  sendString(socket, name);
+
+  /* UNCOMMENT WHEN READY TO RECEIVE INT MESSAGES FROM NAMENODE
+  long response = receiveLong(socket);
+  if(response == SUCCESS){
+    cout << "Stat content of: " << name << endl;
+  } else if(response == FILE_NOT_EXIST){
+    cout << "Error. File does not exist" << endl;
+  } else if(response == PATH_NOT_EXIST){
+    cout << "Error. Path does not exist" << endl;
+  }
+  */
 }
 
 /*
 chunk File into multiple blocks
 */
-void chunkFile(string fullFilePath, string chunkName)
+int chunkFile(string fullFilePath, string chunkName)
 {
-
     ifstream fileStream;
-
     fileStream.open(fullFilePath.c_str(), ios::in | ios::binary);
 
     // File open a success
-
     if (fileStream.is_open()) {
 
         ofstream output;
@@ -358,8 +461,10 @@ void chunkFile(string fullFilePath, string chunkName)
         // Close input file stream.
         fileStream.close();
         cout << "Chunking complete! " << counter - 1 << " files created." << endl;
+	return (counter - 1);
     }
     else { cout << "Error opening file!" << endl; }
+    return 0;
 }
 
 /*
@@ -403,4 +508,95 @@ void getObject(string s3file, string s3bucket)
       }
   }
   Aws::ShutdownAPI(options);
+}
+
+void sendString(int sock, string wordSent)
+{
+  char wordBuffer[2000];
+  strcpy(wordBuffer, wordSent.c_str());
+  int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
+  if (bytesSent != 2000) {
+    cerr << "Error sending " << endl;
+    exit(-1);
+  }
+}
+
+string receiveString(int sock)
+{
+  int bytesLeft = 2000;
+  char stringBuffer[2000];
+  while(bytesLeft) {
+    int bytesRecv = recv(sock, stringBuffer, bytesLeft, 0);
+    if (bytesRecv < 0) {
+      cout << "Error with receiving " << endl;
+      exit(-1);
+    }
+    bytesLeft = bytesLeft - bytesRecv;
+  }
+  return stringBuffer;
+}
+
+void sendLong(int clientSock, long size)
+{
+  size = htonl(size);
+  int bytesSent = send(clientSock, (void *) &size, sizeof(long), 0);
+  if(bytesSent != sizeof(long)) {
+    pthread_exit(NULL);
+  }
+}
+
+long receiveLong(int clientSock)
+{
+  int bytesLeft = sizeof(long);  // bytes to read
+  long numberGiven;   // initially empty
+  char *bp = (char *) &numberGiven;
+  while (bytesLeft) {
+    int bytesRecv = recv(clientSock, bp, bytesLeft, 0);
+    if (bytesRecv <= 0) {
+      pthread_exit(NULL);
+    }
+    bytesLeft = bytesLeft - bytesRecv;
+    bp = bp + bytesRecv;
+  }
+  long hostToInt = ntohl(numberGiven);
+  return hostToInt;
+}
+
+
+//C++-based: takes client socket and block file name and
+//then sends name and size to sendBlockHelper to send
+void sendBlock(int sock, string file_name){
+
+    sendString(sock, file_name);
+    //now take file size and send over
+    FILE* readPtr;
+    readPtr = fopen(file_name.c_str(),"rb");
+    fseek(readPtr, 0L, SEEK_END);
+    long file_size = ftell(readPtr);
+    sendLong(sock, file_size);
+    sendBlockHelper(sock, file_name);
+    fclose(readPtr);
+}
+//C-based: sends a binary file to Server by reading out of directory and calculating size
+void sendBlockHelper(int sock, string file_name) {
+  FILE* readPtr;
+  readPtr = fopen(file_name.c_str(),"rb");
+  unsigned char binaryBuffer[2000];
+  fseek(readPtr, 0L, SEEK_END);
+  long file_size = ftell(readPtr);
+  rewind(readPtr);
+
+  long remaining_to_send = file_size;
+
+  while(remaining_to_send > 0){
+      long b_read = fread(binaryBuffer, 1 , sizeof(binaryBuffer),readPtr);
+      int bytesSent = send(sock, (void *) binaryBuffer, b_read, 0);
+      if (bytesSent != b_read) {
+        cerr << "Error sending " << endl;
+        exit(-1);
+      }
+      remaining_to_send = remaining_to_send - (long)bytesSent;
+      cout << "sent " << bytesSent << " remain " << remaining_to_send << "\n";
+      fclose(readPtr);
+    }
 }
