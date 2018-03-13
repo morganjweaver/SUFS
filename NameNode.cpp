@@ -119,6 +119,7 @@ int main(int argc, char const *argv[])
   }
 
     processClient(clientSock, ipstr);
+    cout << "Closing socket in function main in while loop\n";
     close(clientSock);
   }
 }
@@ -219,7 +220,7 @@ void processClient(int clientSock, string clientIP)
       string blocks = receiveString(clientSock);
 
       processHeartbeat(port, clientIP, blocks,  nodeMap);
-      close(clientSock);
+      //close(clientSock);
     }
 
     if(command == "mkdir")
