@@ -50,6 +50,7 @@ vector<string> ls(string path, DirHashMap& dirMap);
 vector<string> DataNodeIPs;
 void heartbeatThreadTask();
 void sendHeartbeat(int sock, string IPstring);
+bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap);
 string DataNodePort = "0";
 //SERVER SOCKET CODE
 int main(int argc, char const *argv[])
