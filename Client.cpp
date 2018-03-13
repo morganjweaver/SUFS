@@ -34,14 +34,6 @@ using namespace std;
 const long chunkSize = 67108864;
 int counter = 0;
 
-const int SUCCESS = 0;
-const int FILE_NOT_EXIST = 1;
-const int PATH_NOT_EXIST = 2;
-const int FILE_EXISTS = 3;
-const int DIRECTORY_EXIST = 4;
-const int DIRECTORY_NOT_EMPTY = 5;
-const int DIRECTORY_NOT_EXIST = 6;
-
 void handleCommand(string cmd, int socket);
 void ls(string filepath, int socket);
 void mkdir(string name, string path, int socket);
@@ -248,7 +240,7 @@ void rmdir(string name, string path, int socket)
 
 //sendToDataNode(), which takes in an IP, a Port, and a chunked file name
 void blockToDataNode(char* DNIPaddr, unsigned short port, string chunkedFile){
-//set up connection to given DataBlock then funnel into sendBlock.
+  //set up connection to given DataBlock then funnel into sendBlock.
    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
    if(sock < 0) {
     cout << "blockToDataNode: Error with socket" << endl;
@@ -298,7 +290,8 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   vector<string> IPs;
   string filename;
   stringstream s (DataNodeIPs);
-  while(s>> filename)
+  vector<string> blockIDnames;
+  while(s >> filename)
     IPs.push_back(filename);
 
   //download object from S3
@@ -310,9 +303,16 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   for(int i = 1; i <= numChunks; i++){
     int sendingIP = counter % numDataNodes;
     string chunkedFileName = baseName + "." + to_string(i);
+    blockIDnames.push_back(chunkedFileName);
     char * IP = const_cast<char*>(IPs[sendingIP].c_str());
-    blockToDataNode(IP, dataNodePort, chunkedFileName);
+    blockToDataNode(IP, dataNodePort, chunkedFileName);  
     counter++;
+  }
+
+  sendLong(socket, blockIDnames.size());
+
+  for(int i = 0; i < blockIDnames.size(); i++){
+    sendString(socket, blockIDnames[i]);
   }
   
   removeFile(S3_file);
@@ -322,7 +322,12 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
     removeFile(chunkedFileName);
   }
   
-  cout << "Created File: " << name << endl;
+  //determine success or error
+  int response = receiveLong(socket);
+  if(response == 1)
+    cout << "Successfully created file \"" << name << "\" " << endl;
+  else
+    cout << "Error creating file" << endl;
 }
 
 /*
@@ -332,9 +337,15 @@ Provide absolute file path
 void cat(string path, int socket)
 {
   cout << "Viewing File Content of: " << path << endl;
+  
   sendString(socket, "cat");
+  //send the absolute to namenode data structure 
   sendString(socket, path);
-
+  
+  //will be receiving block_IDs and associated DataNode_IPs
+  //use information from stat? 
+  //create stat first before writing cat
+  //get all the block_IDs and DataNode_IPs 
 }
 
 /*
@@ -346,6 +357,8 @@ void stat(string name, int socket)
   cout << "Stat Content of: " << name << endl;
   sendString(socket, "stat");
   sendString(socket, name);
+  
+  //receive back a bunch of strings in the form of dataNodeIP and their blockIDs
 }
 
 /*
