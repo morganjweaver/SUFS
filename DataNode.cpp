@@ -136,32 +136,33 @@ void processDataNode(int socket)
 
 void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
    cout << "Heartbeat thread launched!\n";
-   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+   
+  while(true){
+    this_thread::sleep_for(chrono::seconds(10));
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
    if(sock < 0) {
     cout << "THREAD: Error with socket" << endl;
     exit(-1);
-   }
+     }
 
-  char* IPAddr = const_cast<char *>(NameNodeIP);
+    char* IPAddr = const_cast<char *>(NameNodeIP);
 
-  unsigned long servIP;
-  int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
-  if (status <= 0) {
-    cout << "THREAD: Error with convert dotted decimal address to int" << endl;
-    exit(-1);
-  }
+    unsigned long servIP;
+    int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
+    if (status <= 0) {
+      cout << "THREAD: Error with convert dotted decimal address to int" << endl;
+      exit(-1);
+    }
 
-  struct sockaddr_in servAddr;
-  servAddr.sin_family = AF_INET; // always AF_INET
-  servAddr.sin_addr.s_addr = servIP;
-  servAddr.sin_port = htons(NNPort);
-  status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
-  if(status < 0) {
-    cout << "THREAD: Error with connect" << endl;
-    exit(-1);
-  }
-  while(true){
-    this_thread::sleep_for(chrono::seconds(10));
+    struct sockaddr_in servAddr;
+    servAddr.sin_family = AF_INET; // always AF_INET
+    servAddr.sin_addr.s_addr = servIP;
+    servAddr.sin_port = htons(NNPort);
+    status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+    if(status < 0) {
+      cout << "THREAD: Error with connect" << endl;
+      exit(-1);
+    }
     cout<< "10-sec heartbeat!\n";
     sendHeartbeat(sock);
     cout << "Closing socket in function threadTask after Heartbeat sent\n";
