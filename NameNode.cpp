@@ -451,10 +451,18 @@ void heartbeatThreadTask(){
   servAddr.sin_family = AF_INET; // always AF_INET
   servAddr.sin_addr.s_addr = servIP;
   servAddr.sin_port = htons(port);
+  int connect_attempts = 0;
+
   status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if(status < 0) {
+    while(connect_attempts<3){
+      status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+      connect_attempts++;
+    }
+    if(status < 0) {
     cout << "THREAD: Error with connect to IP: " << DataNodeIPs[i] << endl;
     exit(-1);
+  }
   }
     sendHeartbeat(sock, IPs);
     cout << "Closing socket in function main after HeartBeat\n";
