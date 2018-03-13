@@ -50,6 +50,8 @@ vector<string> ls(string path, DirHashMap& dirMap);
 vector<string> DataNodeIPs;
 void heartbeatThreadTask();
 void sendHeartbeat(int sock, string IPstring);
+bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap);
+long receiveLong(int clientSock);
 string DataNodePort = "0";
 //SERVER SOCKET CODE
 int main(int argc, char const *argv[])
@@ -270,6 +272,14 @@ void processClient(int clientSock, string clientIP)
        sendString(clientSock, IPs);
        sendString(clientSock,DataNodePort);
       }
+	  
+	long numBlockNames = receiveLong(clientSock);
+	vector <string> blockNames;
+	for(int i = 0; i < numBlockNames; i++){
+	string getName = receiveString(clientSock);
+	blockNames.push_back(getName);
+	}
+	    
       check = create(getName, getPath, blockNames, DataNodeIPs, dirMap);
       sendLong(clientSock, check);
       if(check == 1)
@@ -454,7 +464,24 @@ void sendHeartbeat(int sock, string IPstring){
   cout << "HEARTBEAT CONTENTS: " << IPstring << endl;
   close(sock);
 }
-       
+
+//receive a numeric over the network 
+long receiveLong(int clientSock)
+{
+  int bytesLeft = sizeof(long);  // bytes to read
+  long numberGiven;   // initially empty
+  char *bp = (char *) &numberGiven;
+  while (bytesLeft) {
+    int bytesRecv = recv(clientSock, bp, bytesLeft, 0);
+    if (bytesRecv <= 0) {
+      pthread_exit(NULL);
+    }
+    bytesLeft = bytesLeft - bytesRecv;
+    bp = bp + bytesRecv;
+  }
+  long hostToInt = ntohl(numberGiven);
+  return hostToInt;
+}
 
 
 
