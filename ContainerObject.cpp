@@ -2,6 +2,7 @@
 #include <vector>
 #include <iterator>
 #include <stdio.h>
+#include "Block.h"
 
 using namespace std;
 
