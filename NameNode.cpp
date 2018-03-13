@@ -269,9 +269,14 @@ void processClient(int clientSock, string clientIP)
         IPs.append(" ");
        sendString(clientSock, IPs);
        sendString(clientSock,DataNodePort);
-  } //now have string for easy sending
-      //call namenode's create function here
-			cout << endl;
+      }
+      check = create(getName, getPath, blockNames, DataNodeIPs, dirMap);
+      sendLong(clientSock, check);
+      if(check == 1)
+	cout << "Success" << endl;
+      else
+	cout << "Error" << endl;
+      cout << endl;
     }
     else if (command == "stat")
     {
