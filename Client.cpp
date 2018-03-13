@@ -186,7 +186,6 @@ Provide absolute filepath
 */
 void ls(string filepath, int socket)
 {
-  //cout << "List Current Directory: " << filepath << endl;
   sendString(socket, "ls");
   sendString(socket, filepath);
 
@@ -232,6 +231,7 @@ void rmdir(string name, string path, int socket)
   sendString(socket, path);
 
   long response = receiveLong(socket);
+  
   if(response == 1)
     cout << "Successfully removed Directory: " << path << endl;
   else
@@ -275,7 +275,6 @@ Provide file name, absolute filepath, S3 Object address
 */
 void create(string name, string path, string S3_file, string S3_bucket, int socket)
 {
- 
   sendString(socket, "create");
   sendString(socket, name);
   sendString(socket, path);
@@ -512,7 +511,6 @@ long receiveLong(int clientSock)
   return hostToInt;
 }
 
-
 //C++-based: takes client socket and block file name and
 //then sends name and size to sendBlockHelper to send
 void sendBlock(int sock, string file_name){
@@ -551,6 +549,7 @@ void sendBlockHelper(int sock, string file_name) {
     }
 }
 
+//delete a file after sending
 void removeFile(string file)
 {
   string filename = file;
