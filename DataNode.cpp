@@ -287,6 +287,8 @@ void sendString(int sock, string wordSent)
   int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
   if (bytesSent != 2000) {
     cerr << "Error sending " << endl;
+    cout << "String: " << wordSent << endl;
+    printf("Versus: %s\n", wordBuffer)
     exit(-1);
   }
 }
