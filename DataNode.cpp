@@ -88,6 +88,7 @@ int main(int argc, char const *argv[])
       cerr << "Error with accept" << endl;
       exit(-1);
     }
+    cout << "launching processDataNode\n";
     processDataNode(clientSock);
   }
 }
@@ -107,9 +108,11 @@ void processHeartbeat(string heartbeat_data){
 }
 void processDataNode(int socket)
 {
-  string receiveData;  
+  string receiveData; 
+
   while(true){
     receiveData = receiveString(socket);
+    cout << "received message: " << receiveData << endl;
     if(receiveData == "heartbeat"){
       cout << "Ready to receive heartbeat" << endl;
       string peerIPs  = receiveString(socket);
@@ -126,6 +129,7 @@ void processDataNode(int socket)
 }
 
 void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
+   cout << "Heartbeat thread launched!\n";
    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
    if(sock < 0) {
     cout << "THREAD: Error with socket" << endl;
@@ -309,7 +313,7 @@ void sendHeartbeat(int sock){
     filenames.append(" ");
   } //now have string for easy sending
   flag = 0; //mark flag open
-  //sendString(sock, )
+  cout << "Sending heartbeat: " << filenames << endl;
   sendString(sock, filenames);
 
 }
