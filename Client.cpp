@@ -307,7 +307,7 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   //download object from S3
   getObject(S3_file, baseName);
   //chunk the file into 64 MB blocks and return the total num blocks
-  int numChunks = chunkFile(S3_file, baseName);
+  int numChunks = chunkFile(S3_file, S3_bucket);
 
   int numDataNodes = IPs.size();
   for(int i = 1; i <= numChunks; i++){
