@@ -115,7 +115,7 @@ int main(int argc, char const *argv[])
       getline(cin, user_command);
       handleCommand(user_command);
     }
-    sendString(sock, "exit");
+    sendString(getNNsocket(argv[1], argv[2]), "exit");
   cout << endl << endl << endl;
   return 0;
 }
@@ -579,7 +579,7 @@ void safeClose(int socket){
     return;
 }
 
-int getNNsocket(char*IP[], char*port[]){
+int getNNsocket(char*IP, char*port){
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if(sock < 0) {
     cout << "Error with socket" << endl;
