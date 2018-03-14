@@ -24,6 +24,7 @@
 #include <sstream>
 #include <cstring>
 #include <cstdlib>
+#include <cxxabi.h>
 #include <stdio.h>
 #include <thread>
 #include <exception>
@@ -54,7 +55,7 @@ void sendHeartbeat(int sock, string IPstring);
 bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap);
 long receiveLong(int clientSock);
 
-string DataNodePort = "0";
+string DataNodePort = "8080";
 //SERVER SOCKET CODE
 
 struct NetException : public exception {
@@ -105,8 +106,7 @@ int main(int argc, char const *argv[])
     }
 
     std::thread threadBeat(heartbeatThreadTask);
-    threadBeat.detach();
-    DataNodeIPs.push_back("172.31.19.92");
+    //DataNodeIPs.push_back("172.31.19.92");
     while(true){
       try{
         struct sockaddr_in clientAddr;
@@ -116,6 +116,7 @@ int main(int argc, char const *argv[])
           cerr << "Error with accept" << endl;
           exit(-1);
         }
+        cout << "accepted client connection" << endl;
 
         //Grabs client IP address for DataNode ID
         socklen_t len;
@@ -135,14 +136,13 @@ int main(int argc, char const *argv[])
             struct sockaddr_in6 *clientSock = (struct sockaddr_in6 *)&addr;
             port = ntohs(clientSock->sin6_port);
             inet_ntop(AF_INET6, &clientSock->sin6_addr, ipstr, sizeof ipstr);
-      }
-
-        processClient(clientSock, ipstr);
+        }
+        cout << "Processing client connection from: " << ipstr << endl;
+        processClient(clientSock, ipstr);        
         cout << "Closing socket in function main in while loop\n";
         close(clientSock);
       }
-      catch(const std::runtime_error& re)
-      {
+      catch(const std::runtime_error& re) {
           // speciffic handling for runtime_error
           std::cerr << "Runtime error: " << re.what() << std::endl;
       }
@@ -152,10 +152,14 @@ int main(int argc, char const *argv[])
           // std::runtime_error which is handled explicitly
           std::cerr << "Error occurred: " << ex.what() << std::endl;
       }
+      catch (abi::__forced_unwind&) {
+         cout << "Thread Closing" << endl;
+         throw;
+      }
       catch(...)
       {
           // catch any other errors (that we have no information about)
-          std::cerr << "Unknown failure occurred. Possible memory corruption" << std::endl;
+          std::cerr << "Unknown failure occurred" << std::endl;
       }
     }
   }
@@ -245,7 +249,9 @@ void processClient(int clientSock, string clientIP)
   bool check = false;
   //while(true)
   //{
+    cout << "waiting for command" << endl;
     command = receiveString(clientSock);
+    cout << "command: " << command << endl;
     //cout << command << endl;
 
     //if command is a write block to file, add recieveBlock
@@ -318,19 +324,23 @@ void processClient(int clientSock, string clientIP)
        cout << "IPs currently in vector: \n";
        for(int j = 0; j<IPs.size(); j++){
          cout << IPs[j];
-}
+       }
        sendString(clientSock, IPs);
        cout << "IP string sent to client: " << IPs << endl;
-       sendString(clientSock,DataNodePort);
+       sendString(clientSock, DataNodePort);
       }
-	  
-	long numBlockNames = receiveLong(clientSock);
-	vector <string> blockNames;
-	for(int i = 0; i < numBlockNames; i++){
+      cout << "receiving blocks" << endl;
+      // OH NOES
+      long numBlockNames = receiveLong(clientSock);
+      cout << "Number of blocks: " << numBlockNames << endl; 
+      vector <string> blockNames;
+      for(int i = 0; i < numBlockNames; i++){
 	string getName = receiveString(clientSock);
+        cout << "receiving name : " << getName << endl;
 	blockNames.push_back(getName);
-	}
+      }
 	    
+      cout << "creating file" << endl;
       check = create(getName, getPath, blockNames, DataNodeIPs, dirMap);
       sendLong(clientSock, check);
       if(check == 1)
