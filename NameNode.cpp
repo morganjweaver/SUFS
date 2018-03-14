@@ -52,6 +52,7 @@ void heartbeatThreadTask();
 void sendHeartbeat(int sock, string IPstring);
 bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap);
 long receiveLong(int clientSock);
+
 string DataNodePort = "0";
 //SERVER SOCKET CODE
 int main(int argc, char const *argv[])
@@ -88,7 +89,7 @@ int main(int argc, char const *argv[])
   }
 
   std::thread threadBeat(heartbeatThreadTask);
-
+  DataNodeIPs.push_back("172.31.19.92");
   while(true){
     struct sockaddr_in clientAddr;
     socklen_t addrLen = sizeof(clientAddr);
@@ -496,7 +497,6 @@ long receiveLong(int clientSock)
   long hostToInt = ntohl(numberGiven);
   return hostToInt;
 }
-
 
 
 

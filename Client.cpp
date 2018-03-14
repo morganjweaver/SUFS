@@ -272,7 +272,7 @@ void blockToDataNode(char* DNIPaddr, unsigned short port, string chunkedFile){
   servAddr.sin_port = htons(port);
   status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if(status < 0) {
-    cout << "THREAD: Error with connect" << endl;
+    cout << "blockToDataNode: Error with connect" << endl;
     exit(-1);
   }
   sendString(sock, "block");
