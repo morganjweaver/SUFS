@@ -52,7 +52,7 @@ int chunkFile(string fullFilePath, string chunkName);
 void getObject(string s3file, string s3bucket);
 void removeFile(string file);
 void safeClose(int socket);
-int getNNsocket(char*IP[], char*port[]);
+int getNNsocket(char*IP, char*port);
 char*NameNodeIP;
 char*NameNodePort;
 
@@ -115,7 +115,7 @@ int main(int argc, char const *argv[])
       getline(cin, user_command);
       handleCommand(user_command);
     }
-    sendString(getNNsocket(argv[1], argv[2]), "exit");
+    sendString(getNNsocket(NameNodeIP, NameNodePort), "exit");
   cout << endl << endl << endl;
   return 0;
 }
@@ -307,7 +307,7 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   //download object from S3
   getObject(S3_file, baseName);
   //chunk the file into 64 MB blocks and return the total num blocks
-  int numChunks = chunkFile(S3_file, baseName);
+  int numChunks = chunkFile(S3_file, S3_bucket);
 
   int numDataNodes = IPs.size();
   for(int i = 1; i <= numChunks; i++){
