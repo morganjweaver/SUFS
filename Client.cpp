@@ -64,8 +64,8 @@ int main(int argc, char const *argv[])
     cout << "Usage: ./Cient [ip_address] [portnumber]" << endl;
     return 1;
   }
-  NameNodeIP = const_cast<char *>argv[1];
-  NameNodePort = const_cast<char *>argv[2];
+  NameNodeIP = const_cast<char *>(argv[1]);
+  NameNodePort = const_cast<char *>(argv[2]);
 
   // int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   // if(sock < 0) {
