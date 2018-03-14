@@ -32,6 +32,7 @@
 #include "IPHashMap.cpp"
 #include "ChunkHashMap.cpp"
 #include "StatObject.cpp"
+#include "CatObject.cpp"
 
 #define PORT 8080
 
@@ -55,6 +56,7 @@ void heartbeatThreadTask();
 void sendHeartbeat(int sock, string IPstring);
 bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap);
 vector<StatObject> stat(string path, DirHashMap& dirMap, ChunkHashMap& ChunkMap);
+vector<CatObject> cat(string path, DirHashMap& dirMap);
 long receiveLong(int clientSock);
 
 string DataNodePort = "8080";
@@ -386,10 +388,17 @@ void processClient(int clientSock, string clientIP)
     }
     else if (command == "cat")
     {
-      getPath = receiveString(clientSock);
-      cout << getPath << endl;
-      //call namenode's cat function here
-			cout << endl;
+        getPath = receiveString(clientSock);
+	cout << getPath << endl;
+	vector<CatObject> catFile;
+	catFile = cat(getPath, dirMap);
+	sendLong(clientSock, catFile.size());
+	for(int i = 0; i < catFile.size(); i++)
+		sendString(clientSock, catFile[i].chunk_ID);
+	sendLong(clientSock, catFile.size());
+	for(int i = 0; i < catFile.size(); i++)
+		sendString(clientSock, catFile[i].IP);
+	cout << endl;
     }
 
   //} //end while
@@ -496,6 +505,19 @@ vector<StatObject> stat(string path, DirHashMap& dirMap, ChunkHashMap& ChunkMap)
 		tempStat.push_back(holdChunk);
 	}
 	return tempStat;
+}
+
+vector<CatObject> cat(string path, DirHashMap& dirMap){
+	ContainerObject* tempFile = new ContainerObject();
+	vector<CatObject> holdCat;
+	CatObject cat;
+	dirMap.get(path, tempFile);
+	for(int i = 0; i < tempFile->blocks.size(); i++){
+		cat.chunk_ID = tempFile->blocks[i].chunk_ID;
+		cat.IP = tempFile->blocks[i].IP;
+		holdCat.push_back(cat);
+	}
+	return holdCat;
 }
 
 //send peer list ot all datanodes
