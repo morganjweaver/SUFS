@@ -146,6 +146,7 @@ void handleCommand(string cmd)
   if(input[0] == "ls"){
     if(input.size() != 2){
       cout << "Error. Invalid command line arguments." << endl;
+	safeClose(socket);
       return;
     } else {
       ls(input[1], socket);
@@ -153,6 +154,7 @@ void handleCommand(string cmd)
   } else if (input[0] == "mkdir"){
     if(input.size() != 3){
       cout << "Error. Invalid command line arguments." << endl;
+	    safeClose(socket);
       return;
     } else {
       mkdir(input[1], input[2], socket);
@@ -160,6 +162,7 @@ void handleCommand(string cmd)
   } else if (input[0] == "rmdir") {
     if(input.size() != 3){
       cout << "Error. Invalid command line arguments." << endl;
+	    safeClose(socket);
       return;
     } else {
       rmdir(input[1], input[2], socket);
@@ -167,6 +170,7 @@ void handleCommand(string cmd)
   } else if (input[0] == "create") {
     if(input.size() != 5){
       cout << "Error. Invalid command line arguments." << endl;
+	    safeClose(socket);
       return;
     } else {
       create(input[1], input[2], input[3], input[4], socket);
@@ -174,6 +178,7 @@ void handleCommand(string cmd)
   } else if (input[0] == "cat") {
     if(input.size() != 2){
       cout << "Error. Invalid command line arguments." << endl;
+	    safeClose(socket);
       return;
     } else {
       cat(input[1], socket);
@@ -181,6 +186,7 @@ void handleCommand(string cmd)
   } else if (input[0] == "stat"){
     if(input.size() != 2){
       cout << "Error. Invalid command line arguments." << endl;
+	    safeClose(socket);
       return;
     } else {
       stat(input[1], socket);
