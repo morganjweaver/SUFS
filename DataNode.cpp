@@ -75,6 +75,8 @@ int main(int argc, char const *argv[])
 
 //-------------------------------------------------------TEST CODE
 blockNames.push_back("dummy_file");
+peerDataNodeIPs.push_back("172.31.25.4");
+
 //-------------------
   status = listen(sock, MAXPENDING);
   if (status < 0) {
@@ -210,14 +212,14 @@ void replicateBlock(string blockName){
 
    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
    if(sock < 0) {
-    cout << "THREAD: Error with socket" << endl;
+    cout << "repBlock: Error with socket" << endl;
     exit(-1);
    }
 
   unsigned long servIP;
   int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
   if (status <= 0) {
-    cout << "THREAD: Error with convert dotted decimal address to int" << endl;
+    cout << "replicateBlock: Error with convert dotted decimal address to int" << endl;
     exit(-1);
   }
 
@@ -227,7 +229,7 @@ void replicateBlock(string blockName){
   servAddr.sin_port = htons(servPort);
   status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if(status < 0) {
-    cout << "THREAD: Error with connect" << endl;
+    cout << "repBlock: Error with connect" << endl;
     exit(-1);
   } //now we have a socket
   sendBlock(sock, blockName);
@@ -242,9 +244,9 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
   write_ptr = fopen(file_name.c_str(),"wb");
   size_t written;
   int bytesLeft = file_size;
-  const unsigned BUF_LEN = 2048;
+  const unsigned BUF_LEN = 2000;
    unsigned char buffer[BUF_LEN];
-   printf("file should be size %ld", file_size);
+   printf("file should be size %ld\n", file_size);
   while(bytesLeft > 0) {
     int bytesRecv = recv(sock, buffer, BUF_LEN, 0);
     if (bytesRecv <= 0) {
@@ -253,10 +255,12 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
     }
     written = fwrite(buffer,1, bytesRecv,write_ptr);
     bytesLeft = bytesLeft - bytesRecv;//- written;
+  cout  << "Remaining: " << bytesLeft << endl;
   }
   flag = 0;
   fclose(write_ptr);
-  return "success writing\n";
+  return "\nsuccess writing\n";
+  close(sock);
 }
 //C++-based: takes client socket and block file name and
 //then sends name and size to sendBlockHelper to send
