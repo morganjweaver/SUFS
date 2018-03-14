@@ -70,7 +70,7 @@ const int DIRECTORY_NOT_EXIST = 6;
 int counter = 0;
 >>>>>>> a6d4bc241f0d983360403bc2565ebcbc61b17fdd
 
-void handleCommand(string cmd, int socket);
+void handleCommand(string cmd);
 void ls(string filepath, int socket);
 void mkdir(string name, string path, int socket);
 void rmdir(string name, string path, int socket);
@@ -87,6 +87,10 @@ int chunkFile(string fullFilePath, string chunkName);
 >>>>>>> c7d15d78a4307e75ae3600736a7ac4ac1a05713a
 void getObject(string s3file, string s3bucket);
 void removeFile(string file);
+void safeClose(int socket);
+int getNNsocket(char*IP[], char*port[]);
+char*NameNodeIP;
+char*NameNodePort;
 
 int main(int argc, char const *argv[])
 {
@@ -96,32 +100,34 @@ int main(int argc, char const *argv[])
     cout << "Usage: ./Cient [ip_address] [portnumber]" << endl;
     return 1;
   }
+  NameNodeIP = const_cast<char *>(argv[1]);
+  NameNodePort = const_cast<char *>(argv[2]);
 
-  int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if(sock < 0) {
-    cout << "Error with socket" << endl;
-    exit(-1);
-  }
+  // int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  // if(sock < 0) {
+  //   cout << "Error with socket" << endl;
+  //   exit(-1);
+  // }
 
-  char* IPAddr = const_cast<char *>(argv[1]);
-  unsigned short servPort = atoi(argv[2]);
+  // char* IPAddr = const_cast<char *>(argv[1]);
+  // unsigned short servPort = atoi(argv[2]);
 
-  unsigned long servIP;
-  int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
-  if (status <= 0) {
-    cout << "Error with convert dotted decimal address to int" << endl;
-    exit(-1);
-  }
+  // unsigned long servIP;
+  // int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
+  // if (status <= 0) {
+  //   cout << "Error with convert dotted decimal address to int" << endl;
+  //   exit(-1);
+  // }
 
-  struct sockaddr_in servAddr;
-  servAddr.sin_family = AF_INET; // always AF_INET
-  servAddr.sin_addr.s_addr = servIP;
-  servAddr.sin_port = htons(servPort);
-  status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
-  if(status < 0) {
-    cout << "Error with connect" << endl;
-    exit(-1);
-  }
+  // struct sockaddr_in servAddr;
+  // servAddr.sin_family = AF_INET; // always AF_INET
+  // servAddr.sin_addr.s_addr = servIP;
+  // servAddr.sin_port = htons(servPort);
+  // status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  // if(status < 0) {
+  //   cout << "Error with connect" << endl;
+  //   exit(-1);
+  // }
 
   string user_command;
 
@@ -143,16 +149,18 @@ int main(int argc, char const *argv[])
     {
       cout << ">> ";
       getline(cin, user_command);
-      handleCommand(user_command, sock);
+      handleCommand(user_command);
     }
-    sendString(sock, "exit");
+    sendString(getNNsocket(argv[1], argv[2]), "exit");
   cout << endl << endl << endl;
   return 0;
 }
 
 //Function that handles which command was entered
-void handleCommand(string cmd, int socket)
+void handleCommand(string cmd)
 {
+  int socket = getNNsocket(NameNodeIP,NameNodePort);
+  cout << "SOCKET! " << socket << endl;
   string buf;
   stringstream ss(cmd);
   vector<string> input;
@@ -214,6 +222,7 @@ void handleCommand(string cmd, int socket)
       stat(input[1], socket);
     }
   }
+  safeClose(socket);
 }
 
 
@@ -312,6 +321,7 @@ Provide file name, absolute filepath, S3 Object address
 */
 void create(string name, string path, string S3_file, string S3_bucket, int socket)
 {
+  //int socket = getNNsock();
   sendString(socket, "create");
   sendString(socket, name);
   sendString(socket, path);
@@ -333,7 +343,7 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   //download object from S3
   getObject(S3_file, baseName);
   //chunk the file into 64 MB blocks and return the total num blocks
-  int numChunks = chunkFile(S3_file, baseName);
+  int numChunks = chunkFile(S3_file, S3_bucket);
 
   int numDataNodes = IPs.size();
   for(int i = 1; i <= numChunks; i++){
@@ -341,6 +351,7 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
     string chunkedFileName = baseName + "." + to_string(i);
     blockIDnames.push_back(chunkedFileName);
     char * IP = const_cast<char*>(IPs[sendingIP].c_str());
+    //close client conn
     blockToDataNode(IP, dataNodePort, chunkedFileName);  
     counter++;
   }
@@ -596,4 +607,39 @@ void removeFile(string file)
     perror("Error deleting file");
   else
     puts("File successfully deleted");
+}
+
+
+void safeClose(int socket){
+  if(close(socket) != 0)
+    return;
+}
+
+int getNNsocket(char*IP, char*port){
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if(sock < 0) {
+    cout << "Error with socket" << endl;
+    exit(-1);
+  }
+
+  char* IPAddr = const_cast<char *>(IP);
+  unsigned short servPort = atoi(port);
+
+  unsigned long servIP;
+  int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
+  if (status <= 0) {
+    cout << "Error with convert dotted decimal address to int" << endl;
+    exit(-1);
+  }
+
+  struct sockaddr_in servAddr;
+  servAddr.sin_family = AF_INET; // always AF_INET
+  servAddr.sin_addr.s_addr = servIP;
+  servAddr.sin_port = htons(servPort);
+  status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  if(status < 0) {
+    cout << "Error with connect" << endl;
+    exit(-1);
+  }
+  return sock;
 }
