@@ -356,12 +356,12 @@ void processClient(int clientSock, string clientIP)
       getPath = receiveString(clientSock);
       cout << getPath << endl;
       vector<StatObject> myStats;
-      myStats = stat(getPath, dirMap, ChunkMap);
+      myStats = stat(getPath, dirMap, chunkMap);
 	 
       sendLong(clientSock, myStats.size());
       for(int i = 0; i < myStats.size(); i++){
         sendString(clientSock, myStats[i].chunk_ID);
-	sendLong(clientSock, myStats[i].repIP.size();
+	sendLong(clientSock, myStats[i].repIP.size());
 	for(int j = 0; j < myStats[i].repIP.size(); j++)
 		sendString(clientSock, myStats[i].repIP[j]);
       }
