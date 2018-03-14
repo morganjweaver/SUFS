@@ -2,12 +2,10 @@
 // Create listener for incoming requests
 // Create handler for incoming requests from listener
 // Create Put/WriteBlock
-// Create car/ls function
+// Create cat
 // Create Stat
 // Create DeleteBlock
 // Create StoreBlock
-// Create Stat
-// Create Hashtable data structure for file dir
 
 #include <unistd.h>
 #include <stdio.h>
@@ -26,10 +24,16 @@
 #include <sstream>
 #include <cstring>
 #include <cstdlib>
+#include <cxxabi.h>
 #include <stdio.h>
 #include <thread>
+#include <exception>
 #include "DirHashMap.cpp"
-#include "NodeHashMap.cpp"
+#include "IPHashMap.cpp"
+#include "ChunkHashMap.cpp"
+#include "StatObject.cpp"
+#include "CatObject.cpp"
+
 #define PORT 8080
 
 using namespace std;
@@ -42,7 +46,7 @@ void processClient(int new_client_socket);
 void sendString(int sock, string wordSent);
 string receiveString(int sock);
 void processClient(int clientSock, string clientIP);
-void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data);
+void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, IPHashMap& IPMap, ChunkHashMap& ChunkMap);
 int uniqueIDCounter = 0;
 bool mkdir(string name, string path, DirHashMap& dirMap);
 bool rmdir(string name, string path, DirHashMap& dirMap);
@@ -51,98 +55,139 @@ vector<string> DataNodeIPs;
 void heartbeatThreadTask();
 void sendHeartbeat(int sock, string IPstring);
 bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap);
+vector<StatObject> stat(string path, DirHashMap& dirMap, ChunkHashMap& ChunkMap);
+vector<CatObject> cat(string path, DirHashMap& dirMap);
 long receiveLong(int clientSock);
-string DataNodePort = "0";
+
+string DataNodePort = "8080";
 //SERVER SOCKET CODE
+
+struct NetException : public exception {
+  NetException(string reason){
+    this->WAT = reason;
+  }
+   string WAT;
+   const char * what () const throw () {
+      return WAT.c_str();
+   }
+};
+
+
+
+
 int main(int argc, char const *argv[])
 {
-  if(argc < 2) {
-    cout << "Error: Missing command line arguments" << endl;
-    cout << "Usage: ./NameNode [portnumber]" << endl;
-  return 1;
-  }
+  
+    if(argc < 2) {
+      cout << "Error: Missing command line arguments" << endl;
+      cout << "Usage: ./NameNode [portnumber]" << endl;
+    return 1;
+    }
 
-  int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if(sock < 0) {
-    cerr << "Error with socket" << endl;
-    exit(-1);
-  }
-
-   unsigned short servPort = atoi(argv[1]);
-
-  struct sockaddr_in servAddr;
-  servAddr.sin_family = AF_INET; // always AF_INET
-  servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  servAddr.sin_port = htons(servPort);
-
-  int status = ::bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
-  if (status < 0) {
-    cerr << "Error with bind" << endl;
-    exit (-1);
-  }
-
-  status = listen(sock, MAXPENDING);
-  if (status < 0) {
-    cerr << "Error with listen" << endl;
-    exit(-1);
-  }
-
-  std::thread threadBeat(heartbeatThreadTask);
-
-  while(true){
-    struct sockaddr_in clientAddr;
-    socklen_t addrLen = sizeof(clientAddr);
-    int clientSock = accept(sock, (struct sockaddr *) &clientAddr, &addrLen);
-    if (clientSock < 0) {
-      cerr << "Error with accept" << endl;
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if(sock < 0) {
+      cerr << "Error with socket" << endl;
       exit(-1);
     }
 
-    //Grabs client IP address for DataNode ID
-    socklen_t len;
-    struct sockaddr_storage addr;
-    char ipstr[INET6_ADDRSTRLEN];
-      int port;
+     unsigned short servPort = atoi(argv[1]);
 
-    len = sizeof addr;
-    getpeername(clientSock, (struct sockaddr*)&addr, &len);
+    struct sockaddr_in servAddr;
+    servAddr.sin_family = AF_INET; // always AF_INET
+    servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    servAddr.sin_port = htons(servPort);
 
-    // deal with both IPv4 and IPv6:
-    if (addr.ss_family == AF_INET) {
-        struct sockaddr_in *clientSock = (struct sockaddr_in *)&addr;
-        port = ntohs(clientSock->sin_port);
-        inet_ntop(AF_INET, &clientSock->sin_addr, ipstr, sizeof ipstr);
-    } else { // AF_INET6
-        struct sockaddr_in6 *clientSock = (struct sockaddr_in6 *)&addr;
-        port = ntohs(clientSock->sin6_port);
-        inet_ntop(AF_INET6, &clientSock->sin6_addr, ipstr, sizeof ipstr);
+    int status = ::bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+    if (status < 0) {
+      cerr << "Error with bind" << endl;
+      exit (-1);
+    }
+
+    status = listen(sock, MAXPENDING);
+    if (status < 0) {
+      cerr << "Error with listen" << endl;
+      exit(-1);
+    }
+
+    std::thread threadBeat(heartbeatThreadTask);
+    //DataNodeIPs.push_back("172.31.19.92");
+    while(true){
+      try{
+        struct sockaddr_in clientAddr;
+        socklen_t addrLen = sizeof(clientAddr);
+        int clientSock = accept(sock, (struct sockaddr *) &clientAddr, &addrLen);
+        if (clientSock < 0) {
+          cerr << "Error with accept" << endl;
+          exit(-1);
+        }
+        cout << "accepted client connection" << endl;
+
+        //Grabs client IP address for DataNode ID
+        socklen_t len;
+        struct sockaddr_storage addr;
+        char ipstr[INET6_ADDRSTRLEN];
+          int port;
+
+        len = sizeof addr;
+        getpeername(clientSock, (struct sockaddr*)&addr, &len);
+
+        // deal with both IPv4 and IPv6:
+        if (addr.ss_family == AF_INET) {
+            struct sockaddr_in *clientSock = (struct sockaddr_in *)&addr;
+            port = ntohs(clientSock->sin_port);
+            inet_ntop(AF_INET, &clientSock->sin_addr, ipstr, sizeof ipstr);
+        } else { // AF_INET6
+            struct sockaddr_in6 *clientSock = (struct sockaddr_in6 *)&addr;
+            port = ntohs(clientSock->sin6_port);
+            inet_ntop(AF_INET6, &clientSock->sin6_addr, ipstr, sizeof ipstr);
+        }
+        cout << "Processing client connection from: " << ipstr << endl;
+        processClient(clientSock, ipstr);        
+        cout << "Closing socket in function main in while loop\n";
+        close(clientSock);
+      }
+      catch(const std::runtime_error& re) {
+          // speciffic handling for runtime_error
+          std::cerr << "Runtime error: " << re.what() << std::endl;
+      }
+      catch(const std::exception& ex)
+      {
+          // speciffic handling for all exceptions extending std::exception, except
+          // std::runtime_error which is handled explicitly
+          std::cerr << "Error occurred: " << ex.what() << std::endl;
+      }
+      catch (abi::__forced_unwind&) {
+         cout << "Thread Closing" << endl;
+         throw;
+      }
+      catch(...)
+      {
+          // catch any other errors (that we have no information about)
+          std::cerr << "Unknown failure occurred" << std::endl;
+      }
+    }
   }
 
-    processClient(clientSock, ipstr);
-    cout << "Closing socket in function main in while loop\n";
-    close(clientSock);
+  /******************************************************************************/
+  void sendLong(int clientSock, long size)
+  {
+    size = htonl(size);
+    int bytesSent = send(clientSock, (void *) &size, sizeof(long), 0);
+    if(bytesSent != sizeof(long)) {
+      pthread_exit(NULL);
+    }
   }
-}
 
-/******************************************************************************/
-void sendLong(int clientSock, long size)
-{
-  size = htonl(size);
-  int bytesSent = send(clientSock, (void *) &size, sizeof(long), 0);
-  if(bytesSent != sizeof(long)) {
-    pthread_exit(NULL);
-  }
-}
+  void sendString(int sock, string wordSent)
+  {
+    char wordBuffer[2000];
+    strcpy(wordBuffer, wordSent.c_str());
+    int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
+    if (bytesSent != 2000) {
+      cerr << "Error sending " << endl;
+      exit(-1);
+    }
 
-void sendString(int sock, string wordSent)
-{
-  char wordBuffer[2000];
-  strcpy(wordBuffer, wordSent.c_str());
-  int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
-  if (bytesSent != 2000) {
-    cerr << "Error sending " << endl;
-    exit(-1);
-  }
 }
 
 string receiveString(int sock)
@@ -161,7 +206,7 @@ string receiveString(int sock)
 }
 //add heartbeat information to DataNode:block hashtable
 
-void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, NodeHashMap& nodeMap){
+void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, IPHashMap& IPMap, ChunkHashMap& ChunkMap){
     //if put attempt returns false, remove the entry and try again
   cout << "Heartbeat received from " << nodeIPaddr << " contents: " << heartbeat_data << endl;
   if(DataNodePort != clientPort){
@@ -181,10 +226,13 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
     blockFileNames.push_back(fileName);
   // Now we have a vector of block file IDs and the IP addr of the DataNode that holds them
   // Add global hashmap fof block-->vector<string file> table here!!
-
-   if(nodeMap.put(nodeIPaddr, blockFileNames) == false){
-     cout << "failed to put addresses" << endl;
-     exit(-1);
+  if(ChunkMap.put(fileName, nodeIPaddr) == false){
+    cout << "failed to put addresses" << endl;
+	exit(-1);
+   }
+  if(IPMap.put(nodeIPaddr, blockFileNames) == false){
+    cout << "failed to put addresses" << endl;
+    exit(-1);
    }
    
 
@@ -199,12 +247,15 @@ void processClient(int clientSock, string clientIP)
   string getName;
   string getPath;
   DirHashMap dirMap;
-  NodeHashMap nodeMap;
+  IPHashMap IPMap;
+  ChunkHashMap chunkMap;
   vector<string> lsReturn;
   bool check = false;
   //while(true)
   //{
+    cout << "waiting for command" << endl;
     command = receiveString(clientSock);
+    cout << "command: " << command << endl;
     //cout << command << endl;
 
     //if command is a write block to file, add recieveBlock
@@ -219,7 +270,7 @@ void processClient(int clientSock, string clientIP)
       string port = receiveString(clientSock); 
       string blocks = receiveString(clientSock);
 
-      processHeartbeat(port, clientIP, blocks,  nodeMap);
+      processHeartbeat(port, clientIP, blocks, IPMap, chunkMap);
       //close(clientSock);
     }
 
@@ -273,17 +324,27 @@ void processClient(int clientSock, string clientIP)
         string IP = DataNodeIPs[i];
         IPs.append(IP);
         IPs.append(" ");
+       cout << "Data Node Port is :" << DataNodePort << endl;
+       cout << "IPs currently in vector: \n";
+       for(int j = 0; j<IPs.size(); j++){
+         cout << IPs[j];
+       }
        sendString(clientSock, IPs);
-       sendString(clientSock,DataNodePort);
+       cout << "IP string sent to client: " << IPs << endl;
+       sendString(clientSock, DataNodePort);
       }
-	  
-	long numBlockNames = receiveLong(clientSock);
-	vector <string> blockNames;
-	for(int i = 0; i < numBlockNames; i++){
+      cout << "receiving blocks" << endl;
+      // OH NOES
+      long numBlockNames = receiveLong(clientSock);
+      cout << "Number of blocks: " << numBlockNames << endl; 
+      vector <string> blockNames;
+      for(int i = 0; i < numBlockNames; i++){
 	string getName = receiveString(clientSock);
+        cout << "receiving name : " << getName << endl;
 	blockNames.push_back(getName);
-	}
+      }
 	    
+      cout << "creating file" << endl;
       check = create(getName, getPath, blockNames, DataNodeIPs, dirMap);
       sendLong(clientSock, check);
       if(check == 1)
@@ -296,8 +357,17 @@ void processClient(int clientSock, string clientIP)
     {
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-      //call namenode's stat function here
-			cout << endl;
+      vector<StatObject> myStats;
+      myStats = stat(getPath, dirMap, chunkMap);
+	 
+      sendLong(clientSock, myStats.size());
+      for(int i = 0; i < myStats.size(); i++){
+        sendString(clientSock, myStats[i].chunk_ID);
+	sendLong(clientSock, myStats[i].repIP.size());
+	for(int j = 0; j < myStats[i].repIP.size(); j++)
+		sendString(clientSock, myStats[i].repIP[j]);
+      }
+      cout << endl;
     }
     else if (command == "rmdir")
     {
@@ -318,10 +388,17 @@ void processClient(int clientSock, string clientIP)
     }
     else if (command == "cat")
     {
-      getPath = receiveString(clientSock);
-      cout << getPath << endl;
-      //call namenode's cat function here
-			cout << endl;
+        getPath = receiveString(clientSock);
+	cout << getPath << endl;
+	vector<CatObject> catFile;
+	catFile = cat(getPath, dirMap);
+	sendLong(clientSock, catFile.size());
+	for(int i = 0; i < catFile.size(); i++)
+		sendString(clientSock, catFile[i].chunk_ID);
+	sendLong(clientSock, catFile.size());
+	for(int i = 0; i < catFile.size(); i++)
+		sendString(clientSock, catFile[i].IP);
+	cout << endl;
     }
 
   //} //end while
@@ -392,14 +469,16 @@ bool create(string name, string path, vector<string> chunkID, vector<string> dat
 	ContainerObject tempFile;
 	tempFile.fileName = name;
 	tempFile.filePath = path;
-	//Block temp;
-        //send ENTIRE set of DataNode IPs to Client to decide where to send
-    string DN_IPs = "";
-    for (int i = 0; i<dataNodeIP.size(); i++){
-      DN_IPs.append(dataNodeIP[i]);
-      //now we have a string of DN IP addresses to send over the network into receiveString on Client
-    }
-
+	Block temp;
+	
+	int counter = 0;
+	for(int i = 0; i < chunkID.size(); i++){
+		int tempSize = counter % dataNodeIP.size();
+		temp.IP = dataNodeIP[tempSize];
+		temp.chunk_ID = chunkID[i];
+		tempFile.blocks.push_back(temp);
+		counter++;	
+	}
 	check = dirMap.put(path, tempFile);
 	size_t found = path.find_last_of("/\\");
 	if(found != -1 && check != false){
@@ -410,6 +489,35 @@ bool create(string name, string path, vector<string> chunkID, vector<string> dat
 		dirMap.put(shortPath, *parent);
 	}
 	return check;
+}
+
+
+vector<StatObject> stat(string path, DirHashMap& dirMap, ChunkHashMap& ChunkMap){
+	ContainerObject* tempFile = new ContainerObject();
+	vector<string> holdIP;
+	vector<StatObject> tempStat;
+	StatObject holdChunk;
+	dirMap.get(path, tempFile);
+	for(int i = 0; i < tempFile->blocks.size(); i++){
+		ChunkMap.get(tempFile->blocks[i].chunk_ID, holdIP);
+		holdChunk.chunk_ID = tempFile->blocks[i].chunk_ID;
+		holdChunk.repIP = holdIP;
+		tempStat.push_back(holdChunk);
+	}
+	return tempStat;
+}
+
+vector<CatObject> cat(string path, DirHashMap& dirMap){
+	ContainerObject* tempFile = new ContainerObject();
+	vector<CatObject> holdCat;
+	CatObject cat;
+	dirMap.get(path, tempFile);
+	for(int i = 0; i < tempFile->blocks.size(); i++){
+		cat.chunk_ID = tempFile->blocks[i].chunk_ID;
+		cat.IP = tempFile->blocks[i].IP;
+		holdCat.push_back(cat);
+	}
+	return holdCat;
 }
 
 //send peer list ot all datanodes
@@ -460,8 +568,9 @@ void heartbeatThreadTask(){
       connect_attempts++;
     }
     if(status < 0) {
-    cout << "THREAD: Error with connect to IP: " << DataNodeIPs[i] << endl;
-    exit(-1);
+    stringstream err;
+    err << "THREAD: Error with connect to IP: " << DataNodeIPs[i] << endl;
+    throw NetException(err.str());
   }
   }
     sendHeartbeat(sock, IPs);

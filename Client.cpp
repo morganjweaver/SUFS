@@ -76,7 +76,6 @@ void mkdir(string name, string path, int socket);
 void rmdir(string name, string path, int socket);
 void create(string name, string path, string S3_file, string S3_bucket, int socket);
 void cat(string path, int socket);
-void stat(string name, int socket);
 void sendBlock(int sock, string file_name);
 void sendLong(int clientSock, long size);
 void sendBlockHelper(int sock, string file_name);
@@ -88,7 +87,8 @@ int chunkFile(string fullFilePath, string chunkName);
 void getObject(string s3file, string s3bucket);
 void removeFile(string file);
 void safeClose(int socket);
-int getNNsocket(char*IP[], char*port[]);
+int getNNsocket(char*IP, char*port);
+void stat(string name, int socket);
 char*NameNodeIP;
 char*NameNodePort;
 
@@ -151,7 +151,7 @@ int main(int argc, char const *argv[])
       getline(cin, user_command);
       handleCommand(user_command);
     }
-    sendString(getNNsocket(argv[1], argv[2]), "exit");
+    sendString(getNNsocket(NameNodeIP, NameNodePort), "exit");
   cout << endl << endl << endl;
   return 0;
 }
@@ -182,6 +182,7 @@ void handleCommand(string cmd)
   if(input[0] == "ls"){
     if(input.size() != 2){
       cout << "Error. Invalid command line arguments." << endl;
+	safeClose(socket);
       return;
     } else {
       ls(input[1], socket);
@@ -189,6 +190,7 @@ void handleCommand(string cmd)
   } else if (input[0] == "mkdir"){
     if(input.size() != 3){
       cout << "Error. Invalid command line arguments." << endl;
+	    safeClose(socket);
       return;
     } else {
       mkdir(input[1], input[2], socket);
@@ -196,6 +198,7 @@ void handleCommand(string cmd)
   } else if (input[0] == "rmdir") {
     if(input.size() != 3){
       cout << "Error. Invalid command line arguments." << endl;
+	    safeClose(socket);
       return;
     } else {
       rmdir(input[1], input[2], socket);
@@ -203,6 +206,7 @@ void handleCommand(string cmd)
   } else if (input[0] == "create") {
     if(input.size() != 5){
       cout << "Error. Invalid command line arguments." << endl;
+	    safeClose(socket);
       return;
     } else {
       create(input[1], input[2], input[3], input[4], socket);
@@ -210,6 +214,7 @@ void handleCommand(string cmd)
   } else if (input[0] == "cat") {
     if(input.size() != 2){
       cout << "Error. Invalid command line arguments." << endl;
+	    safeClose(socket);
       return;
     } else {
       cat(input[1], socket);
@@ -217,6 +222,7 @@ void handleCommand(string cmd)
   } else if (input[0] == "stat"){
     if(input.size() != 2){
       cout << "Error. Invalid command line arguments." << endl;
+	    safeClose(socket);
       return;
     } else {
       stat(input[1], socket);
@@ -294,7 +300,7 @@ void blockToDataNode(char* DNIPaddr, unsigned short port, string chunkedFile){
    }
 
   char* IPAddr = const_cast<char *>(DNIPaddr);
-
+  printf("\nSuppossed blockToDataNode IP: %s\n", IPAddr);
   unsigned long servIP;
   int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
   if (status <= 0) {
@@ -308,11 +314,12 @@ void blockToDataNode(char* DNIPaddr, unsigned short port, string chunkedFile){
   servAddr.sin_port = htons(port);
   status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if(status < 0) {
-    cout << "THREAD: Error with connect" << endl;
+    cout << "blockToDataNode: Error with connect" << endl;
     exit(-1);
   }
   sendString(sock, "block");
-  sendBlock(port, chunkedFile); 
+  sendBlock(sock, chunkedFile); 
+ safeClose(sock); 
 }
 
 /*
@@ -331,23 +338,34 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   string baseName = receiveString(socket);
   string DataNodeIPs = receiveString(socket);
   string getStringPort = receiveString(socket);
-  unsigned short dataNodePort = (getStringPort, nullptr, 0);
+  cout << "DataNode stats: \n" << "Port: " << getStringPort << endl;
+  cout << "Base Name: " << baseName << "\nDataNodes to send blocks to: " << DataNodeIPs << endl;
+  unsigned short dataNodePort = (unsigned short)stoi(getStringPort);
   vector<string> baseFileNames;
   vector<string> IPs;
-  string filename;
+  
+  string ip;
   stringstream s (DataNodeIPs);
   vector<string> blockIDnames;
-  while(s >> filename)
-    IPs.push_back(filename);
+  while(s >> ip)
+    IPs.push_back(ip);
 
   //download object from S3
-  getObject(S3_file, baseName);
+  getObject(S3_file, S3_bucket);
   //chunk the file into 64 MB blocks and return the total num blocks
-  int numChunks = chunkFile(S3_file, S3_bucket);
+  int numChunks = chunkFile(S3_file, baseName);
 
   int numDataNodes = IPs.size();
+  cout << "Number of suppossed IPs: " << numDataNodes << endl;
+  cout << "Number of blockIDs: " << blockIDnames.size() << endl;
+  sendLong(socket, blockIDnames.size());
+
+  for(int i = 0; i < blockIDnames.size(); i++){
+    sendString(socket, blockIDnames[i]);
+  }
   for(int i = 1; i <= numChunks; i++){
     int sendingIP = counter % numDataNodes;
+    cout << "Sending chuck: " << i << " to node: " << sendingIP;;
     string chunkedFileName = baseName + "." + to_string(i);
     blockIDnames.push_back(chunkedFileName);
     char * IP = const_cast<char*>(IPs[sendingIP].c_str());
@@ -355,12 +373,7 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
     blockToDataNode(IP, dataNodePort, chunkedFileName);  
     counter++;
   }
-
-  sendLong(socket, blockIDnames.size());
-
-  for(int i = 0; i < blockIDnames.size(); i++){
-    sendString(socket, blockIDnames[i]);
-  }
+  
   
   removeFile(S3_file);
   
@@ -405,7 +418,17 @@ void stat(string name, int socket)
   sendString(socket, "stat");
   sendString(socket, name);
   
-  //receive back a bunch of strings in the form of dataNodeIP and their blockIDs
+  long response = receiveLong(socket);
+  for(int i = 0; i < response; i++){
+	  string chunkID = receiveString(socket);
+	  cout << chunkID << " ";
+	  response = receiveLong(socket);
+	  for(int j = 0; j < response; j++){
+		  string IP = receiveString(socket);
+		  cout << IP << " ";
+	  }
+	  cout << endl;
+  }
 }
 
 /*
@@ -567,6 +590,7 @@ void sendBlock(int sock, string file_name){
     //now take file size and send over
     FILE* readPtr;
     readPtr = fopen(file_name.c_str(),"rb");
+    cout << "Writing to file: " << file_name << endl;
     fseek(readPtr, 0L, SEEK_END);
     long file_size = ftell(readPtr);
     sendLong(sock, file_size);
@@ -592,9 +616,10 @@ void sendBlockHelper(int sock, string file_name) {
         exit(-1);
       }
       remaining_to_send = remaining_to_send - (long)bytesSent;
-      cout << "sent " << bytesSent << " remain " << remaining_to_send << "\n";
-      fclose(readPtr);
+      //cout << "sent " << bytesSent << " remain " << remaining_to_send << "\n";
     }
+
+      fclose(readPtr);
 }
 
 //delete a file after sending

@@ -1,12 +1,12 @@
 #include <string>
 using namespace std;
 
-class NodeHashEntry {
+class IPHashEntry {
 	private:
 		  string key;
 		  vector<string> value;
 	public:
-		NodeHashEntry(string key, vector<string> value) {
+		IPHashEntry(string key, vector<string> value) {
 			this->key = key;
 			this->value = value;
 		}
