@@ -208,14 +208,14 @@ void replicateBlock(string blockName){
     int Node = counter % peerDataNodeIPs.size();
     string IP = peerDataNodeIPs[Node];
     cout << "Attempting peer data node IP: " << IP << "from list of size: " << peerDataNodeIPs.size() << endl; 
-    char* IPAddr = const_cast<char *>(blockName.c_str());
+    char* IPAddr = const_cast<char *>(IP.c_str());
 
    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
    if(sock < 0) {
     cout << "repBlock: Error with socket" << endl;
     exit(-1);
    }
-
+  
   unsigned long servIP;
   int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
   if (status <= 0) {
