@@ -88,6 +88,7 @@ int main(int argc, char const *argv[])
   }
 
   std::thread threadBeat(heartbeatThreadTask);
+  threadBeat.detach();
   DataNodeIPs.push_back("172.31.19.92");
   while(true){
     struct sockaddr_in clientAddr;
@@ -203,7 +204,7 @@ void processClient(int clientSock, string clientIP)
   string getPath;
   DirHashMap dirMap;
   IPHashMap IPMap;
-  ChunkHashMap ChunkMap;
+  ChunkHashMap chunkMap;
   vector<string> lsReturn;
   bool check = false;
   //while(true)
@@ -277,7 +278,13 @@ void processClient(int clientSock, string clientIP)
         string IP = DataNodeIPs[i];
         IPs.append(IP);
         IPs.append(" ");
+       cout << "Data Node Port is :" << DataNodePort << endl;
+       cout << "IPs currently in vector: \n";
+       for(int j = 0; j<IPs.size(); j++){
+         cout << IPs[j];
+}
        sendString(clientSock, IPs);
+       cout << "IP string sent to client: " << IPs << endl;
        sendString(clientSock,DataNodePort);
       }
 	  
