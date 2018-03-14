@@ -53,6 +53,7 @@ int main(int argc, char const *argv[])
   return 1;
   }
   flag = 0;
+  portNo = stoi(argv[2]);
   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if(sock < 0) {
     cerr << "Error with socket" << endl;
@@ -72,17 +73,17 @@ int main(int argc, char const *argv[])
     exit (-1);
   }
 
+//-------------------------------------------------------TEST CODE
+blockNames.push_back("dummy_file");
+//-------------------
   status = listen(sock, MAXPENDING);
   if (status < 0) {
     cerr << "Error with listen" << endl;
     exit(-1);
   }
-//-------------------------------------------------------TEST CODE
-blockNames.push_back("dummy_file");
-//--------------------------------------------------------------
-  while(true){
-   cout <<"entered while loop!\n"; 
 
+  while(true){
+    cout <<"entered while loop!\n"; 
     struct sockaddr_in clientAddr;
     socklen_t addrLen = sizeof(clientAddr);
     cout << "attempting client sock\n";
@@ -93,6 +94,7 @@ blockNames.push_back("dummy_file");
       exit(-1);
     }
     cout << "launching processDataNode\n";
+   //receiveBlock(clientSock, 1);   
     processDataNode(clientSock);
     cout << "Closing socket in function main after processDataNode\n";
     close(clientSock);
@@ -142,19 +144,21 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
   while(true){
     this_thread::sleep_for(chrono::seconds(10));
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-   if(sock < 0) {
-    cout << "THREAD: Error with socket" << endl;
-    exit(-1);
-     }
+    if(sock < 0) {
+      cout << "THREAD: Error with socket" << endl;
+      exit(-1);
+    }
 
     char* IPAddr = const_cast<char *>(NameNodeIP);
-
+    printf("NameNode IP is: %s\n",NameNodeIP);
+    cout << "Port is: " << NNPort << endl;
     unsigned long servIP;
     int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
     if (status <= 0) {
       cout << "THREAD: Error with convert dotted decimal address to int" << endl;
       exit(-1);
     }
+    cout << "attempting connection:" << endl;
 
     struct sockaddr_in servAddr;
     servAddr.sin_family = AF_INET; // always AF_INET
@@ -163,19 +167,19 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
     int connect_attempts = 0;
     status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
     if(status < 0) {
-    while(connect_attempts<3){
-      status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
-      connect_attempts++;
+      while(connect_attempts<3){
+          status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+          connect_attempts++;
+      }
     }
-    if(status < 0) {
-    cout << "THREAD: Error with connect to NameNode "  << endl;
-    exit(-1);
-  }
-}
-    cout<< "10-sec heartbeat!\n";
-    sendHeartbeat(sock);
-    cout << "Closing socket in function threadTask after Heartbeat sent\n";
-    close(sock);
+    if (status < 0) {
+         cout << "THREAD: Error with connect to NameNode "  << endl;
+    } else {
+         cout << "10-sec heartbeat!\n" << endl;;
+         sendHeartbeat(sock);
+         cout << "Closing socket in function threadTask after Heartbeat sent\n";
+         close(sock);
+    }
   }
 }
 //0 = regular block 
@@ -184,18 +188,16 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
 {
   long size;
   string file_name;
-  while(file_name != "exit")
-  {
-    file_name = receiveString(clientSock);
-    cout << "File received: " << file_name << endl;
-    size = receiveLong(clientSock);
-    cout << "Size: " << size << endl;
-    string status = receiveBlockHelper(clientSock, file_name, size);
-    cout << "Status: " << status << endl;
-  }
+  file_name = receiveString(clientSock);
+  cout << "File received: " << file_name << endl;
+  size = receiveLong(clientSock);
+  cout << "Size: " << size << endl;
+  string status = receiveBlockHelper(clientSock, file_name, size);
+  cout << "Status: " << status << endl;
   if(replica_flag == 0){ //needs replication!
      replicateBlock(file_name);
   }
+  cout << "Done with files..." << endl;
   //close(clientSock);
 }
 void replicateBlock(string blockName){
@@ -245,14 +247,12 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
    printf("file should be size %ld", file_size);
   while(bytesLeft > 0) {
     int bytesRecv = recv(sock, buffer, BUF_LEN, 0);
-    cout << "got " << bytesRecv << " from client\n";
     if (bytesRecv <= 0) {
       cout << "Error with receiving " << endl;
       exit(-1);
     }
     written = fwrite(buffer,1, bytesRecv,write_ptr);
     bytesLeft = bytesLeft - bytesRecv;//- written;
-    printf("wrote %i to file\n", (int)written);
   }
   flag = 0;
   fclose(write_ptr);
