@@ -197,7 +197,7 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
   string status = receiveBlockHelper(clientSock, file_name, size);
   cout << "Status: " << status << endl;
   if(replica_flag == 0){ //needs replication!
-     replicateBlock(file_name);
+ //    replicateBlock(file_name);
   }
   cout << "Done with files..." << endl;
   //close(clientSock);

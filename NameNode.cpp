@@ -391,7 +391,7 @@ void processClient(int clientSock, string clientIP)
         getPath = receiveString(clientSock);
 	cout << getPath << endl;
 	vector<CatObject> catFile;
-	catFile = cat(getPath, dirMap);
+	catFile = cat(getPath, dirMap, chunkMap);
 	sendLong(clientSock, catFile.size());
 	for(int i = 0; i < catFile.size(); i++)
 		sendString(clientSock, catFile[i].chunk_ID);
@@ -507,14 +507,16 @@ vector<StatObject> stat(string path, DirHashMap& dirMap, ChunkHashMap& ChunkMap)
 	return tempStat;
 }
 
-vector<CatObject> cat(string path, DirHashMap& dirMap){
+vector<CatObject> cat(string path, DirHashMap& dirMap, ChunkHashMap& chunkMap){
 	ContainerObject* tempFile = new ContainerObject();
 	vector<CatObject> holdCat;
+	vector<string> holdIP;
 	CatObject cat;
 	dirMap.get(path, tempFile);
 	for(int i = 0; i < tempFile->blocks.size(); i++){
 		cat.chunk_ID = tempFile->blocks[i].chunk_ID;
-		cat.IP = tempFile->blocks[i].IP;
+		chunkMap.get(cat.chunk_ID, holdIP);
+		cat.IP = holdIP[0];
 		holdCat.push_back(cat);
 	}
 	return holdCat;
