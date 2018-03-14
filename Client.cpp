@@ -53,8 +53,8 @@ void getObject(string s3file, string s3bucket);
 void removeFile(string file);
 void safeClose(int socket);
 int getNNsocket(char*IP[], char*port[]);
-char*NameNodeIP[];
-char*NameNodePort[];
+char*NameNodeIP;
+char*NameNodePort;
 
 int main(int argc, char const *argv[])
 {
