@@ -382,7 +382,17 @@ void stat(string name, int socket)
   sendString(socket, "stat");
   sendString(socket, name);
   
-  //receive back a bunch of strings in the form of dataNodeIP and their blockIDs
+  long response = recieveLong(socket);
+  for(int i = 0; i < response; i++){
+	  string chunkID = recieveString(socket);
+	  cout << chunkID << " ";
+	  response = recieveLong(socket);
+	  for(int j = 0; j < response; j++){
+		  string IP = recieveString(socket);
+		  cout << IP << " ";
+	  }
+	  cout << endl;
+  }
 }
 
 /*
