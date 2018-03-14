@@ -85,7 +85,9 @@ blockNames.push_back("dummy_file");
 
     struct sockaddr_in clientAddr;
     socklen_t addrLen = sizeof(clientAddr);
+    cout << "attempting client sock\n";
     int clientSock = accept(sock, (struct sockaddr *) &clientAddr, &addrLen);
+    cout << "clientSock received\n";
     if (clientSock < 0) {
       cerr << "Error with accept" << endl;
       exit(-1);
