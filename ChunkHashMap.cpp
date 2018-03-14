@@ -36,6 +36,10 @@ class ChunkHashMap {
 			if (table[keyHash] != NULL){
 				holdValues = table[keyHash]->getValue();
 				delete table[keyHash];
+				for(int i = 0; i < holdValues.size(); i++){
+					if (holdValues[i] == value)
+						holdValues.erase(holdValues.begin()+i);
+				}
 				holdValues.push_back(value);
 				table[keyHash] = new ChunkHashEntry(key, holdValues);
 				return true;
@@ -64,3 +68,4 @@ class ChunkHashMap {
 			delete[] table;
 		}
 };
+
