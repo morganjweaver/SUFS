@@ -41,7 +41,6 @@ void mkdir(string name, string path, int socket);
 void rmdir(string name, string path, int socket);
 void create(string name, string path, string S3_file, string S3_bucket, int socket);
 void cat(string path, int socket);
-void stat(string name, int socket);
 void sendBlock(int sock, string file_name);
 void sendLong(int clientSock, long size);
 void sendBlockHelper(int sock, string file_name);
@@ -53,6 +52,7 @@ void getObject(string s3file, string s3bucket);
 void removeFile(string file);
 void safeClose(int socket);
 int getNNsocket(char*IP, char*port);
+void stat(string name, int socket);
 char*NameNodeIP;
 char*NameNodePort;
 
@@ -382,13 +382,13 @@ void stat(string name, int socket)
   sendString(socket, "stat");
   sendString(socket, name);
   
-  long response = recieveLong(socket);
+  long response = receiveLong(socket);
   for(int i = 0; i < response; i++){
-	  string chunkID = recieveString(socket);
+	  string chunkID = receiveString(socket);
 	  cout << chunkID << " ";
-	  response = recieveLong(socket);
+	  response = receiveLong(socket);
 	  for(int j = 0; j < response; j++){
-		  string IP = recieveString(socket);
+		  string IP = receiveString(socket);
 		  cout << IP << " ";
 	  }
 	  cout << endl;
