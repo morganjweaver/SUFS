@@ -26,9 +26,11 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <thread>
+#include <exception>
 #include "DirHashMap.cpp"
 #include "IPHashMap.cpp"
 #include "ChunkHashMap.cpp"
+
 #define PORT 8080
 
 using namespace std;
@@ -54,96 +56,130 @@ long receiveLong(int clientSock);
 
 string DataNodePort = "0";
 //SERVER SOCKET CODE
+
+struct NetException : public exception {
+  NetException(string reason){
+    this->WAT = reason;
+  }
+   string WAT;
+   const char * what () const throw () {
+      return WAT.c_str();
+   }
+};
+
+
+
+
 int main(int argc, char const *argv[])
 {
-  if(argc < 2) {
-    cout << "Error: Missing command line arguments" << endl;
-    cout << "Usage: ./NameNode [portnumber]" << endl;
-  return 1;
-  }
+  
+    if(argc < 2) {
+      cout << "Error: Missing command line arguments" << endl;
+      cout << "Usage: ./NameNode [portnumber]" << endl;
+    return 1;
+    }
 
-  int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if(sock < 0) {
-    cerr << "Error with socket" << endl;
-    exit(-1);
-  }
-
-   unsigned short servPort = atoi(argv[1]);
-
-  struct sockaddr_in servAddr;
-  servAddr.sin_family = AF_INET; // always AF_INET
-  servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  servAddr.sin_port = htons(servPort);
-
-  int status = ::bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
-  if (status < 0) {
-    cerr << "Error with bind" << endl;
-    exit (-1);
-  }
-
-  status = listen(sock, MAXPENDING);
-  if (status < 0) {
-    cerr << "Error with listen" << endl;
-    exit(-1);
-  }
-
-  std::thread threadBeat(heartbeatThreadTask);
-  threadBeat.detach();
-  DataNodeIPs.push_back("172.31.19.92");
-  while(true){
-    struct sockaddr_in clientAddr;
-    socklen_t addrLen = sizeof(clientAddr);
-    int clientSock = accept(sock, (struct sockaddr *) &clientAddr, &addrLen);
-    if (clientSock < 0) {
-      cerr << "Error with accept" << endl;
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if(sock < 0) {
+      cerr << "Error with socket" << endl;
       exit(-1);
     }
 
-    //Grabs client IP address for DataNode ID
-    socklen_t len;
-    struct sockaddr_storage addr;
-    char ipstr[INET6_ADDRSTRLEN];
-      int port;
+     unsigned short servPort = atoi(argv[1]);
 
-    len = sizeof addr;
-    getpeername(clientSock, (struct sockaddr*)&addr, &len);
+    struct sockaddr_in servAddr;
+    servAddr.sin_family = AF_INET; // always AF_INET
+    servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    servAddr.sin_port = htons(servPort);
 
-    // deal with both IPv4 and IPv6:
-    if (addr.ss_family == AF_INET) {
-        struct sockaddr_in *clientSock = (struct sockaddr_in *)&addr;
-        port = ntohs(clientSock->sin_port);
-        inet_ntop(AF_INET, &clientSock->sin_addr, ipstr, sizeof ipstr);
-    } else { // AF_INET6
-        struct sockaddr_in6 *clientSock = (struct sockaddr_in6 *)&addr;
-        port = ntohs(clientSock->sin6_port);
-        inet_ntop(AF_INET6, &clientSock->sin6_addr, ipstr, sizeof ipstr);
+    int status = ::bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+    if (status < 0) {
+      cerr << "Error with bind" << endl;
+      exit (-1);
+    }
+
+    status = listen(sock, MAXPENDING);
+    if (status < 0) {
+      cerr << "Error with listen" << endl;
+      exit(-1);
+    }
+
+    std::thread threadBeat(heartbeatThreadTask);
+    threadBeat.detach();
+    DataNodeIPs.push_back("172.31.19.92");
+    while(true){
+      try{
+        struct sockaddr_in clientAddr;
+        socklen_t addrLen = sizeof(clientAddr);
+        int clientSock = accept(sock, (struct sockaddr *) &clientAddr, &addrLen);
+        if (clientSock < 0) {
+          cerr << "Error with accept" << endl;
+          exit(-1);
+        }
+
+        //Grabs client IP address for DataNode ID
+        socklen_t len;
+        struct sockaddr_storage addr;
+        char ipstr[INET6_ADDRSTRLEN];
+          int port;
+
+        len = sizeof addr;
+        getpeername(clientSock, (struct sockaddr*)&addr, &len);
+
+        // deal with both IPv4 and IPv6:
+        if (addr.ss_family == AF_INET) {
+            struct sockaddr_in *clientSock = (struct sockaddr_in *)&addr;
+            port = ntohs(clientSock->sin_port);
+            inet_ntop(AF_INET, &clientSock->sin_addr, ipstr, sizeof ipstr);
+        } else { // AF_INET6
+            struct sockaddr_in6 *clientSock = (struct sockaddr_in6 *)&addr;
+            port = ntohs(clientSock->sin6_port);
+            inet_ntop(AF_INET6, &clientSock->sin6_addr, ipstr, sizeof ipstr);
+      }
+
+        processClient(clientSock, ipstr);
+        cout << "Closing socket in function main in while loop\n";
+        close(clientSock);
+      }
+      catch(const std::runtime_error& re)
+      {
+          // speciffic handling for runtime_error
+          std::cerr << "Runtime error: " << re.what() << std::endl;
+      }
+      catch(const std::exception& ex)
+      {
+          // speciffic handling for all exceptions extending std::exception, except
+          // std::runtime_error which is handled explicitly
+          std::cerr << "Error occurred: " << ex.what() << std::endl;
+      }
+      catch(...)
+      {
+          // catch any other errors (that we have no information about)
+          std::cerr << "Unknown failure occurred. Possible memory corruption" << std::endl;
+      }
+    }
   }
 
-    processClient(clientSock, ipstr);
-    cout << "Closing socket in function main in while loop\n";
-    close(clientSock);
+  /******************************************************************************/
+  void sendLong(int clientSock, long size)
+  {
+    size = htonl(size);
+    int bytesSent = send(clientSock, (void *) &size, sizeof(long), 0);
+    if(bytesSent != sizeof(long)) {
+      pthread_exit(NULL);
+    }
   }
-}
 
-/******************************************************************************/
-void sendLong(int clientSock, long size)
-{
-  size = htonl(size);
-  int bytesSent = send(clientSock, (void *) &size, sizeof(long), 0);
-  if(bytesSent != sizeof(long)) {
-    pthread_exit(NULL);
-  }
-}
+  void sendString(int sock, string wordSent)
+  {
+    char wordBuffer[2000];
+    strcpy(wordBuffer, wordSent.c_str());
+    int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
+    if (bytesSent != 2000) {
+      cerr << "Error sending " << endl;
+      exit(-1);
+    }
 
-void sendString(int sock, string wordSent)
-{
-  char wordBuffer[2000];
-  strcpy(wordBuffer, wordSent.c_str());
-  int bytesSent = send(sock, (void *) wordBuffer, 2000, 0);
-  if (bytesSent != 2000) {
-    cerr << "Error sending " << endl;
-    exit(-1);
-  }
 }
 
 string receiveString(int sock)
@@ -471,8 +507,9 @@ void heartbeatThreadTask(){
       connect_attempts++;
     }
     if(status < 0) {
-    cout << "THREAD: Error with connect to IP: " << DataNodeIPs[i] << endl;
-    exit(-1);
+    stringstream err;
+    err << "THREAD: Error with connect to IP: " << DataNodeIPs[i] << endl;
+    throw NetException(err.str());
   }
   }
     sendHeartbeat(sock, IPs);
