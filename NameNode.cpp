@@ -2,12 +2,10 @@
 // Create listener for incoming requests
 // Create handler for incoming requests from listener
 // Create Put/WriteBlock
-// Create car/ls function
+// Create cat
 // Create Stat
 // Create DeleteBlock
 // Create StoreBlock
-// Create Stat
-// Create Hashtable data structure for file dir
 
 #include <unistd.h>
 #include <stdio.h>
@@ -29,7 +27,8 @@
 #include <stdio.h>
 #include <thread>
 #include "DirHashMap.cpp"
-#include "NodeHashMap.cpp"
+#include "IPHashMap.cpp"
+#include "ChunkHashMap.cpp"
 #define PORT 8080
 
 using namespace std;
@@ -42,7 +41,7 @@ void processClient(int new_client_socket);
 void sendString(int sock, string wordSent);
 string receiveString(int sock);
 void processClient(int clientSock, string clientIP);
-void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data);
+void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, IPHashMap& IPMap, ChunkHashMap& ChunkMap);
 int uniqueIDCounter = 0;
 bool mkdir(string name, string path, DirHashMap& dirMap);
 bool rmdir(string name, string path, DirHashMap& dirMap);
@@ -162,7 +161,7 @@ string receiveString(int sock)
 }
 //add heartbeat information to DataNode:block hashtable
 
-void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, NodeHashMap& nodeMap){
+void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, IPHashMap& IPMap, ChunkHashMap& ChunkMap){
     //if put attempt returns false, remove the entry and try again
   cout << "Heartbeat received from " << nodeIPaddr << " contents: " << heartbeat_data << endl;
   if(DataNodePort != clientPort){
@@ -182,10 +181,13 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
     blockFileNames.push_back(fileName);
   // Now we have a vector of block file IDs and the IP addr of the DataNode that holds them
   // Add global hashmap fof block-->vector<string file> table here!!
-
-   if(nodeMap.put(nodeIPaddr, blockFileNames) == false){
-     cout << "failed to put addresses" << endl;
-     exit(-1);
+  if(ChunkMap.put(fileName, nodeIPaddr) == false){
+    cout << "failed to put addresses" << endl;
+	exit(-1);
+   }
+  if(IPMap.put(nodeIPaddr, blockFileNames) == false){
+    cout << "failed to put addresses" << endl;
+    exit(-1);
    }
    
 
@@ -200,7 +202,8 @@ void processClient(int clientSock, string clientIP)
   string getName;
   string getPath;
   DirHashMap dirMap;
-  NodeHashMap nodeMap;
+  IPHashMap IPMap;
+  ChunkHashMap ChunkMap;
   vector<string> lsReturn;
   bool check = false;
   //while(true)
@@ -220,7 +223,7 @@ void processClient(int clientSock, string clientIP)
       string port = receiveString(clientSock); 
       string blocks = receiveString(clientSock);
 
-      processHeartbeat(port, clientIP, blocks,  nodeMap);
+      processHeartbeat(port, clientIP, blocks, IPMap, chunkMap);
       //close(clientSock);
     }
 
@@ -497,6 +500,7 @@ long receiveLong(int clientSock)
   long hostToInt = ntohl(numberGiven);
   return hostToInt;
 }
+
 
 
 
