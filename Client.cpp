@@ -301,8 +301,8 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   string baseName = receiveString(socket);
   //string DataNodeIPs = receiveString(socket);
   long numIPs = receiveLong(socket);
-    string getStringPort = receiveString(socket);
-  cout << "Suppossedly " << numIPs << " IPs from server";
+  string getStringPort = receiveString(socket);
+  //cout << "Suppossedly " << numIPs << " IPs from server";
   vector<string> IPs;
   cout << "getting IPs:" << endl;
   for(int i = 0; i < numIPs; i++){
@@ -311,7 +311,10 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
     IPs.push_back(getIP);
     cout << "getting IP " << getIP << " from Name Node\n";
   }
-
+  cout << "IP RECEIPT CHECK: "<< IPs.size() <<" IPs: \n";
+  for(int j = 0; j < IPs.size(); j++){
+      cout << IPs[j] << endl;
+  }
   cout << "DataNode stats: \n" << "Port: " << getStringPort << endl;
   cout << "Base Name: " << baseName << endl;// << "\nDataNodes to send blocks to: " << IPs << endl;
   unsigned short dataNodePort = (unsigned short)stoi(getStringPort);
