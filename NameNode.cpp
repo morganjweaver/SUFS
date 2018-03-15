@@ -210,7 +210,7 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
   vector<string> blockFileNames;
   string fileName;
   stringstream s (heartbeat_data);
-  while(s>> fileName)
+  while(s>> fileName){
     blockFileNames.push_back(fileName);
   // Now we have a vector of block file IDs and the IP addr of the DataNode that holds them
   // Add global hashmap fof block-->vector<string file> table here!!
@@ -218,6 +218,7 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
     cout << "failed to put addresses" << endl;
 	exit(-1);
    }
+  }
   if(IPMap.put(nodeIPaddr, blockFileNames) == false){
     cout << "failed to put addresses" << endl;
     exit(-1);
