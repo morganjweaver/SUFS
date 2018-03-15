@@ -19,10 +19,9 @@ class DirHashMap {
 
 		bool get(string key, ContainerObject* output) {
 			size_t keyHash = hashfn(key) % TABLE_SIZE;
-			cout << "key hash: " << keyHash << endl;
+			
 			while (table[keyHash] != NULL && table[keyHash]->getKey() != key)
 				keyHash = (keyHash + 1) % TABLE_SIZE;
-				cout << "key hashes: " << keyHash << endl;
 			if (table[keyHash] == NULL)
 				return false;
 			else {
@@ -33,10 +32,10 @@ class DirHashMap {
 
 		bool put(string key, ContainerObject value) {
 			size_t keyHash = hashfn(key) % TABLE_SIZE;
-			cout << "key hash: " << keyHash << endl;
+			
 			while (table[keyHash] != NULL && table[keyHash]->getKey() != key)
 				keyHash = (keyHash + 1) % TABLE_SIZE;
-				cout << "key hashes: " << keyHash << endl;
+			
 			if (table[keyHash] != NULL){
 				table[keyHash] = NULL;
 				delete table[keyHash];

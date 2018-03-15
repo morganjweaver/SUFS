@@ -35,7 +35,9 @@
 #include "CatObject.cpp"
 
 #define PORT 8080
-
+  DirHashMap dirMap;
+  IPHashMap IPMap;
+  ChunkHashMap chunkMap;
 using namespace std;
 
 //Error messages to send back to client
@@ -240,9 +242,6 @@ void processClient(int clientSock, string clientIP)
   string command;
   string getName;
   string getPath;
-  DirHashMap dirMap;
-  IPHashMap IPMap;
-  ChunkHashMap chunkMap;
   vector<string> lsReturn;
   bool check = false;
   //while(true)
@@ -473,6 +472,7 @@ vector<string> ls(string path, DirHashMap& dirMap)
 
 bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap){
 	bool check = false;
+	bool checkParent = false;
 	ContainerObject tempFile;
 	tempFile.fileName = name;
 	tempFile.filePath = path;
@@ -486,15 +486,19 @@ bool create(string name, string path, vector<string> chunkID, vector<string> dat
 		tempFile.blocks.push_back(temp);
 		counter++;	
 	}
-	check = dirMap.put(path, tempFile);
 	size_t found = path.find_last_of("/\\");
-	if(found != -1 && check != false){
-		ContainerObject* parent = new ContainerObject();
-		string shortPath = path.substr(0,found);
-		dirMap.get(shortPath, parent);
+	ContainerObject* parent = new ContainerObject();
+	string shortPath = path.substr(0,found);
+	checkParent = dirMap.get(shortPath, parent);
+	if(checkParent == false){
+		check = false;
+		return check;
+	}
+	else if(found != -1){
 		parent->files.push_back(tempFile);
 		dirMap.put(shortPath, *parent);
 	}
+	check = dirMap.put(path, tempFile);
 	return check;
 }
 
