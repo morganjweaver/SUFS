@@ -198,7 +198,7 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
   cout << "Status: " << status << endl;
   if(replica_flag == 0){ //needs replication!
  //    replicateBlock(file_name);
-  cout << "received replica block "<< "file_name!!\n"
+  cout << "received replica block "<< "file_name!!\n";
   } else{
     cout << "received non-replica block "<< "file_name!!\n";
   }
