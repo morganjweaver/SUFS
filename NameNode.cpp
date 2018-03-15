@@ -46,7 +46,7 @@ void processClient(int new_client_socket);
 void sendString(int sock, string wordSent);
 string receiveString(int sock);
 void processClient(int clientSock, string clientIP);
-void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, IPHashMap& IPMap, ChunkHashMap& ChunkMap);
+void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, IPHashMap& IPMap,ChunkHashMap& ChunkMap);
 int uniqueIDCounter = 0;
 bool mkdir(string name, string path, DirHashMap& dirMap);
 bool rmdir(string name, string path, DirHashMap& dirMap);
@@ -265,7 +265,7 @@ void processClient(int clientSock, string clientIP)
       close(clientSock);
       exit(-1);
     }
-
+    
     if(command == "heartbeat"){
       string port = receiveString(clientSock); 
       string blocks = receiveString(clientSock);
@@ -281,69 +281,80 @@ void processClient(int clientSock, string clientIP)
       getPath = receiveString(clientSock);
       cout << getPath << endl;
       check = mkdir(getName, getPath, dirMap);
-			sendLong(clientSock, check);
-			if(check == 1)
-				cout << "Success" << endl;
-			else
-				cout << "Error" << endl;
+      sendLong(clientSock, check);
+      if(check == 1)
+	cout << "Success" << endl;
+      else
+	cout << "Error" << endl;
       //cout << check << endl;
-
-			cout << endl;
+      
+      cout << endl;
     }
     else if(command == "ls")
-    {
-      getPath = receiveString(clientSock);
+      {
+	getPath = receiveString(clientSock);
       cout << getPath << endl;
       lsReturn = ls(getPath, dirMap);
-
-			if(lsReturn.size() == 0){
-				cout << "Error" << endl;
-			}
-
-			for(int i = 0; i < lsReturn.size(); i++){
-				cout << lsReturn[i] << endl;
-			}
-
+      
+      if(lsReturn.size() == 0){
+	cout << "Error" << endl;
+      }
+      
+      for(int i = 0; i < lsReturn.size(); i++){
+	cout << lsReturn[i] << endl;
+      }
+      
       sendLong(clientSock, lsReturn.size());
-
+      
       for(int i = 0; i < lsReturn.size(); i++){
         sendString(clientSock, lsReturn[i]);
       }
-
-			cout << endl;
-    }
-    else if (command == "create")
-    {
-      getName = receiveString(clientSock);
-      cout << getName << endl;
-      getPath = receiveString(clientSock);
-      cout << getPath << endl;
-      sendString(clientSock, to_string(uniqueIDCounter));
-      string IPs = "";
-      for (int i = 0; i<DataNodeIPs.size();i++){
-        string IP = DataNodeIPs[i];
-        IPs.append(IP);
-        IPs.append(" ");
-       cout << "Data Node Port is :" << DataNodePort << endl;
-       cout << "IPs currently in vector: \n";
-       for(int j = 0; j<IPs.size(); j++){
-         cout << IPs[j];
-       }
-       sendString(clientSock, IPs);
-       cout << "IP string sent to client: " << IPs << endl;
-       sendString(clientSock, DataNodePort);
+      
+      cout << endl;
       }
-      cout << "receiving blocks" << endl;
-      // OH NOES
-      long numBlockNames = receiveLong(clientSock);
-      cout << "Number of blocks: " << numBlockNames << endl; 
-      vector <string> blockNames;
-      for(int i = 0; i < numBlockNames; i++){
-	string getName = receiveString(clientSock);
+    else if (command == "create")
+      {
+	getName = receiveString(clientSock);
+	cout << getName << endl;
+	getPath = receiveString(clientSock);
+	cout << getPath << endl;
+	sendString(clientSock, to_string(uniqueIDCounter));
+	
+	sendLong(clientSock, DataNodeIPs.size());
+	
+	for(int i = 0; i < DataNodeIPs.size(); i++){
+	  sendString(clientSock, DataNodeIPs[i]);
+	}
+
+	/*
+	string IPs = "";
+	
+	for (int i = 0; i<DataNodeIPs.size();i++){
+	  string IP = DataNodeIPs[i];
+	  IPs.append(IP);
+	  IPs.append(" ");
+	  cout << "Data Node Port is :" << DataNodePort << endl;
+	  cout << "IPs currently in vector: \n";
+	}  
+	for(int j = 0; j<IPs.size(); j++){
+	  cout << IPs[j] << " ";
+	}
+	*/
+	//sendString(clientSock, IPs);
+	//cout << "IP string sent to client: " << IPs << endl;
+	sendString(clientSock, DataNodePort);
+	
+	cout << "receiving blocks" << endl;
+	// OH NOES
+	long numBlockNames = receiveLong(clientSock);
+	cout << "Number of blocks: " << numBlockNames << endl; 
+	vector <string> blockNames;
+	for(int i = 0; i < numBlockNames; i++){
+	  string getName = receiveString(clientSock);
         cout << "receiving name : " << getName << endl;
 	blockNames.push_back(getName);
       }
-	    
+      
       cout << "creating file" << endl;
       check = create(getName, getPath, blockNames, DataNodeIPs, dirMap);
       sendLong(clientSock, check);
@@ -352,20 +363,20 @@ void processClient(int clientSock, string clientIP)
       else
 	cout << "Error" << endl;
       cout << endl;
-    }
+      }
     else if (command == "stat")
     {
       getPath = receiveString(clientSock);
       cout << getPath << endl;
       vector<StatObject> myStats;
       myStats = stat(getPath, dirMap, chunkMap);
-	 
+      
       sendLong(clientSock, myStats.size());
       for(int i = 0; i < myStats.size(); i++){
         sendString(clientSock, myStats[i].chunk_ID);
 	sendLong(clientSock, myStats[i].repIP.size());
 	for(int j = 0; j < myStats[i].repIP.size(); j++)
-		sendString(clientSock, myStats[i].repIP[j]);
+	  sendString(clientSock, myStats[i].repIP[j]);
       }
       cout << endl;
     }
