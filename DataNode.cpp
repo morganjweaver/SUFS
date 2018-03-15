@@ -274,7 +274,7 @@ string receiveBlockHelper(int sock, string file_name, long file_size, int replic
   
     if(replica_flag == 0){ //needs replication!
   cout << "received NON-replica block "<< file_name << "!!\n";
-  replicateBlock(file_name);
+  //replicateBlock(file_name);
   } 
   if(replica_flag == 1){
     cout << "received REPLICA block "<< file_name <<"!!\n";
@@ -394,6 +394,7 @@ long receiveLong(int clientSock) {
 }
 int getSocket(char*IP, char*port){
     cout << "SOCKET GOT\n\n";
+
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if(sock < 0) {
     cout << "Error with socket" << endl;

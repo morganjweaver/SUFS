@@ -348,13 +348,16 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
 
 //long response = receiveLong(socket);
   for(int i = 1; i <= numChunks; i++){
-    int sendingIP = counter % numDataNodes;
-    cout << "Sending chuck: " << i << " to node: " << sendingIP;;
+    
     string chunkedFileName = baseName + "." + to_string(i);
     //blockIDnames.push_back(chunkedFileName);
-    char * IP = const_cast<char*>(IPs[sendingIP].c_str());
     //close client conn
-    blockToDataNode(IP, dataNodePort, chunkedFileName);  
+    for (int j = 0; j<3; j++){
+      int sendingIP = counter % numDataNodes;
+      char * IP = const_cast<char*>(IPs[sendingIP].c_str());
+      cout << "Sending chunk: " << i << " to node: " << sendingIP;
+      blockToDataNode(IP, dataNodePort, chunkedFileName);
+    }  
     counter++;
   }
   
