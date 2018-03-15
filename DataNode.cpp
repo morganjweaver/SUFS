@@ -142,7 +142,7 @@ void processDataNode(int socket)
       cout << "Ready to receive REPLICA" << endl;
       receiveBlock(socket, 1);
     } else{
-      cout << "MAIN PROCESS ERROR: Command matches no known functionality!\n"
+      cout << "MAIN PROCESS ERROR: Command matches no known functionality!\n";
     }
 }
 
