@@ -143,7 +143,7 @@ void processDataNode(int socket)
       receiveBlock(socket, 1);
     }
   //}
-  //close(socket);
+  close(socket);
 }
 
 void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
@@ -204,9 +204,9 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
   cout << "Status: " << status << endl;
   if(replica_flag == 0){ //needs replication!
      replicateBlock(file_name);
-  cout << "received replica block "<< "file_name!!\n";
+  cout << "received replica block "<< file_name << "!!\n";
   } else{
-    cout << "received non-replica block "<< "file_name!!\n";
+    cout << "received non-replica block "<< file_name"!!\n";
   }
   cout << "Done with files..." << endl;
   //close(clientSock);
@@ -284,7 +284,7 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
   flag = 0;
   fclose(write_ptr);
   return "\nsuccess writing\n";
-  close(sock);
+  //close(sock);
 }  
 
 //C++-based: takes client socket and block file name and
