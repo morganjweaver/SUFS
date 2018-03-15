@@ -217,11 +217,13 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
 void replicateBlock(string blockName){
   try{
     cout << "ABOUT TO TRY REPLICATE!!!\n\n";
-    char* port = to_string(portNo).c_str();
+    string s = to_string(portNo);
+   char* port = const_cast<char *>(s.c_str());
    
     int Node = counter % peerDataNodeIPs.size();
     char* IP = const_cast<char *>(peerDataNodeIPs[Node].c_str());
     cout << "Attempting peer data node IP: " << IP << " from list of size: " << peerDataNodeIPs.size() << endl; 
+  
   int sock = getSocket(IP, port);  
   cout << "now sending command to peer\n";
   sendString(sock, "replica");
