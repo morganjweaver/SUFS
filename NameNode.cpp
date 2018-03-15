@@ -1,12 +1,3 @@
-//TODO:
-// Create listener for incoming requests
-// Create handler for incoming requests from listener
-// Create Put/WriteBlock
-// Create cat
-// Create Stat
-// Create DeleteBlock
-// Create StoreBlock
-
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -34,10 +25,10 @@
 #include "StatObject.cpp"
 #include "CatObject.cpp"
 
-#define PORT 8080
-  DirHashMap dirMap;
-  IPHashMap IPMap;
-  ChunkHashMap chunkMap;
+DirHashMap dirMap;
+IPHashMap IPMap;
+ChunkHashMap chunkMap;
+
 using namespace std;
 
 //Error messages to send back to client
@@ -581,11 +572,11 @@ void heartbeatThreadTask(){
    
   while(true){
     try{
-    this_thread::sleep_for(chrono::seconds(60));
+    this_thread::sleep_for(chrono::seconds(15));
     cout<< "1-min heartbeat!\n";
     //first turn vectors into char*
     if(DataNodePort == "0")
-        this_thread::sleep_for(chrono::seconds(60));
+        this_thread::sleep_for(chrono::seconds(30));
     unsigned short port = (unsigned short)atoi(DataNodePort.c_str());
 
    for(int i = 0; i<DataNodeIPs.size(); i++){ 
