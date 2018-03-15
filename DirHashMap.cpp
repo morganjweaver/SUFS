@@ -35,7 +35,7 @@ class DirHashMap {
 			
 			while (table[keyHash] != NULL && table[keyHash]->getKey() != key)
 				keyHash = (keyHash + 1) % TABLE_SIZE;
-				cout << "key hashes: " << keyHash << endl;
+			
 			if (table[keyHash] != NULL){
 				table[keyHash] = NULL;
 				delete table[keyHash];
