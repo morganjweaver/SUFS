@@ -536,15 +536,15 @@ void heartbeatThreadTask(){
         this_thread::sleep_for(chrono::seconds(60));
     unsigned short port = (unsigned short)atoi(DataNodePort.c_str());
 
-    string IPs = "";
-    for(int i = 0; i<DataNodeIPs.size(); i++){ 
-        IPs.append(DataNodeIPs[i]);
-    }
    for(int i = 0; i<DataNodeIPs.size(); i++){ 
        int n = DataNodeIPs[i].length();
        char DN_IP[n+1];
        strcpy(DN_IP, DataNodeIPs[i].c_str()); 
-       
+    string IPs = "";
+    for(int j = 0; j<DataNodeIPs.size(); j++){ 
+        if(DataNodeIPs[j] != DataNodeIPs[i])
+        IPs.append(DataNodeIPs[j]);
+    } //send each DataNode a list of PEER IPs, not self
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
    if(sock < 0) {
     cout << "THREAD: Error with socket" << endl;
