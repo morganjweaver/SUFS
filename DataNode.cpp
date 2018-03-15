@@ -326,8 +326,9 @@ void sendBlockHelper(int sock, string file_name) {
       }
       remaining_to_send = remaining_to_send - (long)bytesSent;
       cout << "sent " << bytesSent << " remain " << remaining_to_send << "\n";
-      fclose(readPtr);
+     
     }
+     fclose(readPtr);
 }
 void sendLong(int clientSock, long size)
 {
