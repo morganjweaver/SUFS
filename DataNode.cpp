@@ -415,5 +415,6 @@ int getSocket(char*IP, char*port){
     cout << "Error with connect" << endl;
     exit(-1);
   }
+  sendString(sock, "SANITY_CHECK");
   return sock;
 }
