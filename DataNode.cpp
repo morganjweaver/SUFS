@@ -160,7 +160,7 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
     }
 
     char* IPAddr = const_cast<char *>(NameNodeIP);
-    printf("NameNode IP is: %s\n",NameNodeIP);
+    //printf("NameNode IP is: %s\n",NameNodeIP);
     cout << "Port is: " << NNPort << endl;
     unsigned long servIP;
     int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
@@ -192,20 +192,7 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
     }
   }
 }
-//0 = regular block 
-//1 = replica block
-void receiveBlock(int clientSock, int replica_flag) //based upon processClient
-{
-  long size;
-  string file_name;
-  file_name = receiveString(clientSock);
-  cout << "File received: " << file_name << endl;
-  size = receiveLong(clientSock);
-  cout << "Size: " << size << endl;
-  string status = receiveBlockHelper(clientSock, file_name, size, replica_flag);
-  cout << "Status: " << status << endl;
-  cout << "Done with files..." << endl;
-}
+
 void replicateBlock(string blockName){
   try{
     cout << "ABOUT TO TRY REPLICATE!!!\n\n";
@@ -238,10 +225,24 @@ close(sock);
           std::cerr << "Unknown failure occurred" << std::endl;
       }
 }
+//0 = regular block 
+//1 = replica block
+void receiveBlock(int clientSock, int replica_flag) //based upon processClient
+{
+  long size;
+  string file_name;
+  file_name = receiveString(clientSock);
+  cout << "File received: " << file_name << endl;
+  size = receiveLong(clientSock);
+  cout << "Size: " << size << endl;
+  string status = receiveBlockHelper(clientSock, file_name, size, replica_flag);
+  cout << "Status: " << status << endl;
+  cout << "Done with files..." << endl;
+}
 string receiveBlockHelper(int sock, string file_name, long file_size, int replica_flag) {
-  while (flag !=0){
-    this_thread::sleep_for(chrono::seconds(1));
-  } flag = 1;
+  // while (flag !=0){
+  //   this_thread::sleep_for(chrono::seconds(1));
+  // } flag = 1;
   cout << "ReceiveHelper: Getting block " << file_name << endl;
   blockNames.push_back(file_name);
   flag = 0;
