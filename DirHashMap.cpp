@@ -37,7 +37,6 @@ class DirHashMap {
 				table[keyHash] = NULL;
 				delete table[keyHash];
 				table[keyHash] = new DirHashEntry(key, value);
-				return false;
 			}
 			table[keyHash] = new DirHashEntry(key, value);
 			return true;
