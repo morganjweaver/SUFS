@@ -212,7 +212,7 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
     cout << "received REPLICA block "<< file_name <<"!!\n";
   }
   cout << "Done with files..." << endl;
-  //close(clientSock);
+  close(clientSock);
 }
 void replicateBlock(string blockName){
   try{
@@ -236,17 +236,19 @@ void replicateBlock(string blockName){
     cout << "replicateBlock: Error with convert dotted decimal address to int" << endl;
     exit(-1);
   }
+  cout << "current connection status is (0): " << status << endl;
   cout << "about to try replicate connect\n";
   struct sockaddr_in servAddr;
   servAddr.sin_family = AF_INET; // always AF_INET
   servAddr.sin_addr.s_addr = servIP;
   servAddr.sin_port = htons(servPort);
   status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  cout << "Connect stat (0) " << status << endl;
   if(status < 0) {
     cout << "repBlock: Error with connect" << endl;
     exit(-1);
   } //now we have a socket
-  sendString(sock, "sanitycheck");
+  //sendString(sock, "sanitycheck");
   cout << "now sending command to peer\n";
   sendString(sock, "replica");
   sendBlock(sock, blockName);
