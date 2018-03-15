@@ -305,29 +305,12 @@ void processClient(int clientSock, string clientIP)
       	uniqueIDCounter++;
         cout << "\n\nNumber of DN IPS: " << DataNodeIPs.size() << endl;
       	sendLong(clientSock, (DataNodeIPs.size()));
-      	sendString(clientSock, DataNodePort);
         //cout << "About to send to client " << DataNodeIPs.size() << " IPs of DNs\n";
       	for(int i = 0; i < DataNodeIPs.size(); i++){
       	  sendString(clientSock, DataNodeIPs[i]);
 	        cout << "sending IP " << DataNodeIPs[i] << "\n";
         }
-	
-	/*
-	string IPs = "";
-	
-	for (int i = 0; i<DataNodeIPs.size();i++){
-	  string IP = DataNodeIPs[i];
-	  IPs.append(IP);
-	  IPs.append(" ");
-	  cout << "Data Node Port is :" << DataNodePort << endl;
-	  cout << "IPs currently in vector: \n";
-	}  
-	for(int j = 0; j<IPs.size(); j++){
-	  cout << IPs[j] << " ";
-	}
-	*/
-	//sendString(clientSock, IPs);
-	//cout << "IP string sent to client: " << IPs << endl;
+
 	sendString(clientSock, DataNodePort);
 	
 	cout << "receiving blocks" << endl;
