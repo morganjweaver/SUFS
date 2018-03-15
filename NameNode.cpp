@@ -304,7 +304,7 @@ void processClient(int clientSock, string clientIP)
 	cout << getPath << endl;
 	sendString(clientSock, to_string(uniqueIDCounter));
 	
-	sendLong(clientSock, DataNodeIPs.size());
+	sendLong(clientSock, (DataNodeIPs.size()-1);
 	sendString(clientSock, DataNodePort);
 	for(int i = 0; i < DataNodeIPs.size(); i++){
 	  sendString(clientSock, DataNodeIPs[i]);
