@@ -212,7 +212,7 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
     cout << "received REPLICA block "<< file_name <<"!!\n";
   }
   cout << "Done with files..." << endl;
-  close(clientSock);
+  //close(clientSock);
 }
 void replicateBlock(string blockName){
   try{
