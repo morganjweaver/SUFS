@@ -292,7 +292,6 @@ Provide file name, absolute filepath, S3 Object address
 */
 void create(string name, string path, string S3_file, string S3_bucket, int socket)
 {
-  //int socket = getNNsock();
   sendString(socket, "create");
   sendString(socket, name);
   sendString(socket, path);
@@ -359,14 +358,14 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
     counter++;
   }
   
-  /*
+  
   removeFile(S3_file);
   
   for(int i = 1; i <= numChunks; i++){
     string chunkedFileName = baseName + "." + to_string(i);
     removeFile(chunkedFileName);
   }
-  */
+  cout <<"Done creating file\n";
 	
   //determine success or error
   //long response = receiveLong(socket);

@@ -120,7 +120,6 @@ int main(int argc, char const *argv[])
           cerr << "Error with accept" << endl;
           exit(-1);
         }
-        cout << "accepted client connection" << endl;
 
         //Grabs client IP address for DataNode ID
         socklen_t len;
@@ -143,7 +142,6 @@ int main(int argc, char const *argv[])
         }
         cout << "Processing client connection from: " << ipstr << endl;
         processClient(clientSock, ipstr);        
-        cout << "Closing socket in function main in while loop\n";
         close(clientSock);
       }
       catch(const std::runtime_error& re) {
@@ -155,10 +153,6 @@ int main(int argc, char const *argv[])
           // speciffic handling for all exceptions extending std::exception, except
           // std::runtime_error which is handled explicitly
           std::cerr << "Error occurred: " << ex.what() << std::endl;
-      }
-      catch (abi::__forced_unwind&) {
-         cout << "Thread Closing" << endl;
-         throw;
       }
       catch(...)
       {
@@ -590,7 +584,6 @@ void heartbeatThreadTask(){
   }
   }
     sendHeartbeat(sock, IPs);
-    cout << "Closing socket in function main after HeartBeat\n";
     close(sock);
   }
  }
