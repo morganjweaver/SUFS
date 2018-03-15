@@ -208,7 +208,7 @@ void replicateBlock(string blockName){
   sendString(sock, "replica");
   sendBlock(sock, blockName);
 counter++;
-close(sock);
+//close(sock);
 } catch(const std::runtime_error& re) {
           // speciffic handling for runtime_error
           std::cerr << "Replication runtime error: " << re.what() << std::endl;
@@ -393,6 +393,7 @@ long receiveLong(int clientSock) {
   return hostToInt;
 }
 int getSocket(char*IP, char*port){
+    cout << "SOCKET GOT\n\n";
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if(sock < 0) {
     cout << "Error with socket" << endl;
