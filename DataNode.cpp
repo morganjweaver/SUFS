@@ -145,7 +145,7 @@ void processDataNode(int socket)
       cout << "MAIN PROCESS ERROR: Command matches no known functionality!\n";
     }
   cout << "Closing socket in processDataNode\n";
-    close(clientSock);
+    close(socket);
 }
 
 void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
