@@ -1,12 +1,3 @@
-//TODO:
-// Create listener for incoming requests
-// Create handler for incoming requests from listener
-// Create Put/WriteBlock
-// Create cat
-// Create Stat
-// Create DeleteBlock
-// Create StoreBlock
-
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -34,10 +25,10 @@
 #include "StatObject.cpp"
 #include "CatObject.cpp"
 
-#define PORT 8080
-  DirHashMap dirMap;
-  IPHashMap IPMap;
-  ChunkHashMap chunkMap;
+DirHashMap dirMap;
+IPHashMap IPMap;
+ChunkHashMap chunkMap;
+
 using namespace std;
 
 //Error messages to send back to client
@@ -216,17 +207,16 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
     if (DataNodeIPs[i] == nodeIPaddr)
         DataNodeIPs.erase(DataNodeIPs.begin()+i);
   }
-  vector<string> blockFileNames;
-  string fileName;
-  stringstream s (heartbeat_data);
-  while(s>> fileName)
-    blockFileNames.push_back(fileName);
-  // Now we have a vector of block file IDs and the IP addr of the DataNode that holds them
-  // Add global hashmap fof block-->vector<string file> table here!!
-  if(ChunkMap.put(fileName, nodeIPaddr) == false){
-    cout << "failed to put addresses" << endl;
-	exit(-1);
-   }
+  stringstream s(heartbeat_data);
+  istream_iterator<string> begin(s);
+  istream_iterator<string> end;
+  vector<string> blockFileNames(begin, end);
+  for(int i = 0; i < blockFileNames.size(); i++){
+	if(ChunkMap.put(blockFileNames[i], nodeIPaddr) == false){
+		cout << "failed to put addresses" << endl;
+		exit(-1);
+	}
+  }
   if(IPMap.put(nodeIPaddr, blockFileNames) == false){
     cout << "failed to put addresses" << endl;
     exit(-1);
@@ -319,7 +309,7 @@ void processClient(int clientSock, string clientIP)
 	for(int i = 0; i < DataNodeIPs.size(); i++){
 	  sendString(clientSock, DataNodeIPs[i]);
 	}
-	unqiueIDCounter++;
+	uniqueIDCounter++;
 	/*
 	string IPs = "";
 	
@@ -581,11 +571,11 @@ void heartbeatThreadTask(){
    
   while(true){
     try{
-    this_thread::sleep_for(chrono::seconds(60));
+    this_thread::sleep_for(chrono::seconds(15));
     cout<< "1-min heartbeat!\n";
     //first turn vectors into char*
     if(DataNodePort == "0")
-        this_thread::sleep_for(chrono::seconds(60));
+        this_thread::sleep_for(chrono::seconds(30));
     unsigned short port = (unsigned short)atoi(DataNodePort.c_str());
 
    for(int i = 0; i<DataNodeIPs.size(); i++){ 
