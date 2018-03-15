@@ -241,6 +241,7 @@ void replicateBlock(string blockName){
     cout << "repBlock: Error with connect" << endl;
     exit(-1);
   } //now we have a socket
+  sendString(sock, "replica");
   sendBlock(sock, blockName);
 counter++;
 } catch(const std::runtime_error& re) {
