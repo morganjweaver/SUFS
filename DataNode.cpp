@@ -264,6 +264,7 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
   while (flag !=0){
     this_thread::sleep_for(chrono::seconds(1));
   } flag = 1;
+  cout << "ReceiveHelper: Getting block " << file_name << endl;
   blockNames.push_back(file_name);
   FILE *write_ptr;
   write_ptr = fopen(file_name.c_str(),"wb");
