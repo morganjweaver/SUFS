@@ -300,19 +300,32 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   //Get chunk IDs and data node IPs from Name Node and 
   //process into vectors, then send blocks/chunks to Data Nodes  
   string baseName = receiveString(socket);
-  string DataNodeIPs = receiveString(socket);
+  //string DataNodeIPs = receiveString(socket);
+  long numIPs = receiveLong(socket);
+  vector<string> IPs;
+  cout << "getting IPs:" << endl;
+  for(int i = 0; i < numIPs; i++){
+    string getIP = receiveString(socket);
+    cout << getIP << endl;
+    IPs.push_back(getIP);
+  }
+
   string getStringPort = receiveString(socket);
   cout << "DataNode stats: \n" << "Port: " << getStringPort << endl;
-  cout << "Base Name: " << baseName << "\nDataNodes to send blocks to: " << DataNodeIPs << endl;
+  cout << "Base Name: " << baseName;// << "\nDataNodes to send blocks to: " << IPs << endl;
   unsigned short dataNodePort = (unsigned short)stoi(getStringPort);
   vector<string> baseFileNames;
-  vector<string> IPs;
+  //vector<string> IPs;
   
-  string ip;
-  stringstream s (DataNodeIPs);
+  //string ip;
+  //stringstream s (DataNodeIPs);
   vector<string> blockIDnames;
-  while(s >> ip)
-    IPs.push_back(ip);
+  //while(s >> ip)
+  //IPs.push_back(ip);
+  
+  for(int i = 0; i < IPs.size(); i++){
+    cout << "IPs available: " << IPs[i] << endl;
+  }
 
   //download object from S3
   getObject(S3_file, S3_bucket);
@@ -321,18 +334,25 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
 
   int numDataNodes = IPs.size();
   cout << "Number of suppossed IPs: " << numDataNodes << endl;
+
+  for(int i = 0; i < numChunks; i++){
+    string chunkedFileName = baseName + "." + to_string(i);
+    blockIDnames.push_back(chunkedFileName);
+  }
+  
   cout << "Number of blockIDs: " << blockIDnames.size() << endl;
   sendLong(socket, blockIDnames.size());
 
   for(int i = 0; i < blockIDnames.size(); i++){
     sendString(socket, blockIDnames[i]);
   }
+
 //long response = receiveLong(socket);
   for(int i = 1; i <= numChunks; i++){
     int sendingIP = counter % numDataNodes;
     cout << "Sending chuck: " << i << " to node: " << sendingIP;;
     string chunkedFileName = baseName + "." + to_string(i);
-    blockIDnames.push_back(chunkedFileName);
+    //blockIDnames.push_back(chunkedFileName);
     char * IP = const_cast<char*>(IPs[sendingIP].c_str());
     //close client conn
     blockToDataNode(IP, dataNodePort, chunkedFileName);  
@@ -371,7 +391,8 @@ void cat(string path, int socket)
   //will be receiving block_IDs and associated DataNode_IPs
   //use information from stat? 
   //create stat first before writing cat
-  //get all the block_IDs and DataNode_IPs 
+  //get all the block_IDs and DataNode_IPs
+
 }
 
 /*
@@ -386,14 +407,14 @@ void stat(string name, int socket)
   
   long response = receiveLong(socket);
   for(int i = 0; i < response; i++){
-	  string chunkID = receiveString(socket);
-	  cout << chunkID << " ";
-	  response = receiveLong(socket);
-	  for(int j = 0; j < response; j++){
-		  string IP = receiveString(socket);
-		  cout << IP << " ";
-	  }
-	  cout << endl;
+    string chunkID = receiveString(socket);
+    cout << chunkID << " ";
+    response = receiveLong(socket);
+    for(int j = 0; j < response; j++){
+      string IP = receiveString(socket);
+      cout << IP << " ";
+    }
+    cout << endl;
   }
 }
 
