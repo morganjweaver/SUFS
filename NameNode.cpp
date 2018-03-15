@@ -319,7 +319,7 @@ void processClient(int clientSock, string clientIP)
 	for(int i = 0; i < DataNodeIPs.size(); i++){
 	  sendString(clientSock, DataNodeIPs[i]);
 	}
-	unqiueIDCounter++;
+	uniqueIDCounter++;
 	/*
 	string IPs = "";
 	
