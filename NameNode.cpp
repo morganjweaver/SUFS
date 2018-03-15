@@ -35,7 +35,9 @@
 #include "CatObject.cpp"
 
 #define PORT 8080
-
+  DirHashMap dirMap;
+  IPHashMap IPMap;
+  ChunkHashMap chunkMap;
 using namespace std;
 
 //Error messages to send back to client
@@ -240,9 +242,6 @@ void processClient(int clientSock, string clientIP)
   string command;
   string getName;
   string getPath;
-  DirHashMap dirMap;
-  IPHashMap IPMap;
-  ChunkHashMap chunkMap;
   vector<string> lsReturn;
   bool check = false;
   //while(true)
