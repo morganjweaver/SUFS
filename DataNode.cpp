@@ -94,22 +94,17 @@ peerDataNodeIPs.push_back("172.31.25.4");
     cerr << "Error with listen" << endl;
     exit(-1);
   }
-
+//TEST TEST
   while(true){
-    cout <<"entered while loop!\n"; 
     struct sockaddr_in clientAddr;
     socklen_t addrLen = sizeof(clientAddr);
-    cout << "attempting client sock\n";
     int clientSock = accept(sock, (struct sockaddr *) &clientAddr, &addrLen);
-    cout << "clientSock received\n";
     if (clientSock < 0) {
       cerr << "Error with accept" << endl;
       exit(-1);
     }
-    cout << "launching processDataNode\n";
-   //receiveBlock(clientSock, 1);   
     processDataNode(clientSock);
-    cout << "Closing socket in function main after processDataNode\n";
+    //cout << "Closing socket in function main after processDataNode\n";
     close(clientSock);
   }
 }
@@ -130,7 +125,7 @@ void processHeartbeat(string heartbeat_data){
 void processDataNode(int socket)
 {
   string receiveData;
-  cout << "Entered processDataNode()" << endl;
+  //cout << "Entered processDataNode()" << endl;
 
   //while(true){
     receiveData = receiveString(socket);
