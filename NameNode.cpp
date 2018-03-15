@@ -658,10 +658,6 @@ void sendHeartbeat(int sock, string IPstring){
   sendString(sock, "heartbeat");
   sendString(sock, IPstring);
   cout << "HEARTBEAT CONTENTS: " << IPstring << endl;
-  if (!replicateTested){
-    //sendReplicaToPeer("0.1", DataNodeIPs[1]);
-    replicateTested = true;
-  }
 }
 
 //receive a numeric over the network 
