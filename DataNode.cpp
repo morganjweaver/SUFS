@@ -263,14 +263,15 @@ string receiveBlockHelper(int sock, string file_name, long file_size, int replic
     bytesLeft = bytesLeft - bytesRecv;//- written;
   
   }
+  fclose(write_ptr);
   cout  << "Received block "<<file_name << endl;
   cout << "*************************\n";
   cout << "Blocks held: \n";
   for (int i = 0; i<blockNames.size(); i++)
     cout << blockNames[i] << "\n";
   cout << "*************************\n";
-  fclose(write_ptr);
-  return "\nsuccess writing\n";
+  
+  
     if(replica_flag == 0){ //needs replication!
   cout << "received NON-replica block "<< file_name << "!!\n";
   replicateBlock(file_name);
@@ -278,6 +279,7 @@ string receiveBlockHelper(int sock, string file_name, long file_size, int replic
   if(replica_flag == 1){
     cout << "received REPLICA block "<< file_name <<"!!\n";
   }
+  return "\nsuccess writing\n";
   //close(sock);
 }  
 
