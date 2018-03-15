@@ -141,11 +141,9 @@ void processDataNode(int socket)
     } else if (receiveData == "replica"){
       cout << "Ready to receive REPLICA" << endl;
       receiveBlock(socket, 1);
-    } else if (receiveData == "sanitycheck"){
-      cout << "\n\nreceived from peer!!\n\n";
+    } else{
+      cout << "MAIN PROCESS ERROR: Command matches no known functionality!\n"
     }
-  //}
-  //close(socket);
 }
 
 void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
@@ -212,7 +210,6 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
     cout << "received REPLICA block "<< file_name <<"!!\n";
   }
   cout << "Done with files..." << endl;
-  //close(clientSock);
 }
 void replicateBlock(string blockName){
   try{
