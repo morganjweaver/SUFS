@@ -395,14 +395,15 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
     counter++;
   }
   
-  
+  /*
   removeFile(S3_file);
   
   for(int i = 1; i <= numChunks; i++){
     string chunkedFileName = baseName + "." + to_string(i);
     removeFile(chunkedFileName);
   }
-  
+  */
+	
   //determine success or error
   //long response = receiveLong(socket);
   //cout << "RESPONSE STATIS: " << response << endl;
