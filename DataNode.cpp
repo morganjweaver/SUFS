@@ -104,8 +104,8 @@ blockNames.push_back("dummy_file");
       exit(-1);
     }
     processDataNode(clientSock);
-    //cout << "Closing socket in function main after processDataNode\n";
-    close(clientSock);
+  //  cout << "Closing socket in function main after processDataNode\n";
+    //close(clientSock);
   }
 }
 
@@ -144,6 +144,8 @@ void processDataNode(int socket)
     } else{
       cout << "MAIN PROCESS ERROR: Command matches no known functionality!\n";
     }
+  cout << "Closing socket in processDataNode\n";
+    close(clientSock);
 }
 
 void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
