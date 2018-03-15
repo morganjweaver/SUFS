@@ -203,16 +203,18 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
   string status = receiveBlockHelper(clientSock, file_name, size);
   cout << "Status: " << status << endl;
   if(replica_flag == 0){ //needs replication!
-     replicateBlock(file_name);
-  cout << "received replica block "<< file_name << "!!\n";
-  } else{
-    cout << "received non-replica block "<< file_name <<"!!\n";
+  cout << "received NON-replica block "<< file_name << "!!\n";
+  replicateBlock(file_name);
+  } 
+  if(replica_flag == 1){
+    cout << "received REPLICA block "<< file_name <<"!!\n";
   }
   cout << "Done with files..." << endl;
   //close(clientSock);
 }
 void replicateBlock(string blockName){
   try{
+    cout << "ABOUT TO TRY REPLICATE!!!\n\n";
     unsigned short servPort = portNo;
     int Node = counter % peerDataNodeIPs.size();
     string IP = peerDataNodeIPs[Node];
