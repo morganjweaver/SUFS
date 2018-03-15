@@ -410,20 +410,22 @@ bool mkdir(string name, string path, DirHashMap& dirMap){
 	ContainerObject tempDir;
 	tempDir.dirName = name;
 	tempDir.dirPath = path;
-	check = dirMap.put(path, tempDir);
 
 	size_t found = path.find_last_of("/\\");
-	ContainerObject* parent = new ContainerObject();
-	string shortPath = path.substr(0,found);
-	checkParent = dirMap.get(shortPath, parent);
-	if(checkParent == false){
-		check = false;
-		return check;
-	}
-	else if(found != -1){
+	if(found != -1){
+		ContainerObject* parent = new ContainerObject();
+		string shortPath = path.substr(0,found);
+		checkParent = dirMap.get(shortPath, parent);
+		if(checkParent == false){
+			check = false;
+			return check;
+		}
+		dirMap.put(path, tempDir);
 		parent->directories.push_back(tempDir);
 		dirMap.put(shortPath, *parent);
+		check = true;
 	}
+	dirMap.put(path, tempDir);
 	check = true;
 	return check;
 }
