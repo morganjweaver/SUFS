@@ -406,26 +406,26 @@ void processClient(int clientSock, string clientIP)
 
 bool mkdir(string name, string path, DirHashMap& dirMap){
 	bool check = false;
+	bool checkParent = false;
 	ContainerObject tempDir;
 	tempDir.dirName = name;
 	tempDir.dirPath = path;
 	check = dirMap.put(path, tempDir);
 
 	size_t found = path.find_last_of("/\\");
-	if(found != -1){
-		ContainerObject* parent = new ContainerObject();
-		string shortPath = path.substr(0,found);
-		dirMap.get(shortPath, parent);
+	ContainerObject* parent = new ContainerObject();
+	string shortPath = path.substr(0,found);
+	checkParent = dirMap.get(shortPath, parent);
+	if(checkParent == false){
+		check = false;
+		return check;
+	}
+	else if(found != -1){
 		parent->directories.push_back(tempDir);
 		dirMap.put(shortPath, *parent);
-		ContainerObject* test = new ContainerObject();
-		dirMap.get(shortPath, test);
 	}
-
-	if(check)
-		return true;
-	else
-		return false;
+	check = true;
+	return check;
 }
 
 bool rmdir(string name, string path, DirHashMap& dirMap){
