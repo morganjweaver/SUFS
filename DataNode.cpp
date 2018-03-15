@@ -39,7 +39,7 @@ void sendLong(int clientSock, long size);
 void sendString(int sock, string wordSent);
 void sendBlockHelper(int sock, string file_name);
 void sendBlock(int sock, string file_name);
-
+int getSocket(char*IP, char*port);
 int flag; //provides a lock for the threads
 vector<string> blockNames;
 vector<string> peerDataNodeIPs;
@@ -217,38 +217,12 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
 void replicateBlock(string blockName){
   try{
     cout << "ABOUT TO TRY REPLICATE!!!\n\n";
-    unsigned short servPort = (unsigned short)portNo;
-    cout << "Port is " << portNo << endl;
+    char* port = to_string(portNo).c_str();
+   
     int Node = counter % peerDataNodeIPs.size();
     char* IP = const_cast<char *>(peerDataNodeIPs[Node].c_str());
     cout << "Attempting peer data node IP: " << IP << " from list of size: " << peerDataNodeIPs.size() << endl; 
-    char* IPAddr = const_cast<char *>(IP);
-
-   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-   if(sock < 0) {
-    cout << "repBlock: Error with socket" << endl;
-    exit(-1);
-   }
-  
-  unsigned long servIP;
-  int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
-  if (status <= 0) {
-    cout << "replicateBlock: Error with convert dotted decimal address to int" << endl;
-    exit(-1);
-  }
-  cout << "current connection status is (0): " << status << endl;
-  cout << "about to try replicate connect\n";
-  struct sockaddr_in servAddr;
-  servAddr.sin_family = AF_INET; // always AF_INET
-  servAddr.sin_addr.s_addr = servIP;
-  servAddr.sin_port = htons(servPort);
-  status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
-  cout << "Connect stat (0) " << status << endl;
-  if(status < 0) {
-    cout << "repBlock: Error with connect" << endl;
-    exit(-1);
-  } //now we have a socket
-  //sendString(sock, "sanitycheck");
+  int sock = getSocket(IP, port);  
   cout << "now sending command to peer\n";
   sendString(sock, "replica");
   sendBlock(sock, blockName);
@@ -413,4 +387,32 @@ long receiveLong(int clientSock) {
   }
   long hostToInt = ntohl(numberGiven);
   return hostToInt;
+}
+int getSocket(char*IP, char*port){
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if(sock < 0) {
+    cout << "Error with socket" << endl;
+    exit(-1);
+  }
+
+  char* IPAddr = const_cast<char *>(IP);
+  unsigned short servPort = atoi(port);
+
+  unsigned long servIP;
+  int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
+  if (status <= 0) {
+    cout << "Error with convert dotted decimal address to int" << endl;
+    exit(-1);
+  }
+
+  struct sockaddr_in servAddr;
+  servAddr.sin_family = AF_INET; // always AF_INET
+  servAddr.sin_addr.s_addr = servIP;
+  servAddr.sin_port = htons(servPort);
+  status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  if(status < 0) {
+    cout << "Error with connect" << endl;
+    exit(-1);
+  }
+  return sock;
 }
