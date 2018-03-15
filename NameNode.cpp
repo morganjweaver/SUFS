@@ -40,7 +40,6 @@ void sendString(int sock, string wordSent);
 string receiveString(int sock);
 void processClient(int clientSock, string clientIP);
 void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, IPHashMap& IPMap,ChunkHashMap& ChunkMap);
-int uniqueIDCounter = 0;
 bool mkdir(string name, string path, DirHashMap& dirMap);
 bool rmdir(string name, string path, DirHashMap& dirMap);
 vector<string> ls(string path, DirHashMap& dirMap);
@@ -52,7 +51,7 @@ vector<StatObject> stat(string path, DirHashMap& dirMap, ChunkHashMap& ChunkMap)
 vector<CatObject> cat(string path, DirHashMap& dirMap, ChunkHashMap& chunkMap);;
 long receiveLong(int clientSock);
 
-bool replicateTested = false;
+int uniqueIDCounter = 0;
 string DataNodePort = "8080";
 //SERVER SOCKET CODE
 
@@ -276,16 +275,16 @@ void processClient(int clientSock, string clientIP)
     }
     else if(command == "ls")
       {
-	getPath = receiveString(clientSock);
-      cout << getPath << endl;
-      lsReturn = ls(getPath, dirMap);
+  	    getPath = receiveString(clientSock);
+        cout << getPath << endl;
+        lsReturn = ls(getPath, dirMap);
       
       if(lsReturn.size() == 0){
-	cout << "Error" << endl;
+	       cout << "Error" << endl;
       }
       
       for(int i = 0; i < lsReturn.size(); i++){
-	cout << lsReturn[i] << endl;
+	       cout << lsReturn[i] << endl;
       }
       
       sendLong(clientSock, lsReturn.size());
@@ -298,18 +297,19 @@ void processClient(int clientSock, string clientIP)
       }
     else if (command == "create")
       {
-	getName = receiveString(clientSock);
-	cout << getName << endl;
-	getPath = receiveString(clientSock);
-	cout << getPath << endl;
-	sendString(clientSock, to_string(uniqueIDCounter));
-	
-	sendLong(clientSock, (DataNodeIPs.size()-1));
-	sendString(clientSock, DataNodePort);
-	for(int i = 0; i < DataNodeIPs.size(); i++){
-	  sendString(clientSock, DataNodeIPs[i]);
+      	getName = receiveString(clientSock);
+      	cout << getName << endl;
+      	getPath = receiveString(clientSock);
+      	cout << getPath << endl;
+      	sendString(clientSock, to_string(uniqueIDCounter));
+      	uniqueIDCounter++;
+      	sendLong(clientSock, (DataNodeIPs.size()-1));
+      	sendString(clientSock, DataNodePort);
+        cout << "About to send to client " << DataNodeIPs.size() << " IPs of DNs\n";
+      	for(int i = 0; i < DataNodeIPs.size(); i++){
+      	  sendString(clientSock, DataNodeIPs[i]);
 	}
-	uniqueIDCounter++;
+	
 	/*
 	string IPs = "";
 	
@@ -469,7 +469,7 @@ bool create(string name, string path, vector<string> chunkID, vector<string> dat
 	tempFile.filePath = path;
 	Block temp;
 	
-	int counter = 0;
+	int counter = 0;  //NOT global uniqueIDCounter
 	for(int i = 0; i < chunkID.size(); i++){
 		int tempSize = counter % dataNodeIP.size();
 		temp.IP = dataNodeIP[tempSize];
