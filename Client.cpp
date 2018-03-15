@@ -33,42 +33,7 @@ using namespace std;
 
 //TODO: man 2 sendfile to chunk and move blocks to server EC2
 const long chunkSize = 67108864;
-<<<<<<< HEAD
-
-<<<<<<< HEAD
-/*
-** Client Functions
-These function help with starting/handling the commands typed in my user
-*/
-void handleCommand(string cmd);
-void ls(string filepath);
-void mkdir(string name, string path);
-void rmdir(string path);
-void create(string name, string path, string S3_file, string S3_bucket);
-void cat(string path);
-void stat(string name);
-char **sendRPC(char* request);
-/*
-** Client - NameNode Functions?
-*/
-
-/*
-** Client - DataNode Functions?
-*/
-
-void chunkFile(string fullFilePath, string chunkName);
-int sendRPC(char* request);
-=======
-const int SUCCESS = 0;
-const int FILE_NOT_EXIST = 1;
-const int PATH_NOT_EXIST = 2;
-const int FILE_EXISTS = 3;
-const int DIRECTORY_EXIST = 4;
-const int DIRECTORY_NOT_EMPTY = 5;
-const int DIRECTORY_NOT_EXIST = 6;
-=======
 int counter = 0;
->>>>>>> a6d4bc241f0d983360403bc2565ebcbc61b17fdd
 
 void handleCommand(string cmd);
 void ls(string filepath, int socket);
@@ -83,7 +48,6 @@ void sendString(int sock, string wordSent);
 string receiveString(int sock);
 long receiveLong(int clientSock);
 int chunkFile(string fullFilePath, string chunkName);
->>>>>>> c7d15d78a4307e75ae3600736a7ac4ac1a05713a
 void getObject(string s3file, string s3bucket);
 void removeFile(string file);
 void safeClose(int socket);
