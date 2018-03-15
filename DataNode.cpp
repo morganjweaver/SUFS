@@ -220,7 +220,7 @@ void replicateBlock(string blockName){
     unsigned short servPort = (unsigned short)portNo;
     cout << "Port is " << portNo << endl;
     int Node = counter % peerDataNodeIPs.size();
-    char* IP = peerDataNodeIPs[Node].c_str();
+    char* IP = const_cast<char *>(peerDataNodeIPs[Node].c_str());
     cout << "Attempting peer data node IP: " << IP << " from list of size: " << peerDataNodeIPs.size() << endl; 
     char* IPAddr = const_cast<char *>(IP);
 
