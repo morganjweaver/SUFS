@@ -61,6 +61,7 @@ vector<StatObject> stat(string path, DirHashMap& dirMap, ChunkHashMap& ChunkMap)
 vector<CatObject> cat(string path, DirHashMap& dirMap, ChunkHashMap& chunkMap);;
 long receiveLong(int clientSock);
 
+bool replicateTested = false;
 string DataNodePort = "8080";
 //SERVER SOCKET CODE
 
@@ -532,8 +533,50 @@ vector<CatObject> cat(string path, DirHashMap& dirMap, ChunkHashMap& chunkMap){
 	}
 	return holdCat;
 }
+void sendReplicaToPeer(string filename, string DN_IP_ADDR)
+//tell a DataNode to send a copy of a specified file to a peer
+{
+  int n = DN_IP_ADDR.length();
+  char DN_IP[n+1];
+  strcpy(DN_IP, DN_IP_ADDR.c_str());
+  char* IPAddr = const_cast<char *>(DN_IP);
+   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+   if(sock < 0) {
+    cout << "THREAD: Error with socket" << endl;
+    exit(-1);
+   }
+  unsigned long servIP;
+  int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
+  if (status <= 0) {
+    cout << "REPLICATE: Error with convert dotted decimal address to int" << endl;
+    exit(-1);
+  }
+  unsigned short port = (unsigned short)stoi(DataNodePort);
+  struct sockaddr_in servAddr;
+  servAddr.sin_family = AF_INET; // always AF_INET
+  servAddr.sin_addr.s_addr = servIP;
+  servAddr.sin_port = htons(port);
+  int connect_attempts = 0;
 
-//send peer list ot all datanodes
+  status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+  if(status < 0) {
+    while(connect_attempts<3){
+      status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
+      connect_attempts++;
+    }
+    if(status < 0) {
+    stringstream err;
+    err << "REPLICATE: Error with connect to IP: " << DN_IP_ADDR << endl;
+    throw NetException(err.str());
+  }
+  }
+  //now we have a connection!
+  sendString(port, "replicate");
+  sendString(port, filename);
+  close(sock);
+  }
+
+
 void heartbeatThreadTask(){
    
   while(true){
@@ -601,10 +644,7 @@ void heartbeatThreadTask(){
           // std::runtime_error which is handled explicitly
           std::cerr << "Error occurred: " << ex.what() << std::endl;
       }
-      catch (abi::__forced_unwind&) {
-         cout << "Thread Closing" << endl;
-         throw;
-      }
+     
       catch(...)
       {
           // catch any other errors (that we have no information about)
@@ -618,7 +658,10 @@ void sendHeartbeat(int sock, string IPstring){
   sendString(sock, "heartbeat");
   sendString(sock, IPstring);
   cout << "HEARTBEAT CONTENTS: " << IPstring << endl;
-  //close(sock);
+  if (!replicateTested){
+    sendReplicaToPeer("0.1", DataNodeIPs[1]);
+    replicateTested = true;
+  }
 }
 
 //receive a numeric over the network 

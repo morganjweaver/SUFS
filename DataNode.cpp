@@ -39,7 +39,7 @@ void sendLong(int clientSock, long size);
 void sendString(int sock, string wordSent);
 void sendBlockHelper(int sock, string file_name);
 void sendBlock(int sock, string file_name);
-int getSocket(char*IP, char*port);
+int getSocket(char*IP, unsigned short port);
 int flag; //provides a lock for the threads
 vector<string> blockNames;
 vector<string> peerDataNodeIPs;
@@ -84,17 +84,12 @@ int main(int argc, char const *argv[])
     exit (-1);
   }
 
-//-------------------------------------------------------TEST CODE
-blockNames.push_back("dummy_file");
-//peerDataNodeIPs.push_back("172.31.25.4");
-
-//-------------------
   status = listen(sock, MAXPENDING);
   if (status < 0) {
     cerr << "Error with listen" << endl;
     exit(-1);
   }
-//TEST TEST
+
   while(true){
     struct sockaddr_in clientAddr;
     socklen_t addrLen = sizeof(clientAddr);
@@ -125,9 +120,7 @@ void processHeartbeat(string heartbeat_data){
 void processDataNode(int socket)
 {
   string receiveData;
-  //cout << "Entered processDataNode()" << endl;
 
-  //while(true){
     receiveData = receiveString(socket);
     cout << "received message: " << receiveData << endl;
     
@@ -136,11 +129,12 @@ void processDataNode(int socket)
       string peerIPs  = receiveString(socket);
       processHeartbeat(peerIPs);
     } else if (receiveData == "block"){
-      cout << "Ready to receive NONREPLICA block" << endl;
+      cout << "About to receive block" << endl;
       receiveBlock(socket, 0);
-    } else if (receiveData == "replica"){
-      cout << "\n\nABOUT TO RECEIVE REPLICA\n\n" << endl;
-      receiveBlock(socket, 1);
+    } else if (receiveData == "replicate"){
+      string filename = receiveString(socket);//file name to replicate
+      cout << "Received command to replicate block " << filename << endl;
+
     } else{
       cout << "MAIN PROCESS ERROR: Command matches no known functionality!\n";
     }
@@ -196,18 +190,21 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
 void replicateBlock(string blockName){
   try{
     cout << "ABOUT TO TRY REPLICATE!!!\n\n";
-    string s = to_string(portNo);
-   char* port = const_cast<char *>(s.c_str());
    
     int Node = counter % peerDataNodeIPs.size();
-    char* IP = const_cast<char *>(peerDataNodeIPs[Node].c_str());
+    string IP = peerDataNodeIPs[Node];
+    int n = IP.length();
+    char DN_IP[n+1];
+    strcpy(DN_IP, IP.c_str());
+    //char* IPAddr = const_cast<char *>(DN_IP);
+    
     cout << "Attempting peer data node IP: " << IP << " from list of size: " << peerDataNodeIPs.size() << endl; 
-  
-  int sock = getSocket(IP, port);  
+  unsigned short port = (unsigned short)portNo;
+  int sock = getSocket(DN_IP, port);  
   cout << "now sending REPLICATE command to peer\n";
-  sendString(sock, "replica");
+  sendString(sock, "block");
   sendBlock(sock, blockName);
-counter++;
+//counter++;
 //close(sock);
 } catch(const std::runtime_error& re) {
           // speciffic handling for runtime_error
@@ -392,17 +389,18 @@ long receiveLong(int clientSock) {
   long hostToInt = ntohl(numberGiven);
   return hostToInt;
 }
-int getSocket(char*IP, char*port){
+
+int getSocket(char*IP, unsigned short port){
     cout << "SOCKET GOT\n\n";
 
-    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if(sock < 0) {
     cout << "Error with socket" << endl;
     exit(-1);
   }
 
   char* IPAddr = const_cast<char *>(IP);
-  unsigned short servPort = atoi(port);
+ 
 
   unsigned long servIP;
   int status = inet_pton(AF_INET, IPAddr, (void *) &servIP);
@@ -414,12 +412,12 @@ int getSocket(char*IP, char*port){
   struct sockaddr_in servAddr;
   servAddr.sin_family = AF_INET; // always AF_INET
   servAddr.sin_addr.s_addr = servIP;
-  servAddr.sin_port = htons(servPort);
+  servAddr.sin_port = htons(port);
   status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if(status < 0) {
     cout << "Error with connect" << endl;
     exit(-1);
   }
-  sendString(sock, "SANITY_CHECK");
+  //sendString(sock, "SANITY_CHECK");
   return sock;
 }
