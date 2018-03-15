@@ -124,7 +124,7 @@ int main(int argc, char const *argv[])
 void handleCommand(string cmd)
 {
   int socket = getNNsocket(NameNodeIP,NameNodePort);
-  cout << "SOCKET! " << socket << endl;
+  //cout << "SOCKET! " << socket << endl;
   string buf;
   stringstream ss(cmd);
   vector<string> input;
