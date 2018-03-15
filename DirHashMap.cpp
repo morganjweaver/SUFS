@@ -4,7 +4,7 @@
 #include <iostream>
 using namespace std;
 
-const int TABLE_SIZE = 128;
+const int TABLE_SIZE = 2000;
 
 class DirHashMap {
 	private:
