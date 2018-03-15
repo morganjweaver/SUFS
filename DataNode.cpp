@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <thread>
 #include <algorithm>
+#include <exception>
 const int MAXPENDING = 99;
 
 using namespace std;
@@ -44,6 +45,16 @@ vector<string> blockNames;
 vector<string> peerDataNodeIPs;
 int portNo;
 int counter = 0; //for determining which replicas to store blocks on
+
+struct NetException : public exception {
+  NetException(string reason){
+    this->WAT = reason;
+  }
+   string WAT;
+   const char * what () const throw () {
+      return WAT.c_str();
+   }
+};
 
 int main(int argc, char const *argv[])
 {
@@ -130,10 +141,10 @@ void processDataNode(int socket)
       string peerIPs  = receiveString(socket);
       processHeartbeat(peerIPs);
     } else if (receiveData == "block"){
-      cout << "Ready to receive block" << endl;
+      cout << "Ready to receive NONREPLICA block" << endl;
       receiveBlock(socket, 0);
     } else if (receiveData == "replica"){
-      cout << "Ready to receive block" << endl;
+      cout << "Ready to receive REPLICA" << endl;
       receiveBlock(socket, 1);
     }
   //}
@@ -179,7 +190,7 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
     } else {
          cout << "10-sec heartbeat!\n" << endl;;
          sendHeartbeat(sock);
-         cout << "Closing socket in function threadTask after Heartbeat sent\n";
+         //cout << "Closing socket in function threadTask after Heartbeat sent\n";
          close(sock);
     }
   }
@@ -206,7 +217,7 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
   //close(clientSock);
 }
 void replicateBlock(string blockName){
-
+  try{
     unsigned short servPort = portNo;
     int Node = counter % peerDataNodeIPs.size();
     string IP = peerDataNodeIPs[Node];
@@ -237,6 +248,21 @@ void replicateBlock(string blockName){
   } //now we have a socket
   sendBlock(sock, blockName);
 counter++;
+} catch(const std::runtime_error& re) {
+          // speciffic handling for runtime_error
+          std::cerr << "Replication runtime error: " << re.what() << std::endl;
+      }
+      catch(const std::exception& ex)
+      {
+          // speciffic handling for all exceptions extending std::exception, except
+          // std::runtime_error which is handled explicitly
+          std::cerr << "Error occurred: " << ex.what() << std::endl;
+      }
+      catch(...)
+      {
+          // catch any other errors (that we have no information about)
+          std::cerr << "Unknown failure occurred" << std::endl;
+      }
 }
 string receiveBlockHelper(int sock, string file_name, long file_size) {
   while (flag !=0){
@@ -264,7 +290,8 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
   fclose(write_ptr);
   return "\nsuccess writing\n";
   close(sock);
-}
+}  
+
 //C++-based: takes client socket and block file name and
 //then sends name and size to sendBlockHelper to send
 void sendBlock(int sock, string file_name){
