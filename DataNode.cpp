@@ -106,12 +106,12 @@ int main(int argc, char const *argv[])
 
 //Takes list of DataNode peers from NameNode every minute and updates peer node vector
 void processHeartbeat(string heartbeat_data){
-  cout << "Received peer IP heartbeat!\n Data: " << heartbeat_data << endl;
+  cout << "Received peer IP heartbeat!\n Data: " << heartbeat_data << " " << endl;
   string fileName;
   stringstream s (heartbeat_data);
   while(s>> fileName){
     peerDataNodeIPs.push_back(fileName);
-    cout << "peer IP: " << fileName << endl;
+    cout << "peer IP: " << fileName << " " << endl;
   }
   //de-dupe the peer vector ID
   sort(peerDataNodeIPs.begin(), peerDataNodeIPs.end());
