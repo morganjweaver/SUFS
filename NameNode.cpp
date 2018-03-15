@@ -56,7 +56,7 @@ void heartbeatThreadTask();
 void sendHeartbeat(int sock, string IPstring);
 bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap);
 vector<StatObject> stat(string path, DirHashMap& dirMap, ChunkHashMap& ChunkMap);
-vector<CatObject> cat(string path, DirHashMap& dirMap);
+vector<CatObject> cat(string path, DirHashMap& dirMap, ChunkHashMap& chunkMap);;
 long receiveLong(int clientSock);
 
 string DataNodePort = "8080";
