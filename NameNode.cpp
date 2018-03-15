@@ -306,7 +306,7 @@ void processClient(int clientSock, string clientIP)
 	sendString(clientSock, to_string(uniqueIDCounter));
 	
 	sendLong(clientSock, DataNodeIPs.size());
-	
+	sendString(clientSock, DataNodePort);
 	for(int i = 0; i < DataNodeIPs.size(); i++){
 	  sendString(clientSock, DataNodeIPs[i]);
 	}
@@ -587,6 +587,7 @@ void heartbeatThreadTask(){
     for(int j = 0; j<DataNodeIPs.size(); j++){ 
         if(DataNodeIPs[j] != DataNodeIPs[i])
         IPs.append(DataNodeIPs[j]);
+        IPs.append(" ");
     } //send each DataNode a list of PEER IPs, not self
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
    if(sock < 0) {
