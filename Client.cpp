@@ -135,7 +135,7 @@ void handleCommand(string cmd)
 
   //error catch for invalid commands from user
   if(input[0] != "ls" && input[0] != "mkdir" && input[0] != "rmdir" &&
-     input[0] != "create" && input[0] != "rm" && input[0] != "cat" &&
+     input[0] != "create" && input[0] != "cat" &&
      input[0] != "exit" && input[0] != "stat"){
     cout << "Invalid command. Please try again." << endl;
     return;
@@ -312,7 +312,7 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   }
 
   cout << "DataNode stats: \n" << "Port: " << getStringPort << endl;
-  cout << "Base Name: " << baseName;// << "\nDataNodes to send blocks to: " << IPs << endl;
+  cout << "Base Name: " << baseName << endl;// << "\nDataNodes to send blocks to: " << IPs << endl;
   unsigned short dataNodePort = (unsigned short)stoi(getStringPort);
   vector<string> baseFileNames;
   //vector<string> IPs;
@@ -322,7 +322,8 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   vector<string> blockIDnames;
   //while(s >> ip)
   //IPs.push_back(ip);
-  
+
+  cout << endl;
   for(int i = 0; i < IPs.size(); i++){
     cout << "IPs available: " << IPs[i] << endl;
   }
@@ -410,12 +411,14 @@ void stat(string name, int socket)
   sendString(socket, "stat");
   sendString(socket, name);
   
-  long response = receiveLong(socket);
-  for(int i = 0; i < response; i++){
+  long numStats = receiveLong(socket);
+  cout << "num stats: " << numStats << endl;
+
+  for(int i = 0; i < numStats; i++){
     string chunkID = receiveString(socket);
     cout << chunkID << " ";
-    response = receiveLong(socket);
-    for(int j = 0; j < response; j++){
+    int numIPs = receiveLong(socket);
+    for(int j = 0; j < numIPs; j++){
       string IP = receiveString(socket);
       cout << IP << " ";
     }

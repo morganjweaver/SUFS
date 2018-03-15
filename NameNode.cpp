@@ -207,17 +207,16 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
     if (DataNodeIPs[i] == nodeIPaddr)
         DataNodeIPs.erase(DataNodeIPs.begin()+i);
   }
-  vector<string> blockFileNames;
-  string fileName;
-  stringstream s (heartbeat_data);
-  while(s>> fileName)
-    blockFileNames.push_back(fileName);
-  // Now we have a vector of block file IDs and the IP addr of the DataNode that holds them
-  // Add global hashmap fof block-->vector<string file> table here!!
-  if(ChunkMap.put(fileName, nodeIPaddr) == false){
-    cout << "failed to put addresses" << endl;
-	exit(-1);
-   }
+  stringstream s(heartbeat_data);
+  istream_iterator<string> begin(s);
+  istream_iterator<string> end;
+  vector<string> blockFileNames(begin, end);
+  for(int i = 0; i < blockFileNames.size(); i++){
+	if(ChunkMap.put(blockFileNames[i], nodeIPaddr) == false){
+		cout << "failed to put addresses" << endl;
+		exit(-1);
+	}
+  }
   if(IPMap.put(nodeIPaddr, blockFileNames) == false){
     cout << "failed to put addresses" << endl;
     exit(-1);
