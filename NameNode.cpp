@@ -303,12 +303,14 @@ void processClient(int clientSock, string clientIP)
       	cout << getPath << endl;
       	sendString(clientSock, to_string(uniqueIDCounter));
       	uniqueIDCounter++;
-      	sendLong(clientSock, (DataNodeIPs.size()-1));
+        cout << "\n\nNumber of DN IPS: " << DataNodeIPs.size() << endl;
+      	sendLong(clientSock, (DataNodeIPs.size()));
       	sendString(clientSock, DataNodePort);
         cout << "About to send to client " << DataNodeIPs.size() << " IPs of DNs\n";
       	for(int i = 0; i < DataNodeIPs.size(); i++){
       	  sendString(clientSock, DataNodeIPs[i]);
-	}
+	        cout << "sending IP " << DataNodeIPs[i] << "\n";
+        }
 	
 	/*
 	string IPs = "";
