@@ -266,6 +266,7 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
   } flag = 1;
   cout << "ReceiveHelper: Getting block " << file_name << endl;
   blockNames.push_back(file_name);
+  flag = 0;
   FILE *write_ptr;
   write_ptr = fopen(file_name.c_str(),"wb");
   size_t written;
@@ -281,9 +282,14 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
     }
     written = fwrite(buffer,1, bytesRecv,write_ptr);
     bytesLeft = bytesLeft - bytesRecv;//- written;
-  cout  << "Remaining: " << bytesLeft << endl;
+  
   }
-  flag = 0;
+  cout  << "Received block "<<file_name << endl;
+  cout << "*************************\n";
+  cout << "Blocks held: \n";
+  for (int i = 0; i<blockNames.size(); i++)
+    cout << blockNames[i] << "\n";
+  cout << "*************************\n";
   fclose(write_ptr);
   return "\nsuccess writing\n";
   //close(sock);
