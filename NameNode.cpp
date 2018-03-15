@@ -526,6 +526,7 @@ vector<CatObject> cat(string path, DirHashMap& dirMap, ChunkHashMap& chunkMap){
 void heartbeatThreadTask(){
    
   while(true){
+    try{
     this_thread::sleep_for(chrono::seconds(60));
     cout<< "1-min heartbeat!\n";
     //first turn vectors into char*
@@ -580,6 +581,26 @@ void heartbeatThreadTask(){
     close(sock);
   }
  }
+  catch(const std::runtime_error& re) {
+          // speciffic handling for runtime_error
+          std::cerr << "Runtime error: " << re.what() << std::endl;
+      }
+      catch(const std::exception& ex)
+      {
+          // speciffic handling for all exceptions extending std::exception, except
+          // std::runtime_error which is handled explicitly
+          std::cerr << "Error occurred: " << ex.what() << std::endl;
+      }
+      catch (abi::__forced_unwind&) {
+         cout << "Thread Closing" << endl;
+         throw;
+      }
+      catch(...)
+      {
+          // catch any other errors (that we have no information about)
+          std::cerr << "Unknown failure occurred" << std::endl;
+      }
+}
 }
 
 void sendHeartbeat(int sock, string IPstring){
