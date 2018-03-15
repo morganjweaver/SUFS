@@ -105,7 +105,7 @@ blockNames.push_back("dummy_file");
     }
     processDataNode(clientSock);
     //cout << "Closing socket in function main after processDataNode\n";
-    //close(clientSock);
+    close(clientSock);
   }
 }
 
@@ -145,7 +145,7 @@ void processDataNode(int socket)
       cout << "\n\nreceived from peer!!\n\n";
     }
   //}
-  close(socket);
+  //close(socket);
 }
 
 void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
