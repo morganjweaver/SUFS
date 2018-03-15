@@ -27,7 +27,7 @@ using namespace std;
 
 //SERVER SOCKET CODE:
 void receiveBlock(int clientSock, int replica_flag); 
-string receiveBlockHelper(int sock, string file_name, long file_size);
+string receiveBlockHelper(int sock, string file_name, long file_size, int replica_flag);
 string receiveString(int sock);
 long receiveLong(int clientSock);
 void replicateBlock(string blockName);
@@ -139,7 +139,7 @@ void processDataNode(int socket)
       cout << "Ready to receive NONREPLICA block" << endl;
       receiveBlock(socket, 0);
     } else if (receiveData == "replica"){
-      cout << "Ready to receive REPLICA" << endl;
+      cout << "\n\nABOUT TO RECEIVE REPLICA\n\n" << endl;
       receiveBlock(socket, 1);
     } else{
       cout << "MAIN PROCESS ERROR: Command matches no known functionality!\n";
@@ -202,15 +202,8 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
   cout << "File received: " << file_name << endl;
   size = receiveLong(clientSock);
   cout << "Size: " << size << endl;
-  string status = receiveBlockHelper(clientSock, file_name, size);
+  string status = receiveBlockHelper(clientSock, file_name, size, replica_flag);
   cout << "Status: " << status << endl;
-  if(replica_flag == 0){ //needs replication!
-  cout << "received NON-replica block "<< file_name << "!!\n";
-  replicateBlock(file_name);
-  } 
-  if(replica_flag == 1){
-    cout << "received REPLICA block "<< file_name <<"!!\n";
-  }
   cout << "Done with files..." << endl;
 }
 void replicateBlock(string blockName){
@@ -224,7 +217,7 @@ void replicateBlock(string blockName){
     cout << "Attempting peer data node IP: " << IP << " from list of size: " << peerDataNodeIPs.size() << endl; 
   
   int sock = getSocket(IP, port);  
-  cout << "now sending command to peer\n";
+  cout << "now sending REPLICATE command to peer\n";
   sendString(sock, "replica");
   sendBlock(sock, blockName);
 counter++;
@@ -245,7 +238,7 @@ close(sock);
           std::cerr << "Unknown failure occurred" << std::endl;
       }
 }
-string receiveBlockHelper(int sock, string file_name, long file_size) {
+string receiveBlockHelper(int sock, string file_name, long file_size, int replica_flag) {
   while (flag !=0){
     this_thread::sleep_for(chrono::seconds(1));
   } flag = 1;
@@ -277,6 +270,13 @@ string receiveBlockHelper(int sock, string file_name, long file_size) {
   cout << "*************************\n";
   fclose(write_ptr);
   return "\nsuccess writing\n";
+    if(replica_flag == 0){ //needs replication!
+  cout << "received NON-replica block "<< file_name << "!!\n";
+  replicateBlock(file_name);
+  } 
+  if(replica_flag == 1){
+    cout << "received REPLICA block "<< file_name <<"!!\n";
+  }
   //close(sock);
 }  
 
