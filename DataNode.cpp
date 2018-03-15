@@ -216,7 +216,7 @@ void replicateBlock(string blockName){
     unsigned short servPort = portNo;
     int Node = counter % peerDataNodeIPs.size();
     string IP = peerDataNodeIPs[Node];
-    cout << "Attempting peer data node IP: " << IP << "from list of size: " << peerDataNodeIPs.size() << endl; 
+    cout << "Attempting peer data node IP: " << IP << " from list of size: " << peerDataNodeIPs.size() << endl; 
     char* IPAddr = const_cast<char *>(IP.c_str());
 
    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -244,6 +244,7 @@ void replicateBlock(string blockName){
   sendString(sock, "replica");
   sendBlock(sock, blockName);
 counter++;
+close(sock);
 } catch(const std::runtime_error& re) {
           // speciffic handling for runtime_error
           std::cerr << "Replication runtime error: " << re.what() << std::endl;
@@ -328,9 +329,10 @@ void sendBlockHelper(int sock, string file_name) {
         exit(-1);
       }
       remaining_to_send = remaining_to_send - (long)bytesSent;
-      cout << "sent " << bytesSent << " remain " << remaining_to_send << "\n";
+      //cout << "sent " << bytesSent << " remain " << remaining_to_send << "\n";
      
     }
+    cout << "SENT COMPLETE for block " << file_name << endl;
      fclose(readPtr);
 }
 void sendLong(int clientSock, long size)
