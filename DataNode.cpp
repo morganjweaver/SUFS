@@ -168,7 +168,7 @@ void heartbeatThreadTask(char *NameNodeIP, unsigned short NNPort){
       cout << "THREAD: Error with convert dotted decimal address to int" << endl;
       exit(-1);
     }
-    cout << "attempting connection:" << endl;
+    //cout << "attempting connection:" << endl;
 
     struct sockaddr_in servAddr;
     servAddr.sin_family = AF_INET; // always AF_INET
@@ -218,6 +218,7 @@ void replicateBlock(string blockName){
   try{
     cout << "ABOUT TO TRY REPLICATE!!!\n\n";
     unsigned short servPort = portNo;
+    cout << "Port is " << portNo << endl;
     int Node = counter % peerDataNodeIPs.size();
     string IP = peerDataNodeIPs[Node];
     cout << "Attempting peer data node IP: " << IP << " from list of size: " << peerDataNodeIPs.size() << endl; 
@@ -239,7 +240,7 @@ void replicateBlock(string blockName){
   struct sockaddr_in servAddr;
   servAddr.sin_family = AF_INET; // always AF_INET
   servAddr.sin_addr.s_addr = servIP;
-  servAddr.sin_port = htons(servPort);
+  servAddr.sin_port = htons(portNo);
   status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if(status < 0) {
     cout << "repBlock: Error with connect" << endl;
