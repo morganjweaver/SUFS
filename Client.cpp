@@ -302,7 +302,7 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   //string DataNodeIPs = receiveString(socket);
   long numIPs = receiveLong(socket);
     string getStringPort = receiveString(socket);
-
+  cout << "Suppossedly " << numIPs << " IPs from server";
   vector<string> IPs;
   cout << "getting IPs:" << endl;
   for(int i = 0; i < numIPs; i++){
