@@ -141,6 +141,8 @@ void processDataNode(int socket)
     } else if (receiveData == "replica"){
       cout << "Ready to receive REPLICA" << endl;
       receiveBlock(socket, 1);
+    } else if (receiveData == "sanitycheck"){
+      cout << "\n\nreceived from peer!!\n\n";
     }
   //}
   close(socket);
@@ -233,7 +235,7 @@ void replicateBlock(string blockName){
     cout << "replicateBlock: Error with convert dotted decimal address to int" << endl;
     exit(-1);
   }
-
+  cout << "about to try replicate connect\n";
   struct sockaddr_in servAddr;
   servAddr.sin_family = AF_INET; // always AF_INET
   servAddr.sin_addr.s_addr = servIP;
@@ -243,6 +245,8 @@ void replicateBlock(string blockName){
     cout << "repBlock: Error with connect" << endl;
     exit(-1);
   } //now we have a socket
+  sendString(sock, "sanitycheck");
+  cout << "now sending command to peer\n";
   sendString(sock, "replica");
   sendBlock(sock, blockName);
 counter++;
