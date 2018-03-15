@@ -363,6 +363,7 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   for(int i = 0; i < blockIDnames.size(); i++){
     sendString(socket, blockIDnames[i]);
   }
+//long response = receiveLong(socket);
   for(int i = 1; i <= numChunks; i++){
     int sendingIP = counter % numDataNodes;
     cout << "Sending chuck: " << i << " to node: " << sendingIP;;
@@ -383,11 +384,12 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   }
   
   //determine success or error
-  int response = receiveLong(socket);
-  if(response == 1)
-    cout << "Successfully created file \"" << name << "\" " << endl;
-  else
-    cout << "Error creating file" << endl;
+  //long response = receiveLong(socket);
+  //cout << "RESPONSE STATIS: " << response << endl;
+  //if(response == 1)
+    //cout << "Successfully created file \"" << name << "\" " << endl;
+ // else
+   // cout << "Error creating file" << endl;
 }
 
 /*
