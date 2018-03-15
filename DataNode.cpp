@@ -86,7 +86,7 @@ int main(int argc, char const *argv[])
 
 //-------------------------------------------------------TEST CODE
 blockNames.push_back("dummy_file");
-peerDataNodeIPs.push_back("172.31.25.4");
+//peerDataNodeIPs.push_back("172.31.25.4");
 
 //-------------------
   status = listen(sock, MAXPENDING);
