@@ -307,7 +307,6 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   cout << "getting IPs:" << endl;
   for(int i = 0; i < numIPs; i++){
     string getIP = receiveString(socket);
-    cout << getIP << endl;
     IPs.push_back(getIP);
     cout << "getting IP " << getIP << " from Name Node\n";
   }
@@ -346,7 +345,7 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   }
   
   cout << "Number of blockIDs: " << blockIDnames.size() << endl;
-  sendLong(socket, blockIDnames.size());
+  sendLong(socket, (long)blockIDnames.size());
 
   for(int i = 0; i < blockIDnames.size(); i++){
     sendString(socket, blockIDnames[i]);
