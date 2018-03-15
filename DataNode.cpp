@@ -105,7 +105,7 @@ blockNames.push_back("dummy_file");
     }
     processDataNode(clientSock);
     //cout << "Closing socket in function main after processDataNode\n";
-    close(clientSock);
+    //close(clientSock);
   }
 }
 
@@ -217,12 +217,12 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
 void replicateBlock(string blockName){
   try{
     cout << "ABOUT TO TRY REPLICATE!!!\n\n";
-    unsigned short servPort = portNo;
+    unsigned short servPort = (unsigned short)portNo;
     cout << "Port is " << portNo << endl;
     int Node = counter % peerDataNodeIPs.size();
-    string IP = peerDataNodeIPs[Node];
+    char* IP = peerDataNodeIPs[Node].c_str();
     cout << "Attempting peer data node IP: " << IP << " from list of size: " << peerDataNodeIPs.size() << endl; 
-    char* IPAddr = const_cast<char *>(IP.c_str());
+    char* IPAddr = const_cast<char *>(IP);
 
    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
    if(sock < 0) {
@@ -240,7 +240,7 @@ void replicateBlock(string blockName){
   struct sockaddr_in servAddr;
   servAddr.sin_family = AF_INET; // always AF_INET
   servAddr.sin_addr.s_addr = servIP;
-  servAddr.sin_port = htons(portNo);
+  servAddr.sin_port = htons(servPort);
   status = connect (sock, (struct sockaddr *) &servAddr, sizeof(servAddr));
   if(status < 0) {
     cout << "repBlock: Error with connect" << endl;
