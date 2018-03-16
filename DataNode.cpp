@@ -63,6 +63,27 @@ int main(int argc, char const *argv[])
     cout << "Usage: ./DataNode [NameNode IP] [portnumber]" << endl;
   return 1;
   }
+  //Load blocks if available
+  int flength;
+  ifstream filestr;
+
+  filestr.open("blockbackup.txt", ios::binary); // open your file
+  filestr.seekg(0, ios::end); // put the "cursor" at the end of the file
+  flength = filestr.tellg(); // find the position of the cursor
+  filestr.close(); // close your file
+
+if ( flength != 0 )
+  {
+    //read in the file names line at a time:
+    ifstream infile("blockbackup.txt");
+    string filename;
+    while(infile >> filename){
+      blocknames.push_back(filename);
+      cout << "Just recovered filename " << filename;
+    }
+    infile.close();
+  }
+
   flag = 0;
   portNo = stoi(argv[2]);
   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -237,9 +258,7 @@ void receiveBlock(int clientSock, int replica_flag) //based upon processClient
   cout << "Done with files..." << endl;
 }
 string receiveBlockHelper(int sock, string file_name, long file_size, int replica_flag) {
-  // while (flag !=0){
-  //   this_thread::sleep_for(chrono::seconds(1));
-  // } flag = 1;
+ 
   cout << "ReceiveHelper: Getting block " << file_name << endl;
   blockNames.push_back(file_name);
   flag = 0;
@@ -267,17 +286,12 @@ string receiveBlockHelper(int sock, string file_name, long file_size, int replic
   for (int i = 0; i<blockNames.size(); i++)
     cout << blockNames[i] << "\n";
   cout << "*************************\n";
-  
-  
-    if(replica_flag == 0){ //needs replication!
-  cout << "received NON-replica block "<< file_name << "!!\n";
-  //replicateBlock(file_name);
-  } 
-  if(replica_flag == 1){
-    cout << "received REPLICA block "<< file_name <<"!!\n";
-  }
+  string blockname = file_name;
+  blockname.append("\n");
+  ofstream out("blockbackup.txt", ios::app);
+  out << blockname;
+  out.close();
   return "\nsuccess writing\n";
-  //close(sock);
 }  
 
 //C++-based: takes client socket and block file name and
