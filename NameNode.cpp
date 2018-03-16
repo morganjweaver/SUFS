@@ -214,7 +214,6 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
 	for(int i = 0; i < blockFileNames.size(); i++)
 		cout << blockFileNames[i] << endl;
 	cout << endl << endl;
-	/*
 	for(int i = 0; i < blockFileNames.size(); i++){
 		size_t found = blockFileNames[i].find_last_of(".");
 		string filePath = blockFileNames[i].substr(0,found);
@@ -223,7 +222,6 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
 		myFile->blocks.clear();
 		dirMap.put(filePath, *myFile);
 	}	
-	*/
 	for(int i = 0; i < blockFileNames.size(); i++){
 		size_t found = blockFileNames[i].find_last_of(".");
 		string filePath = blockFileNames[i].substr(0,found);
@@ -234,17 +232,14 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
 		tempBlock.IP = nodeIPaddr;
 		for(int j = 0; j < myFile->blocks.size(); j++){
 			if(myFile->blocks[j].chunk_ID == blockFileNames[i])
-				goto endFor;
-			else {
-				myFile->blocks.push_back(tempBlock);
-				dirMap.put(filePath, *myFile);
-				if(chunkMap.put(blockFileNames[i], nodeIPaddr) == false){
-					cout << "failed to put addresses" << endl;
-					exit(-1);
-				}
-			}
+				continue;
 		}
-	endFor:;
+		myFile->blocks.push_back(tempBlock);
+		dirMap.put(filePath, *myFile);
+		if(chunkMap.put(blockFileNames[i], nodeIPaddr) == false){
+			cout << "failed to put addresses" << endl;
+			exit(-1);
+		}
 	}
 	
   if(IPMap.put(nodeIPaddr, blockFileNames) == false){
