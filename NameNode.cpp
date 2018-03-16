@@ -211,6 +211,9 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
 	istream_iterator<string> begin(s);
 	istream_iterator<string> end;
 	vector<string> blockFileNames(begin, end);
+	for(int i = 0; i < blockFileNames.size(); i++)
+		cout << blockFileNames[i] << endl;
+	cout << endl << endl;
 	for(int i = 0; i < blockFileNames.size(); i++){
 		size_t found = blockFileNames[i].find_last_of(".");
 		string filePath = blockFileNames[i].substr(0,found);
@@ -402,17 +405,15 @@ void processClient(int clientSock, string clientIP)
       	catFile = cat(getPath);
         cout << "getting cat infor for " << getPath << " with " << catFile.size() << " items\n";
       	sendLong(clientSock, (long)catFile.size());
-        cout << "SENT LONG FOR CAT TO CLIENT\n\n";
       	for(int i = 0; i < catFile.size(); i++)
       		sendString(clientSock, catFile[i].chunk_ID);
-          cout << catFile[i].chunk_ID << "\n";
       	sendLong(clientSock, catFile.size());
       	for(int i = 0; i < catFile.size(); i++)
       		sendString(clientSock, catFile[i].IP);
-          cout << catFile[i].chunk_ID << "\n";
       	cout << endl;
     }
 
+  //} //end while
 }
 
 bool mkdir(string name, string path){
