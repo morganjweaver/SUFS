@@ -401,7 +401,7 @@ void processClient(int clientSock, string clientIP)
       	vector<CatObject> catFile;
       	catFile = cat(getPath);
         cout << "getting cat infor for " << getPath << " with " << catFile.size() << " items\n";
-      	sendLong(clientSock, catFile.size());
+      	sendLong(clientSock, (long)catFile.size());
       	for(int i = 0; i < catFile.size(); i++)
       		sendString(clientSock, catFile[i].chunk_ID);
       	sendLong(clientSock, catFile.size());
