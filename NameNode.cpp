@@ -215,20 +215,21 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
 		ContainerObject* myFile = new ContainerObject();
 		dirMap.get(filePath, myFile);
 		Block tempBlock;
-		tempBlock.chunk_ID = filePath;
+		tempBlock.chunk_ID = blockFileNames[i];
 		tempBlock.IP = nodeIPaddr;
 		myFile->blocks.push_back(tempBlock);
 		dirMap.put(filePath, *myFile);
-		if(chunkMap.put(blockFileNames[i], nodeIPaddr) == false){
+		
+		if(ChunkMap.put(blockFileNames[i], nodeIPaddr) == false){
 			cout << "failed to put addresses" << endl;
 			exit(-1);
 		}
 	}
-
-	if(IPMap.put(nodeIPaddr, blockFileNames) == false){
-	cout << "failed to put addresses" << endl;
-	exit(-1);
-	}
+	
+  if(IPMap.put(nodeIPaddr, blockFileNames) == false){
+    cout << "failed to put addresses" << endl;
+    exit(-1);
+   }
 }
 /*
 * This function processes the commands received from the client.
