@@ -29,7 +29,7 @@
 #include <algorithm>
 
 using namespace std;
-
+const int REPFACTOR = 3;
 //TODO: man 2 sendfile to chunk and move blocks to server EC2
 const long chunkSize = 67108864;
 int counter = 0;
@@ -356,7 +356,7 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
 
   for(int i = 1; i <= numChunks; i++){
     string chunkedFileName = baseName + "." + to_string(i);
-    for (int j = 0; j < IPs.size(); j++){
+    for (int j = 0; j < REPFACTOR; j++){
       int sendingIP = counter % IPs.size();
       char * IP = const_cast<char*>(IPs[sendingIP].c_str());
       cout << "Sending chunk: " << i << " to node: " << sendingIP;
