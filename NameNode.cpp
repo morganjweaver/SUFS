@@ -357,13 +357,16 @@ void processClient(int clientSock, string clientIP)
       cout << getPath << endl;
       vector<StatObject> myStats;
       myStats = stat(getPath);
-      
-      sendLong(clientSock, myStats.size());
+      vector<string> statInfo;
       for(int i = 0; i < myStats.size(); i++){
-        sendString(clientSock, myStats[i].chunk_ID);
-	sendLong(clientSock, myStats[i].repIP.size());
-	for(int j = 0; j < myStats[i].repIP.size(); j++)
-	  sendString(clientSock, myStats[i].repIP[j]);
+	      string tempstr = myStats[i].chunk_ID + ": ";
+	      for(int j = 0; j < myStats[i].repIP.size(); i++)
+		      tempstr = tempstr + " " + repIP[j];
+	      statInfo.push_back(tempstr);
+      }
+      sendLong(clientSock, statInfo.size());
+      for(int i = 0; i < statInfo.size(); i++){
+        sendString(clientSock, statInfo[i]);
       }
       cout << endl;
     }
