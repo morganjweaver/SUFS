@@ -295,7 +295,7 @@ void processClient(int clientSock, string clientIP)
       
       cout << endl;
       }
-      
+
     else if (command == "create")
       {
       	getName = receiveString(clientSock);
@@ -311,7 +311,7 @@ void processClient(int clientSock, string clientIP)
       	  sendString(clientSock, DataNodeIPs[i]);
 	        cout << "sending IP " << DataNodeIPs[i] << "\n";
         }
-
+  cout << "sending port " << DataNodePort << endl;
 	sendString(clientSock, DataNodePort);
 	
 	cout << "receiving blocks" << endl;
