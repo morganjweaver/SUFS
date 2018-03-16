@@ -525,9 +525,11 @@ vector<CatObject> cat(string path){
 	dirMap.get(path, tempFile);
 	for(int i = 0; i < tempFile->blocks.size(); i++){
 		cat.chunk_ID = tempFile->blocks[i].chunk_ID;
+    cout << "cat added string " << tempFile->blocks[i].chunk_ID << endl;
 		chunkMap.get(cat.chunk_ID, holdIP);
 		cat.IP = holdIP[0];
-		holdCat.push_back(cat);
+		cout << "cat added IP " << cat.IP << endl;
+    holdCat.push_back(cat);
 	}
 	return holdCat;
 }
