@@ -78,7 +78,7 @@ if ( flength != 0 )
     ifstream infile("blockbackup.txt");
     string filename;
     while(infile >> filename){
-      blocknames.push_back(filename);
+      blockNames.push_back(filename);
       cout << "Just recovered filename " << filename;
     }
     infile.close();
