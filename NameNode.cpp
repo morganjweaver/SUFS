@@ -390,16 +390,16 @@ void processClient(int clientSock, string clientIP)
     else if (command == "cat")
     {
         getPath = receiveString(clientSock);
-	cout << getPath << endl;
-	vector<CatObject> catFile;
-	catFile = cat(getPath);
-	sendLong(clientSock, catFile.size());
-	for(int i = 0; i < catFile.size(); i++)
-		sendString(clientSock, catFile[i].chunk_ID);
-	sendLong(clientSock, catFile.size());
-	for(int i = 0; i < catFile.size(); i++)
-		sendString(clientSock, catFile[i].IP);
-	cout << endl;
+      	cout << getPath << endl;
+      	vector<CatObject> catFile;
+      	catFile = cat(getPath);
+      	sendLong(clientSock, catFile.size());
+      	for(int i = 0; i < catFile.size(); i++)
+      		sendString(clientSock, catFile[i].chunk_ID);
+      	sendLong(clientSock, catFile.size());
+      	for(int i = 0; i < catFile.size(); i++)
+      		sendString(clientSock, catFile[i].IP);
+      	cout << endl;
     }
 
   //} //end while
