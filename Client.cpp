@@ -297,7 +297,11 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   
   //Get chunk IDs and data node IPs from Name Node and 
   //process into vectors, then send blocks/chunks to Data Nodes  
-  string baseName = receiveString(socket);
+  string originalBase = receiveString(socket);
+  string baseName = originalBase;
+  replace(baseName.begin(), baseName.end(), '/', '_');
+
+  //baseName = "test_test";
   //string DataNodeIPs = receiveString(socket);
   long numIPs = receiveLong(socket);
   //cout << "Suppossedly " << numIPs << " IPs from server";
@@ -330,13 +334,15 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   //download object from S3
   getObject(S3_file, S3_bucket);
   //chunk the file into 64 MB blocks and return the total num blocks
+  cout << "Chunking file..." << endl;
   int numChunks = chunkFile(S3_file, baseName);
+  cout << "Num chunks: " << numChunks << endl;
 
   int numDataNodes = IPs.size();
-  cout << "Number of suppossed IPs: " << numDataNodes << endl;
+  cout << "Number of IPs: " << numDataNodes << endl;
 
   for(int i = 0; i < numChunks; i++){
-    string chunkedFileName = baseName + "." + to_string(i);
+    string chunkedFileName = originalBase + "." + to_string(i);
     blockIDnames.push_back(chunkedFileName);
   }
   
@@ -344,26 +350,21 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
   sendLong(socket, (long)blockIDnames.size());
 
   for(int i = 0; i < blockIDnames.size(); i++){
+    
     sendString(socket, blockIDnames[i]);
   }
 
-//long response = receiveLong(socket);
   for(int i = 1; i <= numChunks; i++){
-    
     string chunkedFileName = baseName + "." + to_string(i);
-    //blockIDnames.push_back(chunkedFileName);
-    //close client conn
-    for (int j = 0; j<3; j++){
+    for (int j = 0; j < IPs.size(); j++){
       int sendingIP = counter % IPs.size();
       char * IP = const_cast<char*>(IPs[sendingIP].c_str());
       cout << "Sending chunk: " << i << " to node: " << sendingIP;
       blockToDataNode(IP, dataNodePort, chunkedFileName);
       counter++;
     }  
-    
   }
-  
-  
+    
   removeFile(S3_file);
   
   for(int i = 1; i <= numChunks; i++){
@@ -432,11 +433,12 @@ int chunkFile(string fullFilePath, string chunkName)
 {
     ifstream fileStream;
     fileStream.open(fullFilePath.c_str(), ios::in | ios::binary);
+    //cout << "opened file" << endl;
 
     // File open a success
     if (fileStream.is_open()) {
-
-        ofstream output;
+      //cout << "open success" << endl;  
+      ofstream output;
         int counter = 1;
         string fullChunkName;
         // Create a buffer to hold each chunk
@@ -448,6 +450,7 @@ int chunkFile(string fullFilePath, string chunkName)
             fullChunkName.clear();
             fullChunkName.append(chunkName);
             fullChunkName.append(".");
+	    // cout << "just built chunk names" << endl;
            // Convert counter integer into string and append to name.
              string intBuf = to_string(counter);
 	     fullChunkName.append(intBuf);
@@ -455,9 +458,10 @@ int chunkFile(string fullFilePath, string chunkName)
             output.open(fullChunkName.c_str(),ios::out | ios::trunc | ios::binary);
             // If chunk file opened successfully, read from input and
             // write to output chunk. Then close.
-
+	    //cout <<"write to output chunk" << endl;
 	     if (output.is_open()) {
-                fileStream.read(buffer,chunkSize);
+	       // cout <<"inner if statement" << endl; 
+	       fileStream.read(buffer,chunkSize);
                 // gcount() returns number of bytes read from stream.
                 output.write(buffer,fileStream.gcount());
                 output.close();

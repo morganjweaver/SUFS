@@ -365,6 +365,7 @@ void sendHeartbeat(int sock){
   flag = 1;
   for (int i = 0; i<blockNames.size();i++){
     string block = blockNames[i];
+    replace(block.begin(), block.end(), '_', '/');
     filenames.append(block);
     filenames.append(" ");
   } //now have string for easy sending
