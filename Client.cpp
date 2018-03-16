@@ -409,7 +409,7 @@ void cat(string path, int socket)
   }
   for(int k = 0; k<numBlocks; k++){
     string ip = IPs[k];
-    const char*IP = ip.c_str();
+    char*IP = const_cast<char *>(ip.c_str());
     int socket = getNNsocket(IP, NameNodePort);
     sendString(socket, blockNames[k]);
   }
