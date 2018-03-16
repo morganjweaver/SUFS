@@ -295,6 +295,7 @@ void processClient(int clientSock, string clientIP)
       
       cout << endl;
       }
+      
     else if (command == "create")
       {
       	getName = receiveString(clientSock);
