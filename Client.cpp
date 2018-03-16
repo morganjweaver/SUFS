@@ -399,7 +399,7 @@ void cat(string path, int socket)
   std::vector<string> IPs;
   for (int i = 0; i<numBlocks; i++){
       string block = receiveString(socket);
-      blocks.push_back(block);
+      blockNames.push_back(block);
       cout << "block: " << block << endl;
   }  
   for (int j = 0; j<numBlocks; j++){
