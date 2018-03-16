@@ -214,6 +214,7 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
 	for(int i = 0; i < blockFileNames.size(); i++)
 		cout << blockFileNames[i] << endl;
 	cout << endl << endl;
+	/*
 	for(int i = 0; i < blockFileNames.size(); i++){
 		size_t found = blockFileNames[i].find_last_of(".");
 		string filePath = blockFileNames[i].substr(0,found);
@@ -222,6 +223,7 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
 		myFile->blocks.clear();
 		dirMap.put(filePath, *myFile);
 	}	
+	*/
 	for(int i = 0; i < blockFileNames.size(); i++){
 		size_t found = blockFileNames[i].find_last_of(".");
 		string filePath = blockFileNames[i].substr(0,found);
@@ -528,11 +530,9 @@ vector<CatObject> cat(string path){
 	dirMap.get(path, tempFile);
 	for(int i = 0; i < tempFile->blocks.size(); i++){
 		cat.chunk_ID = tempFile->blocks[i].chunk_ID;
-    cout << "cat added string " << tempFile->blocks[i].chunk_ID << endl;
 		chunkMap.get(cat.chunk_ID, holdIP);
 		cat.IP = holdIP[0];
-		cout << "cat added IP " << cat.IP << endl;
-    holdCat.push_back(cat);
+		holdCat.push_back(cat);
 	}
 	return holdCat;
 }
