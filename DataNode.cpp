@@ -79,7 +79,7 @@ if ( flength != 0 )
     string filename;
     while(infile >> filename){
       blockNames.push_back(filename);
-      cout << "Just recovered filename " << filename;
+      cout << "Just recovered filename " << filename << endl;
     }
     infile.close();
   }
