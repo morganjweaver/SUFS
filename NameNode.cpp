@@ -118,6 +118,7 @@ int main(int argc, char const *argv[])
         struct sockaddr_storage addr;
         char ipstr[INET6_ADDRSTRLEN];
           int port;
+	ipstr[ipstr.length()] = '\0';
 
         len = sizeof addr;
         getpeername(clientSock, (struct sockaddr*)&addr, &len);
