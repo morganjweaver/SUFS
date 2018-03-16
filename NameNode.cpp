@@ -39,16 +39,16 @@ void processClient(int new_client_socket);
 void sendString(int sock, string wordSent);
 string receiveString(int sock);
 void processClient(int clientSock, string clientIP);
-void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, IPHashMap& IPMap,ChunkHashMap& ChunkMap);
-bool mkdir(string name, string path, DirHashMap& dirMap);
-bool rmdir(string name, string path, DirHashMap& dirMap);
-vector<string> ls(string path, DirHashMap& dirMap);
+void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data);
+bool mkdir(string name, string path);
+bool rmdir(string name, string path);
+vector<string> ls(string path);
 vector<string> DataNodeIPs;
 void heartbeatThreadTask();
 void sendHeartbeat(int sock, string IPstring);
-bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap);
-vector<StatObject> stat(string path, DirHashMap& dirMap, ChunkHashMap& ChunkMap);
-vector<CatObject> cat(string path, DirHashMap& dirMap, ChunkHashMap& chunkMap);;
+bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP);
+vector<StatObject> stat(string path);
+vector<CatObject> cat(string path);
 long receiveLong(int clientSock);
 
 string DataNodePort = "8080";
@@ -192,7 +192,7 @@ string receiveString(int sock)
 }
 //add heartbeat information to DataNode:block hashtable
 
-void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, IPHashMap& IPMap, ChunkHashMap& ChunkMap){
+void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data){
 	//if put attempt returns false, remove the entry and try again
 	cout << "Heartbeat received from " << nodeIPaddr << " contents: " << heartbeat_data << endl;
 	if(DataNodePort != clientPort){
@@ -260,7 +260,7 @@ void processClient(int clientSock, string clientIP)
       string port = receiveString(clientSock); 
       string blocks = receiveString(clientSock);
 
-      processHeartbeat(port, clientIP, blocks, IPMap, chunkMap);
+      processHeartbeat(port, clientIP, blocks);
       //close(clientSock);
     }
 
@@ -270,7 +270,7 @@ void processClient(int clientSock, string clientIP)
       cout << getName << endl;
       getPath = receiveString(clientSock);
       cout << getPath << endl;
-      check = mkdir(getName, getPath, dirMap);
+      check = mkdir(getName, getPath);
       sendLong(clientSock, check);
       if(check == 1)
 	cout << "Success" << endl;
@@ -332,7 +332,7 @@ void processClient(int clientSock, string clientIP)
       }
       
       cout << "creating file" << endl;
-      check = create(getName, getPath, blockNames, DataNodeIPs, dirMap);
+      check = create(getName, getPath, blockNames);
       sendLong(clientSock, check);
       if(check == 1)
 	cout << "Success" << endl;
@@ -364,7 +364,7 @@ void processClient(int clientSock, string clientIP)
       cout << getName << endl;
       cout << getPath << endl;
 
-      check = rmdir(getName, getPath, dirMap);
+      check = rmdir(getName, getPath);
 			sendLong(clientSock, check);
 			if(check == 1)
 				cout << "Success" << endl;
@@ -378,7 +378,7 @@ void processClient(int clientSock, string clientIP)
         getPath = receiveString(clientSock);
 	cout << getPath << endl;
 	vector<CatObject> catFile;
-	catFile = cat(getPath, dirMap, chunkMap);
+	catFile = cat(getPath);
 	sendLong(clientSock, catFile.size());
 	for(int i = 0; i < catFile.size(); i++)
 		sendString(clientSock, catFile[i].chunk_ID);
@@ -391,7 +391,7 @@ void processClient(int clientSock, string clientIP)
   //} //end while
 }
 
-bool mkdir(string name, string path, DirHashMap& dirMap){
+bool mkdir(string name, string path){
 	bool check = false;
 	bool checkParent = false;
 	ContainerObject tempDir;
@@ -417,7 +417,7 @@ bool mkdir(string name, string path, DirHashMap& dirMap){
 	return check;
 }
 
-bool rmdir(string name, string path, DirHashMap& dirMap){
+bool rmdir(string name, string path){
 	bool check = false;
 	ContainerObject* tempDir = new ContainerObject();
 	check = dirMap.get(path, tempDir);
@@ -441,7 +441,7 @@ bool rmdir(string name, string path, DirHashMap& dirMap){
 		return false;
 }
 
-vector<string> ls(string path, DirHashMap& dirMap)
+vector<string> ls(string path)
 {
 	vector<string> returnList;
 	ContainerObject* tempDir = new ContainerObject();
@@ -453,7 +453,7 @@ vector<string> ls(string path, DirHashMap& dirMap)
 	return returnList;
 }
 
-bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP, DirHashMap& dirMap){
+bool create(string name, string path, vector<string> chunkID, vector<string> dataNodeIP){
 	bool check = false;
 	bool checkParent = false;
 	ContainerObject tempFile;
@@ -478,7 +478,7 @@ bool create(string name, string path, vector<string> chunkID, vector<string> dat
 }
 
 
-vector<StatObject> stat(string path, DirHashMap& dirMap, ChunkHashMap& ChunkMap){
+vector<StatObject> stat(string path){
 	ContainerObject* tempFile = new ContainerObject();
 	vector<string> holdIP;
 	vector<StatObject> tempStat;
@@ -493,7 +493,7 @@ vector<StatObject> stat(string path, DirHashMap& dirMap, ChunkHashMap& ChunkMap)
 	return tempStat;
 }
 
-vector<CatObject> cat(string path, DirHashMap& dirMap, ChunkHashMap& chunkMap){
+vector<CatObject> cat(string path){
 	ContainerObject* tempFile = new ContainerObject();
 	vector<CatObject> holdCat;
 	vector<string> holdIP;
