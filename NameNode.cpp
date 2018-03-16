@@ -234,14 +234,13 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
 		tempBlock.IP = nodeIPaddr;
 		for(int j = 0; j < myFile->blocks.size(); j++)
 			if(myFile->blocks[j].chunk_ID == blockFileNames[i])
-				goto endFor;
+				continue;
 		myFile->blocks.push_back(tempBlock);
 		dirMap.put(filePath, *myFile);
 		if(chunkMap.put(blockFileNames[i], nodeIPaddr) == false){
 			cout << "failed to put addresses" << endl;
 			exit(-1);
 		}
-		endFor:;
 	}
 	
   if(IPMap.put(nodeIPaddr, blockFileNames) == false){
