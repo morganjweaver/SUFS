@@ -215,20 +215,21 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
 		ContainerObject* myFile = new ContainerObject();
 		dirMap.get(filePath, myFile);
 		Block tempBlock;
-		tempBlock.chunk_ID = filePath;
+		tempBlock.chunk_ID = blockFileNames[i];
 		tempBlock.IP = nodeIPaddr;
 		myFile->blocks.push_back(tempBlock);
 		dirMap.put(filePath, *myFile);
+		
 		if(chunkMap.put(blockFileNames[i], nodeIPaddr) == false){
 			cout << "failed to put addresses" << endl;
 			exit(-1);
 		}
 	}
-
-	if(IPMap.put(nodeIPaddr, blockFileNames) == false){
-	cout << "failed to put addresses" << endl;
-	exit(-1);
-	}
+	
+  if(IPMap.put(nodeIPaddr, blockFileNames) == false){
+    cout << "failed to put addresses" << endl;
+    exit(-1);
+   }
 }
 /*
 * This function processes the commands received from the client.
@@ -632,7 +633,7 @@ void sendHeartbeat(int sock, string IPstring){
 //sends a single string list of IPs to DataNode
   sendString(sock, "heartbeat");
   sendString(sock, IPstring);
-  cout << "HEARTBEAT CONTENTS: " << IPstring << endl;
+  cout << "HEARTBEAT CONTENTS: " << IPstring << "TO A DATANODE" <<endl;
 }
 
 //receive a numeric over the network 
