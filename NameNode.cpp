@@ -402,15 +402,17 @@ void processClient(int clientSock, string clientIP)
       	catFile = cat(getPath);
         cout << "getting cat infor for " << getPath << " with " << catFile.size() << " items\n";
       	sendLong(clientSock, (long)catFile.size());
+        cout << "SENT LONG FOR CAT TO CLIENT\n\n";
       	for(int i = 0; i < catFile.size(); i++)
       		sendString(clientSock, catFile[i].chunk_ID);
+          cout << catFile[i].chunk_ID << "\n";
       	sendLong(clientSock, catFile.size());
       	for(int i = 0; i < catFile.size(); i++)
       		sendString(clientSock, catFile[i].IP);
+          cout << catFile[i].chunk_ID << "\n";
       	cout << endl;
     }
 
-  //} //end while
 }
 
 bool mkdir(string name, string path){
