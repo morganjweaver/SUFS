@@ -361,12 +361,11 @@ void processClient(int clientSock, string clientIP)
       for(int i = 0; i < myStats.size(); i++){
 	      string tempstr = myStats[i].chunk_ID + ": ";
 	      for(int j = 0; j < myStats[i].repIP.size(); j++)
-		      tempstr = tempstr + " " + myStats[i].repIP[j];
+		      tempstr = tempstr + " " + myStats[i].repIP[j] + '\0';
 	      statInfo.push_back(tempstr);
       }
       for(int i = 0; i < statInfo.size(); i++){
-	      statInfo[i] = statInfo[i] + '\0';
-	      cout << statInfo[i];
+	      cout << statInfo[i] << endl;
       }
       sendLong(clientSock, statInfo.size());
       for(int i = 0; i < statInfo.size(); i++){
