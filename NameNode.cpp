@@ -219,7 +219,7 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
 		tempBlock.IP = nodeIPaddr;
 		myFile->blocks.push_back(tempBlock);
 		dirMap.put(filePath, *myFile);
-		if(ChunkMap.put(blockFileNames[i], nodeIPaddr) == false){
+		if(chunkMap.put(blockFileNames[i], nodeIPaddr) == false){
 			cout << "failed to put addresses" << endl;
 			exit(-1);
 		}
@@ -284,7 +284,7 @@ void processClient(int clientSock, string clientIP)
       {
   	    getPath = receiveString(clientSock);
         cout << getPath << endl;
-        lsReturn = ls(getPath, dirMap);
+        lsReturn = ls(getPath);
       
       if(lsReturn.size() == 0){
 	       cout << "Error" << endl;
@@ -332,7 +332,7 @@ void processClient(int clientSock, string clientIP)
       }
       
       cout << "creating file" << endl;
-      check = create(getName, getPath, blockNames);
+      check = create(getName, getPath, blockNames, DataNodeIPs);
       sendLong(clientSock, check);
       if(check == 1)
 	cout << "Success" << endl;
@@ -345,7 +345,7 @@ void processClient(int clientSock, string clientIP)
       getPath = receiveString(clientSock);
       cout << getPath << endl;
       vector<StatObject> myStats;
-      myStats = stat(getPath, dirMap, chunkMap);
+      myStats = stat(getPath);
       
       sendLong(clientSock, myStats.size());
       for(int i = 0; i < myStats.size(); i++){
@@ -485,7 +485,7 @@ vector<StatObject> stat(string path){
 	StatObject holdChunk;
 	dirMap.get(path, tempFile);
 	for(int i = 0; i < tempFile->blocks.size(); i++){
-		ChunkMap.get(tempFile->blocks[i].chunk_ID, holdIP);
+		chunkMap.get(tempFile->blocks[i].chunk_ID, holdIP);
 		holdChunk.chunk_ID = tempFile->blocks[i].chunk_ID;
 		holdChunk.repIP = holdIP;
 		tempStat.push_back(holdChunk);
