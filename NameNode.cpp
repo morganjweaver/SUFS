@@ -230,7 +230,7 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
 				continue;
 		myFile->blocks.push_back(tempBlock);
 		dirMap.put(filePath, *myFile);
-		if(ChunkMap.put(blockFileNames[i], nodeIPaddr) == false){
+		if(chunkMap.put(blockFileNames[i], nodeIPaddr) == false){
 			cout << "failed to put addresses" << endl;
 			exit(-1);
 		}
