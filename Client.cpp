@@ -410,12 +410,13 @@ void cat(string path, int socket)
   for(int k = 0; k<numBlocks; k++){
     
     string ip = IPs[k];
-    char *cptr = new char[ip.size()+1]; // +1 to account for \0 byte
-    std::strncpy(cptr, ip.c_str(), ip.size());
-    
-    int socket = getNNsocket(cptr, NameNodePort);
+    int n = ip.length();
+    char DN_IP[n+1];
+    strcpy(DN_IP, ip.c_str());
+    //char* IPAddr = const_cast<char *>(DN_IP);
+    int socket = getNNsocket(DN_IP, NameNodePort);
     sendString(socket, blockNames[k]);
-    delete [] cptr;
+
   }
   close(socket);
   //GET datanode socket
