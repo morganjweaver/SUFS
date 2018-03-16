@@ -51,7 +51,6 @@ vector<StatObject> stat(string path, DirHashMap& dirMap, ChunkHashMap& ChunkMap)
 vector<CatObject> cat(string path, DirHashMap& dirMap, ChunkHashMap& chunkMap);;
 long receiveLong(int clientSock);
 
-int uniqueIDCounter = 0;
 string DataNodePort = "8080";
 //SERVER SOCKET CODE
 
@@ -194,34 +193,42 @@ string receiveString(int sock)
 //add heartbeat information to DataNode:block hashtable
 
 void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_data, IPHashMap& IPMap, ChunkHashMap& ChunkMap){
-    //if put attempt returns false, remove the entry and try again
-  cout << "Heartbeat received from " << nodeIPaddr << " contents: " << heartbeat_data << endl;
-  if(DataNodePort != clientPort){
-    cout << "DatNodePort set to " << clientPort << " from " <<DataNodePort << endl;
-   DataNodePort = clientPort;
-  }
-  DataNodeIPs.push_back(nodeIPaddr);
-  //now de-dupe from global IP list
-  for(int i = 0; i<DataNodeIPs.size()-1; i++){
-    if (DataNodeIPs[i] == nodeIPaddr)
-        DataNodeIPs.erase(DataNodeIPs.begin()+i);
-  }
-  stringstream s(heartbeat_data);
-  istream_iterator<string> begin(s);
-  istream_iterator<string> end;
-  vector<string> blockFileNames(begin, end);
-  for(int i = 0; i < blockFileNames.size(); i++){
-	if(ChunkMap.put(blockFileNames[i], nodeIPaddr) == false){
-		cout << "failed to put addresses" << endl;
-		exit(-1);
+	//if put attempt returns false, remove the entry and try again
+	cout << "Heartbeat received from " << nodeIPaddr << " contents: " << heartbeat_data << endl;
+	if(DataNodePort != clientPort){
+	cout << "DatNodePort set to " << clientPort << " from " <<DataNodePort << endl;
+	DataNodePort = clientPort;
 	}
-  }
-  if(IPMap.put(nodeIPaddr, blockFileNames) == false){
-    cout << "failed to put addresses" << endl;
-    exit(-1);
-   }
-   
+	DataNodeIPs.push_back(nodeIPaddr);
+	//now de-dupe from global IP list
+	for(int i = 0; i<DataNodeIPs.size()-1; i++){
+	if (DataNodeIPs[i] == nodeIPaddr)
+	DataNodeIPs.erase(DataNodeIPs.begin()+i);
+	}
+	stringstream s(heartbeat_data);
+	istream_iterator<string> begin(s);
+	istream_iterator<string> end;
+	vector<string> blockFileNames(begin, end);
+	for(int i = 0; i < blockFileNames.size(); i++){
+		size_t found = blockFileNames[i].find_last_of(".");
+		string filePath = blockFileNames[i].substr(0,found);
+		ContainerObject* myFile = new ContainerObject();
+		dirMap.get(filePath, myFile);
+		Block tempBlock;
+		tempBlock.chunk_ID = filePath;
+		tempBlock.IP = nodeIPaddr;
+		myFile->blocks.push_back(tempBlock);
+		dirMap.put(filePath, *myFile);
+		if(ChunkMap.put(blockFileNames[i], nodeIPaddr) == false){
+			cout << "failed to put addresses" << endl;
+			exit(-1);
+		}
+	}
 
+	if(IPMap.put(nodeIPaddr, blockFileNames) == false){
+	cout << "failed to put addresses" << endl;
+	exit(-1);
+	}
 }
 /*
 * This function processes the commands received from the client.
@@ -302,7 +309,7 @@ void processClient(int clientSock, string clientIP)
       	cout << getName << endl;
       	getPath = receiveString(clientSock);
       	cout << getPath << endl;
-      	sendString(clientSock, to_string(uniqueIDCounter));
+      	sendString(clientSock, to_string(getPath));
       	uniqueIDCounter++;
         cout << "\n\nNumber of DN IPS: " << DataNodeIPs.size() << endl;
       	sendLong(clientSock, (DataNodeIPs.size()));
@@ -455,14 +462,6 @@ bool create(string name, string path, vector<string> chunkID, vector<string> dat
 	tempFile.filePath = path;
 	Block temp;
 	
-	int counter = 0;  //NOT global uniqueIDCounter
-	for(int i = 0; i < chunkID.size(); i++){
-		int tempSize = counter % dataNodeIP.size();
-		temp.IP = dataNodeIP[tempSize];
-		temp.chunk_ID = chunkID[i];
-		tempFile.blocks.push_back(temp);
-		counter++;	
-	}
 	size_t found = path.find_last_of("/\\");
 	ContainerObject* parent = new ContainerObject();
 	string shortPath = path.substr(0,found);
