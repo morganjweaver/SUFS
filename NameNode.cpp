@@ -363,7 +363,7 @@ void processClient(int clientSock, string clientIP)
         sendString(clientSock, myStats[i].chunk_ID);
 	sendLong(clientSock, myStats[i].repIP.size());
 	for(int j = 0; j < myStats[i].repIP.size(); j++)
-	  sendString(clientSock, myStats[i].repIP[j]);
+	  sendString(clientSock, myStats[j].repIP[j]);
       }
       cout << endl;
     }
