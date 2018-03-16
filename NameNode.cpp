@@ -407,9 +407,11 @@ void processClient(int clientSock, string clientIP)
       	sendLong(clientSock, (long)catFile.size());
       	for(int i = 0; i < catFile.size(); i++)
       		sendString(clientSock, catFile[i].chunk_ID);
+          cout << "sent " << catFile[i].chunk_ID << "to client";
       	sendLong(clientSock, catFile.size());
       	for(int i = 0; i < catFile.size(); i++)
       		sendString(clientSock, catFile[i].IP);
+          cout << "sent " << catFile[i].IP << "to client";
       	cout << endl;
     }
 

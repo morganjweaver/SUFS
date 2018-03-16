@@ -393,7 +393,30 @@ void cat(string path, int socket)
   sendString(socket, "cat");
   //send the absolute to namenode data structure 
   sendString(socket, path);
-  
+  long numBlocks = receiveLong(socket);
+  cout << "about to request" << numBlocks << blocks << "for " << path << endl;
+  std::vector<string> blockNames;
+  std::vector<string> IPs;
+  for (int i = 0; i<numBlocks; i++){
+      string block = receiveString(socket);
+      blocks.push_back(block);
+      cout << "block: " << block << endl;
+  }  
+  for (int j = 0; j<numBlocks; j++){
+    string IP = receiveString(socket);
+    IPs.push_back(IP);
+    cout << "received IP " << IP << endl; 
+  }
+  for(int k = 0; k<numBlocks; k++){
+    char*IP = const_cast<char *>(IPs[k].c_str());
+
+    int socket = getNNsocket(IP, NameNodePort);
+    sendString(blockNames[k]);
+    close(socket);
+
+  }
+  //GET datanode socket
+  //
   //will be receiving block_IDs and associated DataNode_IPs
   //use information from stat? 
   //create stat first before writing cat
