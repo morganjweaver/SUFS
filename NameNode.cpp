@@ -214,13 +214,23 @@ void processHeartbeat(string clientPort, string nodeIPaddr, string heartbeat_dat
 		string filePath = blockFileNames[i].substr(0,found);
 		ContainerObject* myFile = new ContainerObject();
 		dirMap.get(filePath, myFile);
+		myFile->blocks.clear();
+		dirMap.put(filePath, *myFile);
+	}	
+	for(int i = 0; i < blockFileNames.size(); i++){
+		size_t found = blockFileNames[i].find_last_of(".");
+		string filePath = blockFileNames[i].substr(0,found);
+		ContainerObject* myFile = new ContainerObject();
+		dirMap.get(filePath, myFile);
 		Block tempBlock;
 		tempBlock.chunk_ID = blockFileNames[i];
 		tempBlock.IP = nodeIPaddr;
+		for(int j = 0; j < myFile->blocks.size(); j++)
+			if(myFile->blocks[j].chunk_ID == blockFileNames[i])
+				continue;
 		myFile->blocks.push_back(tempBlock);
 		dirMap.put(filePath, *myFile);
-		
-		if(chunkMap.put(blockFileNames[i], nodeIPaddr) == false){
+		if(ChunkMap.put(blockFileNames[i], nodeIPaddr) == false){
 			cout << "failed to put addresses" << endl;
 			exit(-1);
 		}
