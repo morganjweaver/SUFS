@@ -118,8 +118,8 @@ int main(int argc, char const *argv[])
         struct sockaddr_storage addr;
         char ipstr[INET6_ADDRSTRLEN];
           int port;
-	size_t tempSize = sizeof(ipstr);
-	ipstr[tempSize] = '\0';
+	       size_t tempSize = sizeof(ipstr);
+	       ipstr[tempSize] = '\0';
 
         len = sizeof addr;
         getpeername(clientSock, (struct sockaddr*)&addr, &len);
@@ -400,6 +400,7 @@ void processClient(int clientSock, string clientIP)
       	cout << getPath << endl;
       	vector<CatObject> catFile;
       	catFile = cat(getPath);
+        cout << "getting cat infor for " << getPath << " with " << catFile.size() << " items\n";
       	sendLong(clientSock, catFile.size());
       	for(int i = 0; i < catFile.size(); i++)
       		sendString(clientSock, catFile[i].chunk_ID);
