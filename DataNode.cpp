@@ -310,6 +310,7 @@ void sendBlock(int sock, string file_name){
 }
 //C-based: sends a binary file to Server by reading out of directory and calculating size
 void sendBlockHelper(int sock, string file_name) {
+  cout << "sendblockhelper sending " << file_name << endl;
   FILE* readPtr;
   readPtr = fopen(file_name.c_str(),"rb");
   unsigned char binaryBuffer[2000];
