@@ -408,7 +408,8 @@ void cat(string path, int socket)
     cout << "received IP " << IP << endl; 
   }
   for(int k = 0; k<numBlocks; k++){
-    char*IP = const_cast<char *>(IPs[k].c_str());
+    char[] ip = IPs[k].c_str();
+    char*IP = const_cast<char *>(ip);
     int socket = getNNsocket(IP, NameNodePort);
     sendString(socket, blockNames[k]);
   }
