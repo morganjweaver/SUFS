@@ -632,7 +632,7 @@ void sendHeartbeat(int sock, string IPstring){
 //sends a single string list of IPs to DataNode
   sendString(sock, "heartbeat");
   sendString(sock, IPstring);
-  cout << "HEARTBEAT CONTENTS: " << IPstring << endl;
+  cout << "HEARTBEAT CONTENTS: " << IPstring << "TO A DATANODE" <<endl;
 }
 
 //receive a numeric over the network 
