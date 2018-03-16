@@ -408,10 +408,14 @@ void cat(string path, int socket)
     cout << "received IP " << IP << endl; 
   }
   for(int k = 0; k<numBlocks; k++){
+    
     string ip = IPs[k];
-    char*IP = const_cast<char *>(ip.c_str());
-    int socket = getNNsocket(IP, NameNodePort);
+    char *cptr = new char[ip.size()+1]; // +1 to account for \0 byte
+    std::strncpy(cptr, ip.c_str(), ip.size());
+    
+    int socket = getNNsocket(cptr, NameNodePort);
     sendString(socket, blockNames[k]);
+    delete [] cptr;
   }
   close(socket);
   //GET datanode socket
