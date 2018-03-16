@@ -155,7 +155,7 @@ void processDataNode(int socket)
     } else if (receiveData == "replicate"){
       string filename = receiveString(socket);//file name to replicate
       cout << "Received command to replicate block " << filename << endl;
-      sendBlock(socket, file_name);
+      sendBlock(socket, filename);
     } else{
       cout << "MAIN PROCESS ERROR: Command matches no known functionality!\n";
     }
