@@ -367,10 +367,10 @@ void create(string name, string path, string S3_file, string S3_bucket, int sock
     
   removeFile(S3_file);
   
-  for(int i = 1; i <= numChunks; i++){
-    string chunkedFileName = baseName + "." + to_string(i);
-    removeFile(chunkedFileName);
-  }
+  // for(int i = 1; i <= numChunks; i++){
+  //   string chunkedFileName = baseName + "." + to_string(i);
+  //   removeFile(chunkedFileName);
+  // }
   cout <<"Done creating file\n";
 	
   //determine success or error
@@ -409,17 +409,17 @@ void cat(string path, int socket)
   }
   for(int k = 0; k<numBlocks; k++){
     
-    string ip = IPs[k];
-    int n = ip.length();
-    char DN_IP[n+1];
-    strcpy(DN_IP, ip.c_str());
+    // string ip = IPs[k];
+    // int n = ip.length();
+    // char DN_IP[n+1];
+    // strcpy(DN_IP, ip.c_str());
     //char* IPAddr = const_cast<char *>(DN_IP);
-    int socket = getNNsocket(DN_IP, NameNodePort);
-    sendString(socket, "replicate");
-    sendString(socket, blockNames[k]);
-
+    // int socket = getNNsocket(DN_IP, NameNodePort);
+    // sendString(socket, "replicate");
+    // sendString(socket, blockNames[k]);
+    //  close(socket);
   }
-  close(socket);
+ 
   //GET datanode socket
   //
   //will be receiving block_IDs and associated DataNode_IPs
