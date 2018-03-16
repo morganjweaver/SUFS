@@ -361,7 +361,7 @@ void processClient(int clientSock, string clientIP)
       for(int i = 0; i < myStats.size(); i++){
 	      string tempstr = myStats[i].chunk_ID + ": ";
 	      for(int j = 0; j < myStats[i].repIP.size(); i++)
-		      tempstr = tempstr + " " + repIP[j];
+		      tempstr = tempstr + " " + myStats[i].repIP[j];
 	      statInfo.push_back(tempstr);
       }
       sendLong(clientSock, statInfo.size());
