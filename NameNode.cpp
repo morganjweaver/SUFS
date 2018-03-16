@@ -364,8 +364,10 @@ void processClient(int clientSock, string clientIP)
 		      tempstr = tempstr + " " + myStats[i].repIP[j];
 	      statInfo.push_back(tempstr);
       }
-      for(int i = 0; i < statInfo.size(); i++)
+      for(int i = 0; i < statInfo.size(); i++){
 	      statInfo[i] = statInfo[i] + '\0';
+	      cout << statInfo[i];
+      }
       sendLong(clientSock, statInfo.size());
       for(int i = 0; i < statInfo.size(); i++){
         sendString(clientSock, statInfo[i]);
