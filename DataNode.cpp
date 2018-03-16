@@ -155,11 +155,11 @@ void processDataNode(int socket)
     } else if (receiveData == "replicate"){
       string filename = receiveString(socket);//file name to replicate
       cout << "Received command to replicate block " << filename << endl;
-
+      sendBlock(socket, file_name);
     } else{
       cout << "MAIN PROCESS ERROR: Command matches no known functionality!\n";
     }
-  cout << "Closing socket in processDataNode\n";
+    cout << "Closing socket in processDataNode\n";
     close(socket);
 }
 

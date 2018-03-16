@@ -415,6 +415,7 @@ void cat(string path, int socket)
     strcpy(DN_IP, ip.c_str());
     //char* IPAddr = const_cast<char *>(DN_IP);
     int socket = getNNsocket(DN_IP, NameNodePort);
+    sendString(socket, "replicate");
     sendString(socket, blockNames[k]);
 
   }
